@@ -10,12 +10,20 @@ runs smithy-go codegen and opens a PR here against a fixed branch
 ## Layout
 
 ```
-api/          regen target — smithy-go output (NEVER edit by hand)
-client.go     hand-written facade — stable across spec regen
-doc.go        package documentation
-go.mod        Go module definition
-.github/      CI (go vet, go test, go build)
+api/                       regen target — smithy-go output (NEVER edit by hand)
+client.go                  hand-written facade — stable across spec regen
+transport.go               Transport interface — built-in and heavy transports plug into this
+transport/websocket/       built-in WebSocket transport subpackage
+doc.go                     package documentation
+go.mod                     Go module definition
+.github/                   CI (go vet, go build, go test)
 ```
+
+Heavy transports (SageMaker today, future Vertex / Triton / Azure ML) ship
+as separate Go modules. Mock:
+[`deepgram/smithy-mock-go-sdk-transport-sagemaker`](https://github.com/deepgram/smithy-mock-go-sdk-transport-sagemaker).
+See [ADR-0004 in deepgram/spec](https://github.com/deepgram/spec/blob/main/docs/decisions/0004-transport-pluggable-architecture.md#transport-weight-axis)
+for the rationale.
 
 ## Two-layer SDK pattern
 
