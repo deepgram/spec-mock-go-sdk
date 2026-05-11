@@ -1,4 +1,4 @@
-# smithy-mock-go-sdk
+# spec-mock-go-sdk
 
 Mock fan-out target for [`deepgram/spec`](https://github.com/deepgram/spec).
 
@@ -21,7 +21,7 @@ go.mod                     Go module definition
 
 Heavy transports (SageMaker today, future Vertex / Triton / Azure ML) ship
 as separate Go modules. Mock:
-[`deepgram/smithy-mock-go-sdk-transport-sagemaker`](https://github.com/deepgram/smithy-mock-go-sdk-transport-sagemaker).
+[`deepgram/spec-mock-go-sdk-transport-sagemaker`](https://github.com/deepgram/spec-mock-go-sdk-transport-sagemaker).
 See [ADR-0004 in deepgram/spec](https://github.com/deepgram/spec/blob/main/docs/decisions/0004-transport-pluggable-architecture.md#transport-weight-axis)
 for the rationale.
 

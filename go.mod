@@ -1,3 +1,3 @@
-module github.com/deepgram/smithy-mock-go-sdk
+module github.com/deepgram/spec-mock-go-sdk
 
 go 1.22

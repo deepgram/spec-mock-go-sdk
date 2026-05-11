@@ -8,7 +8,7 @@ package websocket
 import (
 	"context"
 
-	deepgram "github.com/deepgram/smithy-mock-go-sdk"
+	deepgram "github.com/deepgram/spec-mock-go-sdk"
 )
 
 // Transport is the WebSocket implementation of deepgram.Transport.
