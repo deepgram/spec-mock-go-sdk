@@ -3,6 +3,10 @@
 
 package types
 
+import (
+	"github.com/deepgram/spec-mock-go-sdk/api/document"
+)
+
 type Entity struct {
 	
 	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
@@ -767,6 +771,468 @@ type TranscribeOutput struct {
 	// Populated on synchronous responses. Absent on the immediate response when
 	// ?callback= is set; appears in the callback delivery instead.
 	Results *ResponseResults `json:"results,omitempty"`
+	
+	noSmithyDocumentSerde
+}
+
+// Audio frame variant. Smithy @streaming union members must be structures; the
+// actual wire form is a binary WS frame whose body is data .
+//
+// @eventPayload marks the field as the binary payload of the event-stream frame
+// (per AWS event-stream conventions); our custom WebSocket protocol generator
+// interprets this as "send the bytes as a WS binary frame."
+type AudioFrame struct {
+	
+	// Raw audio bytes (PCM, opus, etc., per the session's encoding query parameter).
+	// Sent as the WS binary frame body, NOT JSON-encoded.
+	//
+	// This member is required.
+	Data []byte `json:"data"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"CloseStream"} .
+type CloseStream struct {
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"Configure","features":{...}} .
+//
+// features is an open key→value map. Values are JSON documents — the allowed keys
+// evolve and aren't worth modelling exhaustively in the schema. Use the developer
+// docs for the canonical list.
+type Configure struct {
+	
+	// Map of feature name → arbitrary JSON value.
+	//
+	// This member is required.
+	Features map[string]document.Interface `json:"features"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"Finalize","channel":<int|null>} .
+//
+// channel is optional — when omitted, finalize fires for every channel. On a
+// single-channel session, omit it.
+type Finalize struct {
+	
+	// 0-indexed channel to finalize. Omit for "all channels".
+	Channel *int32 `json:"channel,omitempty"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"KeepAlive"} .
+type KeepAlive struct {
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"Sync","id":<u64>} .
+type ClientSync struct {
+	
+	// This member is required.
+	Id *int64 `json:"id"`
+	
+	noSmithyDocumentSerde
+}
+
+// Bidirectional WS stream from client to server. Audio bytes ride as binary
+// frames ( audio variant); control messages ride as JSON text frames whose type
+// field discriminates the variant.
+//
+// The following types satisfy this interface:
+//  ClientStreamMemberAudio
+//  ClientStreamMemberCloseStream
+//  ClientStreamMemberConfigure
+//  ClientStreamMemberFinalize
+//  ClientStreamMemberKeepAlive
+//  ClientStreamMemberSync
+type ClientStream interface {
+	isClientStream()
+}
+
+// Raw audio bytes. Sent as a binary WebSocket frame, NOT as JSON. Stem forwards
+// these to impeller/transcoder. An empty binary frame is treated equivalent to a
+// closeStream JSON message.
+type ClientStreamMemberAudio struct {
+	Value AudioFrame
+	
+	noSmithyDocumentSerde
+}
+func (*ClientStreamMemberAudio) isClientStream() {}
+// Graceful end-of-audio marker. Server flushes pending results and emits a final
+// Metadata message before closing.
+type ClientStreamMemberCloseStream struct {
+	Value CloseStream
+	
+	noSmithyDocumentSerde
+}
+func (*ClientStreamMemberCloseStream) isClientStream() {}
+// Update post-processor / feature configuration mid-session.
+type ClientStreamMemberConfigure struct {
+	Value Configure
+	
+	noSmithyDocumentSerde
+}
+func (*ClientStreamMemberConfigure) isClientStream() {}
+// Force the server to emit a final transcript for the open utterance.
+type ClientStreamMemberFinalize struct {
+	Value Finalize
+	
+	noSmithyDocumentSerde
+}
+func (*ClientStreamMemberFinalize) isClientStream() {}
+// Resets client + driver inactivity timers. Send periodically when the client has
+// no audio to transmit but wants to keep the session alive.
+type ClientStreamMemberKeepAlive struct {
+	Value KeepAlive
+	
+	noSmithyDocumentSerde
+}
+func (*ClientStreamMemberKeepAlive) isClientStream() {}
+// Echo-back marker for deterministic test pipelines.
+type ClientStreamMemberSync struct {
+	Value ClientSync
+	
+	noSmithyDocumentSerde
+}
+func (*ClientStreamMemberSync) isClientStream() {}
+
+// In-message metadata. Distinct from the per-session WsMetadata — this describes
+// only this Results frame. Inlined per LISTEN-013(was flatten in Rust).
+type InterimMetadata struct {
+	
+	Extra map[string]string `json:"extra,omitempty"`
+	
+	ModelInfo *ModelInfo `json:"model_info,omitempty"`
+	
+	ModelUuid *string `json:"model_uuid,omitempty"`
+	
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	RequestId *string `json:"request_id,omitempty"`
+	
+	noSmithyDocumentSerde
+}
+
+type StreamInput struct {
+	
+	Channels *int32 `json:"-"`
+	
+	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
+	// Mutually exclusive with diarize_model .
+	Diarize *bool `json:"-"`
+	
+	DiarizeModel *string `json:"-"`
+	
+	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	DiarizeVersion *string `json:"-"`
+	
+	Encoding *string `json:"-"`
+	
+	Endpointing *int32 `json:"-"`
+	
+	FillerWords *bool `json:"-"`
+	
+	InterimResults *bool `json:"-"`
+	
+	Keyterm []string `json:"-"`
+	
+	Keywords []string `json:"-"`
+	
+	// BCP-47 language code. Examples: en , en-US , es , pt-BR .
+	Language *string `json:"-"`
+	
+	// Deprecated: Prefer mip_opt_out . log_data is recognized for backward
+	// compatibility.
+	LogData *bool `json:"-"`
+	
+	MipOptOut *bool `json:"-"`
+	
+	// A model identifier (e.g. nova-3-general , nova-2-medical ). Free-form string;
+	// the set evolves. Documented in
+	// https://developers.deepgram.com/docs/models-languages-overview.
+	Model *string `json:"-"`
+	
+	Multichannel *bool `json:"-"`
+	
+	NoDelay *bool `json:"-"`
+	
+	ProfanityFilter *bool `json:"-"`
+	
+	Punctuate *bool `json:"-"`
+	
+	Redact []string `json:"-"`
+	
+	SampleRate *int32 `json:"-"`
+	
+	Search []string `json:"-"`
+	
+	SecWebSocketProtocol *string `json:"-"`
+	
+	SmartFormat *bool `json:"-"`
+	
+	Tag []string `json:"-"`
+	
+	UtteranceEndMs *int32 `json:"-"`
+	
+	VadEvents *bool `json:"-"`
+	
+	// Deprecated: Use endpointing instead. Rejected when endpointing is also set as
+	// an integer.
+	VadTurnoff *int32 `json:"-"`
+	
+	Version *string `json:"-"`
+	
+	noSmithyDocumentSerde
+}
+
+// Mid-stream error. See LISTEN-006 for the unusual flat-on-wire representation:
+//
+//     { "type": "Error", "variant": "Closing", "code": "NET-0001", "description":
+//     "..." }
+//
+//     { "type": "Error", "variant": "SchemaError", "description": "...", "message":
+//     "..." }
+//
+// We model this as a single flat structure with a discriminator member — NOT as a
+// nested union — because the wire is flat. Codegen handles the branching.
+type WsError struct {
+	
+	// Discriminator between the two error shapes.
+	//
+	// This member is required.
+	Variant WsErrorVariant `json:"variant"`
+	
+	// Stable error code. Present when variant=Closing . Documented values: NET-0001
+	// (ClientTimeout), NET-0000 (DriverTimeout), DATA-0000 (CodecError).
+	Code *string `json:"code,omitempty"`
+	
+	// Human-readable description. Present in both variants.
+	Description *string `json:"description,omitempty"`
+	
+	// Additional context. Present when variant=SchemaError — the offending message
+	// text.
+	Message *string `json:"message,omitempty"`
+	
+	noSmithyDocumentSerde
+}
+
+// Final per-session metadata. Always emitted at session end before the close
+// frame.
+type WsMetadata struct {
+	
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+	
+	// Number of audio channels.
+	Channels *int32 `json:"channels,omitempty"`
+	
+	// Total number of audio samples processed.
+	Created *string `json:"created,omitempty"`
+	
+	// Wall-clock-relative duration of audio processed in seconds.
+	Duration *float32 `json:"duration,omitempty"`
+	
+	// Free-form integration data echoed back from the request.
+	Extra map[string]string `json:"extra,omitempty"`
+	
+	// Models that produced the transcript.
+	ModelInfo map[string]ModelInfo `json:"model_info,omitempty"`
+	
+	// SHA of the messages crate used to encode this response.
+	Sha256 *string `json:"sha256,omitempty"`
+	
+	// Always serialized as the literal string "deprecated" . Retained for legacy
+	// clients with strict-schema deserializers. Use request_id .
+	//
+	// Deprecated: Field is always the literal string "deprecated". Use request_id for
+	// debug correlation.
+	TransactionKey *string `json:"transaction_key,omitempty"`
+	
+	// Server-emitted warnings (deprecation notices, fallbacks).
+	Warnings []Warning `json:"warnings,omitempty"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"Results", ...} . The body of the message is the StreamingResponse shape
+// inlined at the top level of the JSON object.
+type StreamingResponse struct {
+	
+	// One channel of a transcript. Multichannel responses contain one of these per
+	// audio channel; mono contains exactly one. REST ResponseResults carries a list
+	// of these; WSS StreamingResponse carries exactly one (selected by channel_index ).
+	//
+	// This member is required.
+	Channel *Channel `json:"channel"`
+	
+	// [index, total] — which of the multichannel set this result belongs to.
+	//
+	// This member is required.
+	ChannelIndex []int16 `json:"channel_index"`
+	
+	// Duration of the audio segment this result covers, in seconds.
+	//
+	// This member is required.
+	Duration *float32 `json:"duration"`
+	
+	// true if this Results message was emitted in response to a client Finalize
+	// message; false for normal endpointing.
+	//
+	// This member is required.
+	FromFinalize *bool `json:"from_finalize"`
+	
+	// true if this is the final result for the segment; false for interim.
+	//
+	// This member is required.
+	IsFinal *bool `json:"is_final"`
+	
+	// In-message metadata. Distinct from the per-session WsMetadata — this describes
+	// only this Results frame. Inlined per LISTEN-013(was flatten in Rust).
+	//
+	// This member is required.
+	Metadata *InterimMetadata `json:"metadata"`
+	
+	// Offset from session start of the start of this segment, in seconds.
+	//
+	// This member is required.
+	Start *float32 `json:"start"`
+	
+	// Detected entities (only when ?detect_entities=true ).
+	Entities []Entity `json:"entities,omitempty"`
+	
+	// true if the segment has finalized due to speech end (e.g. a long pause); false
+	// if it's a periodic interim update; absent if the server made no determination.
+	// See LISTEN-008.
+	SpeechFinal *bool `json:"speech_final,omitempty"`
+	
+	// Caller-supplied tag echoed back. Tags via ?tag=... query parameter.
+	Tag *string `json:"tag,omitempty"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"SpeechStarted","channel":[i,t],"timestamp":<float>} .
+type SpeechStarted struct {
+	
+	// [index, total] pair that Deepgram uses to identify a channel in a multichannel
+	// transcript. On the wire today this is a 2-element JSON array (e.g. [0, 1] ). See
+	// divergence-log entry LISTEN-007 for the rationale and the long-term cleanup
+	// target.
+	//
+	// This member is required.
+	Channel []int16 `json:"channel"`
+	
+	// A relative timestamp in seconds from the start of the audio session. Always
+	// non-negative. Used for word start , utterance offsets, etc.
+	//
+	// This member is required.
+	Timestamp *float32 `json:"timestamp"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"Sync","id":<u64>} .
+type ServerSync struct {
+	
+	// This member is required.
+	Id *int64 `json:"id"`
+	
+	noSmithyDocumentSerde
+}
+
+// {"type":"UtteranceEnd","channel":[i,t],"last_word_end":<float>} .
+type UtteranceEnd struct {
+	
+	// [index, total] pair that Deepgram uses to identify a channel in a multichannel
+	// transcript. On the wire today this is a 2-element JSON array (e.g. [0, 1] ). See
+	// divergence-log entry LISTEN-007 for the rationale and the long-term cleanup
+	// target.
+	//
+	// This member is required.
+	Channel []int16 `json:"channel"`
+	
+	// A relative timestamp in seconds from the start of the audio session. Always
+	// non-negative. Used for word start , utterance offsets, etc.
+	//
+	// This member is required.
+	LastWordEnd *float32 `json:"last_word_end"`
+	
+	noSmithyDocumentSerde
+}
+
+// Server → Client message stream. All variants are JSON text frames.
+//
+// The server NEVER sends binary frames on this direction.
+//
+// The following types satisfy this interface:
+//  ServerStreamMemberError
+//  ServerStreamMemberMetadata
+//  ServerStreamMemberResults
+//  ServerStreamMemberSpeechStarted
+//  ServerStreamMemberSync
+//  ServerStreamMemberUtteranceEnd
+type ServerStream interface {
+	isServerStream()
+}
+
+// Error condition. May be sent mid-stream (e.g. malformed client JSON) or
+// immediately preceding a close frame (when ?debug=true ).
+type ServerStreamMemberError struct {
+	Value WsError
+	
+	noSmithyDocumentSerde
+}
+func (*ServerStreamMemberError) isServerStream() {}
+// Per-session metadata. Always emitted at session end.
+type ServerStreamMemberMetadata struct {
+	Value WsMetadata
+	
+	noSmithyDocumentSerde
+}
+func (*ServerStreamMemberMetadata) isServerStream() {}
+// Interim or final transcription result.
+type ServerStreamMemberResults struct {
+	Value StreamingResponse
+	
+	noSmithyDocumentSerde
+}
+func (*ServerStreamMemberResults) isServerStream() {}
+// Speech-detected signal (only when ?vad_events=true ).
+type ServerStreamMemberSpeechStarted struct {
+	Value SpeechStarted
+	
+	noSmithyDocumentSerde
+}
+func (*ServerStreamMemberSpeechStarted) isServerStream() {}
+// Echo of a ClientSync message. Used to align test pipelines.
+type ServerStreamMemberSync struct {
+	Value ServerSync
+	
+	noSmithyDocumentSerde
+}
+func (*ServerStreamMemberSync) isServerStream() {}
+// VAD-driven utterance boundary signal.
+type ServerStreamMemberUtteranceEnd struct {
+	Value UtteranceEnd
+	
+	noSmithyDocumentSerde
+}
+func (*ServerStreamMemberUtteranceEnd) isServerStream() {}
+
+type StreamOutput struct {
+	
+	SecWebSocketProtocol *string `json:"-"`
 	
 	noSmithyDocumentSerde
 }

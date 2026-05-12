@@ -65,3 +65,25 @@ func (CallbackMethod) Values() []CallbackMethod {
 		"PUT",
 	}
 }
+
+type WsErrorVariant string
+
+// Enum values for WsErrorVariant
+const (
+	// Session is being closed by the server. Will be followed by a WS close frame.
+	// Only emitted when ?debug=true .
+	WsErrorVariantClosing WsErrorVariant = "Closing"
+	// Client sent malformed JSON. Server keeps the session open.
+	WsErrorVariantSchemaError WsErrorVariant = "SchemaError"
+)
+
+// Values returns all known values for WsErrorVariant. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (WsErrorVariant) Values() []WsErrorVariant {
+	return []WsErrorVariant{
+		"Closing",
+		"SchemaError",
+	}
+}

@@ -328,3 +328,93 @@ func (e *UnsupportedMediaTypeError) ErrorCode() string {
 }
 func (e *UnsupportedMediaTypeError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
 
+// Server has not received audio frames within the client timeout. WS close code
+// 1011 . err_code: NET-0001 .
+type ClientTimeoutError struct {
+	Message *string
+	
+	ErrorCodeOverride *string
+	
+	Code *string `json:"code"`
+	Description *string `json:"description"`
+	
+	noSmithyDocumentSerde
+}
+
+func (e *ClientTimeoutError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *ClientTimeoutError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *ClientTimeoutError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "ClientTimeoutError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *ClientTimeoutError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
+
+// Audio bytes could not be decoded by the transcoder. WS close code 1008 .
+// err_code: DATA-0000 .
+type CodecError struct {
+	Message *string
+	
+	ErrorCodeOverride *string
+	
+	Code *string `json:"code"`
+	Description *string `json:"description"`
+	
+	noSmithyDocumentSerde
+}
+
+func (e *CodecError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *CodecError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *CodecError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "CodecError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *CodecError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
+
+// Server has not received responses from the inference engine within the driver
+// timeout. WS close code 1011 . err_code: NET-0000 .
+type DriverTimeoutError struct {
+	Message *string
+	
+	ErrorCodeOverride *string
+	
+	Code *string `json:"code"`
+	Description *string `json:"description"`
+	
+	noSmithyDocumentSerde
+}
+
+func (e *DriverTimeoutError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *DriverTimeoutError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *DriverTimeoutError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "DriverTimeoutError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *DriverTimeoutError) ErrorFault() smithy.ErrorFault { return smithy.FaultServer }
+
