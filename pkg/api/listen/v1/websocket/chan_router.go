@@ -176,13 +176,13 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 
 	switch m := msg.(type) {
 	case *spectypes.ServerStreamMemberResults:
-		err = r.fanoutMessage(&m.Value)
+		err = r.fanoutMessage(interfaces.FromStreamingResponse(&m.Value))
 	case *spectypes.ServerStreamMemberMetadata:
-		err = r.fanoutMetadata(&m.Value)
+		err = r.fanoutMetadata(interfaces.FromWsMetadata(&m.Value))
 	case *spectypes.ServerStreamMemberSpeechStarted:
-		err = r.fanoutSpeechStarted(&m.Value)
+		err = r.fanoutSpeechStarted(interfaces.FromSpeechStarted(&m.Value))
 	case *spectypes.ServerStreamMemberUtteranceEnd:
-		err = r.fanoutUtteranceEnd(&m.Value)
+		err = r.fanoutUtteranceEnd(interfaces.FromUtteranceEnd(&m.Value))
 	case *spectypes.ServerStreamMemberError:
 		err = r.fanoutError(wsErrorToSDKError(&m.Value))
 	case *spectypes.ServerStreamMemberSync:

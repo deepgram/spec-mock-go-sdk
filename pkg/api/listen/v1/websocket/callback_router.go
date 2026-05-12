@@ -98,13 +98,13 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 
 	switch m := msg.(type) {
 	case *spectypes.ServerStreamMemberResults:
-		err = r.callback.Message(&m.Value)
+		err = r.callback.Message(interfaces.FromStreamingResponse(&m.Value))
 	case *spectypes.ServerStreamMemberMetadata:
-		err = r.callback.Metadata(&m.Value)
+		err = r.callback.Metadata(interfaces.FromWsMetadata(&m.Value))
 	case *spectypes.ServerStreamMemberSpeechStarted:
-		err = r.callback.SpeechStarted(&m.Value)
+		err = r.callback.SpeechStarted(interfaces.FromSpeechStarted(&m.Value))
 	case *spectypes.ServerStreamMemberUtteranceEnd:
-		err = r.callback.UtteranceEnd(&m.Value)
+		err = r.callback.UtteranceEnd(interfaces.FromUtteranceEnd(&m.Value))
 	case *spectypes.ServerStreamMemberError:
 		err = r.callback.Error(wsErrorToSDKError(&m.Value))
 	case *spectypes.ServerStreamMemberSync:

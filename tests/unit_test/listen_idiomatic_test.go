@@ -5,6 +5,7 @@ package deepgramtest
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"strings"
 	"testing"
@@ -74,26 +75,26 @@ func Test_FromURL_HappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FromURL err: %v", err)
 	}
-	if res.RequestId == nil || *res.RequestId != "abc-123" {
-		t.Fatalf("RequestId = %v, want abc-123", res.RequestId)
+	if res.RequestID != "abc-123" {
+		t.Fatalf("RequestId = %v, want abc-123", res.RequestID)
 	}
 	if res.Metadata == nil {
 		t.Fatal("Metadata nil")
 	}
-	if res.Metadata.Duration == nil || *res.Metadata.Duration != 3.14 {
+	if math.Abs(res.Metadata.Duration - 3.14) > 0.001 {
 		t.Fatalf("Duration = %v, want 3.14", res.Metadata.Duration)
 	}
 	if res.Results == nil || len(res.Results.Channels) != 1 {
 		t.Fatalf("Channels = %d, want 1", len(res.Results.Channels))
 	}
 	alt := res.Results.Channels[0].Alternatives[0]
-	if alt.Transcript == nil || *alt.Transcript != "hello world" {
+	if alt.Transcript != "hello world" {
 		t.Fatalf("Transcript = %v, want 'hello world'", alt.Transcript)
 	}
 	if len(alt.Words) != 2 {
 		t.Fatalf("len(Words) = %d, want 2", len(alt.Words))
 	}
-	if alt.Words[0].Word == nil || *alt.Words[0].Word != "hello" {
+	if alt.Words[0].Word != "hello" {
 		t.Fatalf("Words[0].Word = %v, want 'hello'", alt.Words[0].Word)
 	}
 }
@@ -117,8 +118,8 @@ func Test_FromStream_HappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FromStream err: %v", err)
 	}
-	if *res.RequestId != "stream-456" {
-		t.Fatalf("RequestId = %s, want stream-456", *res.RequestId)
+	if res.RequestID != "stream-456" {
+		t.Fatalf("RequestId = %s, want stream-456", res.RequestID)
 	}
 }
 
@@ -154,8 +155,8 @@ func Test_Diarization_SpeakerField(t *testing.T) {
 	if words[1].Speaker == nil || *words[1].Speaker != 1 {
 		t.Fatalf("Words[1].Speaker = %v, want 1", words[1].Speaker)
 	}
-	if words[1].SpeakerConfidence == nil || *words[1].SpeakerConfidence != 0.92 {
-		t.Fatalf("Words[1].SpeakerConfidence = %v, want 0.92", words[1].SpeakerConfidence)
+	if words[1].SpeakerConfidence == nil || math.Abs(*words[1].SpeakerConfidence - 0.92) > 0.001 {
+		t.Fatalf("Words[1].SpeakerConfidence = %v, want 0.92", *words[1].SpeakerConfidence)
 	}
 }
 
@@ -181,10 +182,10 @@ func Test_Multichannel_Response(t *testing.T) {
 	if len(res.Results.Channels) != 2 {
 		t.Fatalf("Channels = %d, want 2", len(res.Results.Channels))
 	}
-	if *res.Results.Channels[0].Alternatives[0].Transcript != "ch0 audio" {
+	if res.Results.Channels[0].Alternatives[0].Transcript != "ch0 audio" {
 		t.Fatal("Channel 0 transcript wrong")
 	}
-	if *res.Results.Channels[1].Alternatives[0].Transcript != "ch1 audio" {
+	if res.Results.Channels[1].Alternatives[0].Transcript != "ch1 audio" {
 		t.Fatal("Channel 1 transcript wrong")
 	}
 }
@@ -235,8 +236,8 @@ func Test_Paragraphs_Response(t *testing.T) {
 	if len(p.Sentences) != 2 {
 		t.Fatalf("Sentences = %d, want 2", len(p.Sentences))
 	}
-	if *p.Sentences[0].Text != "hello." {
-		t.Fatalf("Sentence[0].Text = %v, want 'hello.'", *p.Sentences[0].Text)
+	if p.Sentences[0].Text != "hello." {
+		t.Fatalf("Sentence[0].Text = %v, want 'hello.'", p.Sentences[0].Text)
 	}
 	if p.Speaker == nil || *p.Speaker != 0 {
 		t.Fatalf("Paragraph.Speaker = %v, want 0", p.Speaker)
@@ -273,15 +274,15 @@ func Test_Entities_Response(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 	entities := res.Results.Channels[0].Alternatives[0].Entities
-	if len(entities) != 1 {
-		t.Fatalf("len(Entities) = %d, want 1", len(entities))
+	if entities == nil || len(*entities) != 1 {
+		t.Fatalf("len(Entities) = %d, want 1", len(*entities))
 	}
-	e := entities[0]
-	if *e.Label != "LOCATION" || *e.Value != "Paris" {
-		t.Fatalf("Entity = (%s, %s), want (LOCATION, Paris)", *e.Label, *e.Value)
+	e := (*entities)[0]
+	if e.Label != "LOCATION" || e.Value != "Paris" {
+		t.Fatalf("Entity = (%s, %s), want (LOCATION, Paris)", e.Label, e.Value)
 	}
-	if *e.StartWord != 3 || *e.EndWord != 4 {
-		t.Fatalf("Entity word range = (%d, %d), want (3, 4)", *e.StartWord, *e.EndWord)
+	if e.StartWord != 3 || e.EndWord != 4 {
+		t.Fatalf("Entity word range = (%v, %v), want (3, 4)", e.StartWord, e.EndWord)
 	}
 }
 
@@ -314,13 +315,13 @@ func Test_LanguageDetection_Response(t *testing.T) {
 		t.Fatalf("err: %v", err)
 	}
 	ch := res.Results.Channels[0]
-	if ch.DetectedLanguage == nil || *ch.DetectedLanguage != "fr" {
+	if ch.DetectedLanguage != "fr" {
 		t.Fatalf("DetectedLanguage = %v, want 'fr'", ch.DetectedLanguage)
 	}
-	if ch.LanguageConfidence == nil || *ch.LanguageConfidence != 0.98 {
+	if math.Abs(ch.LanguageConfidence - 0.98) > 0.001 {
 		t.Fatalf("LanguageConfidence = %v, want 0.98", ch.LanguageConfidence)
 	}
-	if ch.Alternatives[0].Words[0].Language == nil || *ch.Alternatives[0].Words[0].Language != "fr" {
+	if ch.Alternatives[0].Words[0].Language != "fr" {
 		t.Fatalf("Words[0].Language = %v, want 'fr'", ch.Alternatives[0].Words[0].Language)
 	}
 }
