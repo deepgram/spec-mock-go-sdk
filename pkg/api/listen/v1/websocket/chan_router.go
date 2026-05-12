@@ -12,7 +12,10 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
+	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	pkginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
 )
 
 // NewWithDefault creates a ChanRouter with the default callback handler
@@ -152,91 +155,6 @@ func (r *ChanRouter) processGeneric(msgType string, byMsg []byte, action func(da
 	return err
 }
 
-func (r *ChanRouter) processMessage(byMsg []byte) error {
-	action := func(byMsg []byte) error {
-		var msg interfaces.MessageResponse
-		if err := json.Unmarshal(byMsg, &msg); err != nil {
-			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
-			return err
-		}
-
-		for _, ch := range r.messageChan {
-			*ch <- &msg
-		}
-		return nil
-	}
-
-	return r.processGeneric(string(interfaces.TypeMessageResponse), byMsg, action)
-}
-
-func (r *ChanRouter) processMetadata(byMsg []byte) error {
-	action := func(data []byte) error {
-		var msg interfaces.MetadataResponse
-		if err := json.Unmarshal(byMsg, &msg); err != nil {
-			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
-			return err
-		}
-
-		for _, ch := range r.metadataChan {
-			*ch <- &msg
-		}
-		return nil
-	}
-
-	return r.processGeneric(string(interfaces.TypeMetadataResponse), byMsg, action)
-}
-
-func (r *ChanRouter) processSpeechStartedResponse(byMsg []byte) error {
-	action := func(data []byte) error {
-		var msg interfaces.SpeechStartedResponse
-		if err := json.Unmarshal(byMsg, &msg); err != nil {
-			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
-			return err
-		}
-
-		for _, ch := range r.speechStartedChan {
-			*ch <- &msg
-		}
-		return nil
-	}
-
-	return r.processGeneric(string(interfaces.TypeSpeechStartedResponse), byMsg, action)
-}
-
-func (r *ChanRouter) processUtteranceEndResponse(byMsg []byte) error {
-	action := func(data []byte) error {
-		var msg interfaces.UtteranceEndResponse
-		if err := json.Unmarshal(data, &msg); err != nil {
-			klog.V(1).Infof("json.Unmarshal(UtteranceEndResponse) failed. Err: %v\n", err)
-			return err
-		}
-
-		for _, ch := range r.utteranceEndChan {
-			*ch <- &msg
-		}
-		return nil
-	}
-
-	return r.processGeneric(string(interfaces.TypeUtteranceEndResponse), byMsg, action)
-}
-
-func (r *ChanRouter) processErrorResponse(byMsg []byte) error {
-	action := func(data []byte) error {
-		var msg interfaces.ErrorResponse
-		if err := json.Unmarshal(byMsg, &msg); err != nil {
-			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
-			return err
-		}
-
-		for _, ch := range r.errorChan {
-			*ch <- &msg
-		}
-		return nil
-	}
-
-	return r.processGeneric(string(interfaces.TypeErrorResponse), byMsg, action)
-}
-
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -245,36 +163,102 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		klog.V(5).Infof("Raw Message:\n%s\n", string(byMsg))
 	}
 
-	var mt interfaces.MessageType
-	if err := json.Unmarshal(byMsg, &mt); err != nil {
-		klog.V(1).Infof("json.Unmarshal(MessageType) failed. Err: %v\n", err)
+	// Generated dispatcher: read the `type` discriminator and route to the
+	// matching ServerStream variant. Replaces the legacy MessageType peek +
+	// switch + per-method json.Unmarshal pattern with one call that returns
+	// the already-parsed typed variant.
+	msg, err := ws.UnmarshalServerStream(byMsg)
+	if err != nil {
+		klog.V(1).Infof("UnmarshalServerStream failed. Err: %v\n", err)
 		klog.V(6).Infof("router.Message LEAVE\n")
-		return err
+		return r.UnhandledMessage(byMsg)
 	}
 
-	var err error
-	switch interfaces.TypeResponse(mt.Type) {
-	case interfaces.TypeMessageResponse:
-		err = r.processMessage(byMsg)
-	case interfaces.TypeMetadataResponse:
-		err = r.processMetadata(byMsg)
-	case interfaces.TypeSpeechStartedResponse:
-		err = r.processSpeechStartedResponse(byMsg)
-	case interfaces.TypeUtteranceEndResponse:
-		err = r.processUtteranceEndResponse(byMsg)
-	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
-		err = r.processErrorResponse(byMsg)
+	switch m := msg.(type) {
+	case *spectypes.ServerStreamMemberResults:
+		err = r.fanoutMessage(&m.Value)
+	case *spectypes.ServerStreamMemberMetadata:
+		err = r.fanoutMetadata(&m.Value)
+	case *spectypes.ServerStreamMemberSpeechStarted:
+		err = r.fanoutSpeechStarted(&m.Value)
+	case *spectypes.ServerStreamMemberUtteranceEnd:
+		err = r.fanoutUtteranceEnd(&m.Value)
+	case *spectypes.ServerStreamMemberError:
+		err = r.fanoutError(wsErrorToSDKError(&m.Value))
+	case *spectypes.ServerStreamMemberSync:
+		// Sync messages are test-pipeline alignment markers, not
+		// part of the public surface. Ignore.
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}
 
-	if err == nil {
-		klog.V(6).Infof("MessageType(%s) after - Result: succeeded\n", mt.Type)
-	} else {
-		klog.V(5).Infof("MessageType(%s) after - Result: %v\n", mt.Type, err)
+	if err != nil {
+		klog.V(5).Infof("router.Message dispatch failed: %v\n", err)
 	}
 	klog.V(6).Infof("router.Message LEAVE\n")
 	return err
+}
+
+// fanoutMessage / fanoutMetadata / etc. are tiny per-variant fan-out
+// helpers that replace the legacy processMessage / processMetadata /
+// ... functions. The wire bytes were already parsed by
+// UnmarshalServerStream above; these just hand the typed value to
+// every registered channel.
+
+func (r *ChanRouter) fanoutMessage(m *interfaces.MessageResponse) error {
+	for _, ch := range r.messageChan {
+		*ch <- m
+	}
+	return nil
+}
+
+func (r *ChanRouter) fanoutMetadata(m *interfaces.MetadataResponse) error {
+	for _, ch := range r.metadataChan {
+		*ch <- m
+	}
+	return nil
+}
+
+func (r *ChanRouter) fanoutSpeechStarted(m *interfaces.SpeechStartedResponse) error {
+	for _, ch := range r.speechStartedChan {
+		*ch <- m
+	}
+	return nil
+}
+
+func (r *ChanRouter) fanoutUtteranceEnd(m *interfaces.UtteranceEndResponse) error {
+	for _, ch := range r.utteranceEndChan {
+		*ch <- m
+	}
+	return nil
+}
+
+func (r *ChanRouter) fanoutError(m *interfaces.ErrorResponse) error {
+	for _, ch := range r.errorChan {
+		*ch <- m
+	}
+	return nil
+}
+
+// wsErrorToSDKError converts a generated WsError (the wire-level
+// representation: variant + code + description + message) into the
+// SDK's DeepgramError so existing customer-facing error channels keep
+// their type signature.
+func wsErrorToSDKError(w *spectypes.WsError) *interfaces.ErrorResponse {
+	out := &pkginterfaces.DeepgramError{}
+	if w == nil {
+		return out
+	}
+	if w.Code != nil {
+		out.ErrCode = *w.Code
+	}
+	if w.Description != nil {
+		out.ErrMsg = *w.Description
+	}
+	if w.Message != nil && out.ErrMsg == "" {
+		out.ErrMsg = *w.Message
+	}
+	return out
 }
 
 // Binary handles platform messages and routes them appropriately based on the MessageType

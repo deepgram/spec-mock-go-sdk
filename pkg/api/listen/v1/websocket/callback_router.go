@@ -5,13 +5,14 @@
 package websocketv1
 
 import (
-	"encoding/json"
 	"os"
 	"strings"
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
+	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
 )
 
@@ -77,71 +78,6 @@ func (r *CallbackRouter) processGeneric(msgType string, byMsg []byte, action fun
 	return err
 }
 
-func (r *CallbackRouter) processMessage(byMsg []byte) error {
-	var msg interfaces.MessageResponse
-	if err := json.Unmarshal(byMsg, &msg); err != nil {
-		return err
-	}
-
-	action := func(data *interface{}) error {
-		return r.callback.Message(&msg)
-	}
-
-	return r.processGeneric("MessageResponse", byMsg, action, msg)
-}
-
-func (r *CallbackRouter) processMetadata(byMsg []byte) error {
-	var msg interfaces.MetadataResponse
-	if err := json.Unmarshal(byMsg, &msg); err != nil {
-		return err
-	}
-
-	action := func(data *interface{}) error {
-		return r.callback.Metadata(&msg)
-	}
-
-	return r.processGeneric("MetadataResponse", byMsg, action, msg)
-}
-
-func (r *CallbackRouter) processSpeechStartedResponse(byMsg []byte) error {
-	var msg interfaces.SpeechStartedResponse
-	if err := json.Unmarshal(byMsg, &msg); err != nil {
-		return err
-	}
-
-	action := func(data *interface{}) error {
-		return r.callback.SpeechStarted(&msg)
-	}
-
-	return r.processGeneric("SpeechStartedResponse", byMsg, action, msg)
-}
-
-func (r *CallbackRouter) processUtteranceEndResponse(byMsg []byte) error {
-	var msg interfaces.UtteranceEndResponse
-	if err := json.Unmarshal(byMsg, &msg); err != nil {
-		return err
-	}
-
-	action := func(data *interface{}) error {
-		return r.callback.UtteranceEnd(&msg)
-	}
-
-	return r.processGeneric("UtteranceEndResponse", byMsg, action, msg)
-}
-
-func (r *CallbackRouter) processErrorResponse(byMsg []byte) error {
-	var msg interfaces.ErrorResponse
-	if err := json.Unmarshal(byMsg, &msg); err != nil {
-		return err
-	}
-
-	action := func(data *interface{}) error {
-		return r.callback.Error(&msg)
-	}
-
-	return r.processGeneric("ErrorResponse", byMsg, action, msg)
-}
-
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *CallbackRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -150,33 +86,36 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 		klog.V(5).Infof("Raw Message:\n%s\n", string(byMsg))
 	}
 
-	var mt interfaces.MessageType
-	if err := json.Unmarshal(byMsg, &mt); err != nil {
-		klog.V(1).Infof("json.Unmarshal(MessageType) failed. Err: %v\n", err)
+	// Generated dispatcher: see chan_router.go's Message() for the
+	// architectural rationale. Same approach mirrored here for the
+	// callback-based router.
+	msg, err := ws.UnmarshalServerStream(byMsg)
+	if err != nil {
+		klog.V(1).Infof("UnmarshalServerStream failed. Err: %v\n", err)
 		klog.V(6).Infof("router.Message LEAVE\n")
-		return err
+		return r.UnhandledMessage(byMsg)
 	}
 
-	var err error
-	switch interfaces.TypeResponse(mt.Type) {
-	case interfaces.TypeMessageResponse:
-		err = r.processMessage(byMsg)
-	case interfaces.TypeMetadataResponse:
-		err = r.processMetadata(byMsg)
-	case interfaces.TypeSpeechStartedResponse:
-		err = r.processSpeechStartedResponse(byMsg)
-	case interfaces.TypeUtteranceEndResponse:
-		err = r.processUtteranceEndResponse(byMsg)
-	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
-		err = r.processErrorResponse(byMsg)
+	switch m := msg.(type) {
+	case *spectypes.ServerStreamMemberResults:
+		err = r.callback.Message(&m.Value)
+	case *spectypes.ServerStreamMemberMetadata:
+		err = r.callback.Metadata(&m.Value)
+	case *spectypes.ServerStreamMemberSpeechStarted:
+		err = r.callback.SpeechStarted(&m.Value)
+	case *spectypes.ServerStreamMemberUtteranceEnd:
+		err = r.callback.UtteranceEnd(&m.Value)
+	case *spectypes.ServerStreamMemberError:
+		err = r.callback.Error(wsErrorToSDKError(&m.Value))
+	case *spectypes.ServerStreamMemberSync:
+		// Sync messages are test-pipeline alignment markers, not
+		// part of the public surface. Ignore.
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}
 
-	if err == nil {
-		klog.V(6).Infof("MessageType(%s) after - Result: succeeded\n", mt.Type)
-	} else {
-		klog.V(5).Infof("MessageType(%s) after - Result: %v\n", mt.Type, err)
+	if err != nil {
+		klog.V(5).Infof("router.Message dispatch failed: %v\n", err)
 	}
 	klog.V(6).Infof("router.Message LEAVE\n")
 	return err

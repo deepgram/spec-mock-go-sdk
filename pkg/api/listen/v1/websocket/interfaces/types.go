@@ -1,130 +1,66 @@
-// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
-// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// Copyright Deepgram, Inc. All Rights Reserved.
 // SPDX-License-Identifier: MIT
+
+// This file used to declare hand-written wire types (Word / Alternative /
+// Channel / Metadata / MessageResponse / MetadataResponse / etc.) that
+// duplicated the JSON shapes already defined by deepgram/spec. After the
+// listen WS production-faithful rewire, every wire-related type here is
+// a Go type alias for its generated counterpart in api/types. Connection-
+// level events (OpenResponse / CloseResponse) and the SDK's generic
+// ErrorResponse stay as before because they aren't part of the Smithy-
+// modelled wire surface.
+//
+// Field-level breaking changes vs the original hand-written types:
+//   - all fields are now pointers (smithy-go's convention for nullable
+//     wire members), e.g. `*string` rather than `string`
+//   - floats are `*float32` rather than `float64` to match the Smithy
+//     Float primitive precision
+//
+// Customer code accessing these fields needs to nil-check / dereference;
+// the legacy default handlers and examples in this repo do.
 
 package interfacesv1
 
 import (
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	commoninterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
 )
 
-/***********************************/
-// Request/Input structs
-/***********************************/
+// Option types - configuration carried client-to-server, not part of the
+// wire message surface. Left as-is.
 type LiveOptions interfaces.LiveTranscriptionOptions
+type LiveTranscriptionOptions interfaces.LiveTranscriptionOptions
 
-/***********************************/
-// MessageType is the header to bootstrap you way unmarshalling other messages
-/***********************************/
-/*
-	Example:
-	{
-		"type": "message",
-		"message": {
-			...
-		}
-	}
-*/
+// MessageType is the discriminator-only header used by legacy code to peek
+// at JSON before unmarshalling into a typed struct. Retained for
+// back-compat with code that imports it directly; new code should use
+// api/transport/websocket.UnmarshalServerStream which handles the
+// discriminator automatically.
 type MessageType struct {
 	Type string `json:"type"`
 }
 
-/***********************************/
-// shared/common structs
-/***********************************/
-// Word is a single word in a transcript
-type Word struct {
-	Confidence     float64 `json:"confidence,omitempty"`
-	End            float64 `json:"end,omitempty"`
-	PunctuatedWord string  `json:"punctuated_word,omitempty"`
-	Start          float64 `json:"start,omitempty"`
-	Word           string  `json:"word,omitempty"`
-	Speaker        *int    `json:"speaker,omitempty"`
-	Language       string  `json:"language,omitempty"`
-}
+// Wire shapes - aliased to the spec-generated equivalents in api/types.
+// These four were the only message envelopes the router parses on the
+// inbound side; everything else (Word / Alternative / Channel / etc.) is
+// reachable as fields of these types.
+type MessageResponse = spectypes.StreamingResponse
+type MetadataResponse = spectypes.WsMetadata
+type UtteranceEndResponse = spectypes.UtteranceEnd
+type SpeechStartedResponse = spectypes.SpeechStarted
 
-// Alternative is a single alternative in a transcript
-type Alternative struct {
-	Confidence float64  `json:"confidence,omitempty"`
-	Transcript string   `json:"transcript,omitempty"`
-	Words      []Word   `json:"words,omitempty"`
-	Languages  []string `json:"languages,omitempty"`
-}
+// Transcript-shape aliases for consumers that imported these names
+// directly. All field types match api/types verbatim - they ARE api/types.
+type Word = spectypes.Word
+type Alternative = spectypes.Alternative
+type Channel = spectypes.Channel
+type ModelInfo = spectypes.ModelInfo
+type Metadata = spectypes.WsMetadata
 
-// Channel is a single channel in a transcript
-type Channel struct {
-	Alternatives []Alternative `json:"alternatives,omitempty"`
-}
-
-// ModelInfo is the model information for a transcript
-type ModelInfo struct {
-	Arch    string `json:"arch,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Version string `json:"version,omitempty"`
-}
-
-// Metadata is the metadata for a transcript
-type Metadata struct {
-	Extra     map[string]string `json:"extra,omitempty"`
-	ModelInfo ModelInfo         `json:"model_info,omitempty"`
-	ModelUUID string            `json:"model_uuid,omitempty"`
-	RequestID string            `json:"request_id,omitempty"`
-}
-
-/***********************************/
-// Request/Input structs
-/***********************************/
-type LiveTranscriptionOptions interfaces.LiveTranscriptionOptions
-
-/***********************************/
-// Results from Live Transcription
-/***********************************/
-// OpenResponse is the response from opening the connection
+// Connection-level events - not Smithy-modelled, left as before.
 type OpenResponse = commoninterfaces.OpenResponse
-
-// MessageResponse is the response from a live transcription
-type MessageResponse struct {
-	Channel      Channel  `json:"channel,omitempty"`
-	ChannelIndex []int    `json:"channel_index,omitempty"`
-	Duration     float64  `json:"duration,omitempty"`
-	IsFinal      bool     `json:"is_final,omitempty"`
-	FromFinalize bool     `json:"from_finalize,omitempty"`
-	Metadata     Metadata `json:"metadata,omitempty"`
-	SpeechFinal  bool     `json:"speech_final,omitempty"`
-	Start        float64  `json:"start,omitempty"`
-	Type         string   `json:"type,omitempty"`
-}
-
-// MetadataResponse is the response from a live transcription
-type MetadataResponse struct {
-	Channels       int                  `json:"channels,omitempty"`
-	Created        string               `json:"created,omitempty"`
-	Duration       float64              `json:"duration,omitempty"`
-	ModelInfo      map[string]ModelInfo `json:"model_info,omitempty"`
-	Models         []string             `json:"models,omitempty"`
-	RequestID      string               `json:"request_id,omitempty"`
-	Sha256         string               `json:"sha256,omitempty"`
-	TransactionKey string               `json:"transaction_key,omitempty"`
-	Type           string               `json:"type,omitempty"`
-	Extra          map[string]string    `json:"extra,omitempty"`
-}
-
-// UtteranceEndResponse is the response from a live transcription
-type UtteranceEndResponse struct {
-	Type        string  `json:"type,omitempty"`
-	Channel     []int   `json:"channel,omitempty"`
-	LastWordEnd float64 `json:"last_word_end,omitempty"`
-}
-
-type SpeechStartedResponse struct {
-	Type      string  `json:"type,omitempty"`
-	Channel   []int   `json:"channel,omitempty"`
-	Timestamp float64 `json:"timestamp,omitempty"`
-}
-
-// CloseResponse is the response from closing the connection
 type CloseResponse = commoninterfaces.CloseResponse
 
-// ErrorResponse is the Deepgram specific response error
+// SDK error type - not a ServerStream variant. Left as before.
 type ErrorResponse = interfaces.DeepgramError

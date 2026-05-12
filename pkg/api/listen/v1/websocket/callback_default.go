@@ -79,14 +79,17 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 	}
 
 	// handle the message
-	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
-
-	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
+	if len(mr.Channel.Alternatives) == 0 || mr.Channel.Alternatives[0].Transcript == nil {
 		klog.V(7).Infof("DEEPGRAM - no transcript")
 		return nil
 	}
+	sentence := strings.TrimSpace(*mr.Channel.Alternatives[0].Transcript)
+	if sentence == "" {
+		klog.V(7).Infof("DEEPGRAM - empty transcript")
+		return nil
+	}
 
-	if mr.IsFinal {
+	if mr.IsFinal != nil && *mr.IsFinal {
 		fmt.Printf("\n[MessageResponse] (Final) %s\n", sentence)
 	} else {
 		fmt.Printf("\n[MessageResponse] (Interim) %s\n", sentence)
@@ -115,9 +118,15 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 	}
 
 	// handle the message
-	fmt.Printf("\n\nMetadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
-	fmt.Printf("Metadata.Channels: %d\n", md.Channels)
-	fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
+	if md.RequestId != nil {
+		fmt.Printf("\n\nMetadata.RequestID: %s\n", strings.TrimSpace(*md.RequestId))
+	}
+	if md.Channels != nil {
+		fmt.Printf("Metadata.Channels: %d\n", *md.Channels)
+	}
+	if md.Created != nil {
+		fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(*md.Created))
+	}
 
 	return nil
 }

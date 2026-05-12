@@ -423,14 +423,19 @@ func (c *WSChannel) inspect(byMsg []byte) error {
 func (c *WSChannel) inspectMessage(mr *msginterfaces.MessageResponse) error {
 	klog.V(7).Infof("live.inspectMessage() ENTER\n")
 
-	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
-	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
+	if len(mr.Channel.Alternatives) == 0 || mr.Channel.Alternatives[0].Transcript == nil {
+		klog.V(7).Info("inspectMessage is empty\n")
+		klog.V(7).Infof("live.inspectMessage() LEAVE\n")
+		return nil
+	}
+	sentence := strings.TrimSpace(*mr.Channel.Alternatives[0].Transcript)
+	if sentence == "" {
 		klog.V(7).Info("inspectMessage is empty\n")
 		klog.V(7).Infof("live.inspectMessage() LEAVE\n")
 		return nil
 	}
 
-	if mr.IsFinal {
+	if mr.IsFinal != nil && *mr.IsFinal {
 		klog.V(7).Infof("IsFinal received: %s\n", time.Now().String())
 
 		// doing a write, need to lock

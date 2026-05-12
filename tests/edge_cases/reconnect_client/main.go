@@ -25,17 +25,19 @@ type MyCallback struct {
 
 func (c MyCallback) Message(mr *api.MessageResponse) error {
 	// handle the message
-	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
-
-	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
+	if len(mr.Channel.Alternatives) == 0 || mr.Channel.Alternatives[0].Transcript == nil {
+		return nil
+	}
+	sentence := strings.TrimSpace(*mr.Channel.Alternatives[0].Transcript)
+	if sentence == "" {
 		return nil
 	}
 
-	if mr.IsFinal {
+	if mr.IsFinal != nil && *mr.IsFinal {
 		c.sb.WriteString(sentence)
 		c.sb.WriteString(" ")
 
-		if mr.SpeechFinal {
+		if mr.SpeechFinal != nil && *mr.SpeechFinal {
 			fmt.Printf("[------- Is Final]: %s\n", c.sb.String())
 			c.sb.Reset()
 		}
@@ -55,9 +57,15 @@ func (c MyCallback) Open(ocr *api.OpenResponse) error {
 func (c MyCallback) Metadata(md *api.MetadataResponse) error {
 	// handle the metadata
 	fmt.Printf("\n[Metadata] Received\n")
-	fmt.Printf("Metadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
-	fmt.Printf("Metadata.Channels: %d\n", md.Channels)
-	fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
+	if md.RequestId != nil {
+		fmt.Printf("Metadata.RequestID: %s\n", strings.TrimSpace(*md.RequestId))
+	}
+	if md.Channels != nil {
+		fmt.Printf("Metadata.Channels: %d\n", *md.Channels)
+	}
+	if md.Created != nil {
+		fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(*md.Created))
+	}
 	return nil
 }
 
