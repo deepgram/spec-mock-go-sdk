@@ -22,8 +22,11 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	nethttp "net/http"
+
+	ws "github.com/dvonthenen/websocket"
 
 	types "github.com/deepgram/spec-mock-go-sdk/api/types"
 )
@@ -45,17 +48,20 @@ type Stream[C any, S any] interface {
 }
 
 // OpenStream dials a WebSocket connection at url with the supplied
-// upgrade headers, then returns a Stream that serializes Send
-// calls via marshal and deserializes Recv calls via unmarshal.
-// The marshal closure returns (payload, isBinary, error) so binary
-// frames carrying @binaryFrame union members route to binary
-// WebSocket frames while text members ride JSON text frames.
-//
-// PHASE 3 STATUS: this is a stub. The body is implemented in
-// Phase 5 of the endpoint-agnostic transport migration once the
-// consumer-side facade in pkg/client/listen/v1/websocket migrates
-// off its hand-rolled gorilla/websocket loop. The signature is
-// the contract; callers can already build against it.
+// upgrade headers, then returns a Stream that serializes Send calls
+// via marshal (binary frames for @binaryFrame union members, JSON
+// text frames for everything else) and deserializes Recv calls via
+// unmarshal. Writes are serialized by an internal mutex; reads are
+// expected to be driven by a single goroutine per Stream.
+type wsStream[C any, S any] struct {
+	conn      *ws.Conn
+	marshal   func(C) ([]byte, bool, error)
+	unmarshal func([]byte) (S, error)
+	writeMu   sync.Mutex
+}
+
+// OpenStream dials a WebSocket against url using the supplied
+// upgrade headers, returning a typed bidirectional Stream.
 func OpenStream[C any, S any](
 	ctx context.Context,
 	url string,
@@ -63,13 +69,43 @@ func OpenStream[C any, S any](
 	marshal func(C) ([]byte, bool, error),
 	unmarshal func([]byte) (S, error),
 ) (Stream[C, S], error) {
-	_ = ctx
-	_ = url
-	_ = headers
-	_ = marshal
-	_ = unmarshal
-	return nil, fmt.Errorf(
-		"websocket.OpenStream: not yet wired (phase 5 of endpoint-agnostic transports)")
+	dialer := ws.DefaultDialer
+	conn, _, err := dialer.DialContext(ctx, url, headers)
+	if err != nil {
+		return nil, fmt.Errorf("websocket.OpenStream: dial %s: %w", url, err)
+	}
+	return &wsStream[C, S]{
+		conn:      conn,
+		marshal:   marshal,
+		unmarshal: unmarshal,
+	}, nil
+}
+
+func (s *wsStream[C, S]) Send(msg C) error {
+	data, isBinary, err := s.marshal(msg)
+	if err != nil {
+		return fmt.Errorf("websocket Send: marshal: %w", err)
+	}
+	msgType := ws.TextMessage
+	if isBinary {
+		msgType = ws.BinaryMessage
+	}
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
+	return s.conn.WriteMessage(msgType, data)
+}
+
+func (s *wsStream[C, S]) Recv() (S, error) {
+	var zero S
+	_, data, err := s.conn.ReadMessage()
+	if err != nil {
+		return zero, err
+	}
+	return s.unmarshal(data)
+}
+
+func (s *wsStream[C, S]) Close() error {
+	return s.conn.Close()
 }
 
 // Re-exports. Removed in Phase 6; new code should call api/types directly.
