@@ -26,14 +26,18 @@ import (
 // into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
 // zero-valued facade fields are left as nil pointers on the generated struct so
 // they don't surface in the wire query string. Fields the facade exposes but
-// the spec doesn't model (Alternatives, CustomIntent*, CustomTopic*, Dictation,
-// Numerals, Extra, Replace, UttSplit, Measurements, DetectTopics) are dropped
-// here; if/when they land in the spec the codegen-resident schema will pick
-// them up and this converter expands accordingly.
+// the spec doesn't model (CustomIntent*, CustomTopic*, Dictation, Numerals,
+// Extra, Replace, UttSplit, Measurements, DetectTopics) are dropped here; if/
+// when they land in the spec the codegen-resident schema will pick them up and
+// this converter expands accordingly.
 func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
 		return in
+	}
+	if o.Alternatives != 0 {
+		v := int32(o.Alternatives)
+		in.Alternatives = &v
 	}
 	if o.Callback != "" {
 		v := o.Callback
