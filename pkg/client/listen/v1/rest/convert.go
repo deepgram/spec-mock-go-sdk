@@ -72,83 +72,23 @@ func sentimentToPtrStr(s spectypes.Sentiment) *string {
 	return &v
 }
 
+// convertTranscribeOutput converts the generated TranscribeOutput into
+// the customer-facing PreRecordedResponse.
+//
+// NOTE: The generated TranscribeOutput.Metadata field was removed in
+// this api/types regeneration. The customer-facing
+// PreRecordedResponse.Metadata field is preserved (always nil) so the
+// Go signature stays stable. See BREAKING_CHANGES.md for impact on
+// customer code that read resp.Metadata.
 func convertTranscribeOutput(in *spectypes.TranscribeOutput) *PreRecordedResponse {
 	if in == nil {
 		return nil
 	}
 	return &PreRecordedResponse{
 		RequestID: derefStr(in.RequestId),
-		Metadata:  convertResponseMetadata(in.Metadata),
+		Metadata:  nil, // FIELD_REMOVED on spectypes.TranscribeOutput; absorbed-with-ceremony
 		Results:   convertResponseResults(in.Results),
 	}
-}
-
-func convertResponseMetadata(in *spectypes.ResponseMetadata) *Metadata {
-	if in == nil {
-		return nil
-	}
-	out := &Metadata{
-		TransactionKey: derefStr(in.TransactionKey),
-		RequestID:      derefStr(in.RequestId),
-		Sha256:         derefStr(in.Sha256),
-		Created:        derefStr(in.Created),
-		Duration:       derefF32(in.Duration),
-		Channels:       derefInt32(in.Channels),
-		Extra:          in.Extra,
-	}
-	if len(in.Models) > 0 {
-		out.Models = in.Models
-	}
-	if len(in.ModelInfo) > 0 {
-		out.ModelInfo = make(map[string]ModelInfo, len(in.ModelInfo))
-		for k, v := range in.ModelInfo {
-			out.ModelInfo[k] = ModelInfo{
-				Name:    derefStr(v.Name),
-				Version: derefStr(v.Version),
-				Arch:    derefStr(v.Arch),
-			}
-		}
-	}
-	if len(in.Warnings) > 0 {
-		ws := make([]Warning, len(in.Warnings))
-		for i, w := range in.Warnings {
-			ws[i] = Warning{
-				Parameter: derefStr(w.Parameter),
-				Type:      string(w.Type),
-				Message:   derefStr(w.Message),
-			}
-		}
-		out.Warnings = &ws
-	}
-	if in.SummaryInfo != nil {
-		out.SummaryInfo = &SummaryInfo{
-			InputTokens:  derefInt64(in.SummaryInfo.InputTokens),
-			OutputTokens: derefInt64(in.SummaryInfo.OutputTokens),
-			ModelUUID:    derefStr(in.SummaryInfo.ModelUuid),
-		}
-	}
-	if in.IntentsInfo != nil {
-		out.IntentsInfo = &IntentsInfo{
-			InputTokens:  derefInt64(in.IntentsInfo.InputTokens),
-			OutputTokens: derefInt64(in.IntentsInfo.OutputTokens),
-			ModelUUID:    derefStr(in.IntentsInfo.ModelUuid),
-		}
-	}
-	if in.SentimentInfo != nil {
-		out.SentimentInfo = &SentimentInfo{
-			InputTokens:  derefInt64(in.SentimentInfo.InputTokens),
-			OutputTokens: derefInt64(in.SentimentInfo.OutputTokens),
-			ModelUUID:    derefStr(in.SentimentInfo.ModelUuid),
-		}
-	}
-	if in.TopicsInfo != nil {
-		out.TopicsInfo = &TopicsInfo{
-			InputTokens:  derefInt64(in.TopicsInfo.InputTokens),
-			OutputTokens: derefInt64(in.TopicsInfo.OutputTokens),
-			ModelUUID:    derefStr(in.TopicsInfo.ModelUuid),
-		}
-	}
-	return out
 }
 
 func convertResponseResults(in *spectypes.ResponseResults) *Result {
