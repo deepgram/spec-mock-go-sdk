@@ -129,11 +129,24 @@ jobs:
             --add-label "regen/breaking-unavoidable"
 
       - name: Post absorbed-breaking comment
-        if: steps.report.outputs.absorbed != '0' && steps.report.outputs.absorbed != ''
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          ABSORBED: ${{ steps.report.outputs.absorbed }}
         run: |
           set -euo pipefail
+          title="## \u26a0\ufe0f Absorbed breaking changes"
+          gh api "repos/$REPO/issues/$PR_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$title\")) | .id" 2>/dev/null \
+            | while read -r id; do
+                [[ -n "$id" ]] && gh api -X DELETE "repos/$REPO/issues/comments/$id" >/dev/null 2>&1 || true
+              done
+          if [[ -z "$ABSORBED" || "$ABSORBED" == "0" ]]; then
+            echo "no tier-1 changes this run; old comment (if any) deleted, nothing to post"
+            exit 0
+          fi
           body=$(jq -r '
             "## \u26a0\ufe0f Absorbed breaking changes\n\n" +
             "These changes are tier-1: the facade absorbed them by zero-defaulting the affected customer fields, but the semantic contract has shifted. Reviewer attention required; no hard merge block.\n\n" +
@@ -143,16 +156,27 @@ jobs:
               | join("\n")) +
             "\n\nFull descriptions live in `BREAKING_CHANGES.md` at the repo root."
           ' "${RUNNER_TEMP}/spec-idiomatic-report.json")
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
-            --body "$body"
+          gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
 
       - name: Post unavoidable-breaking comment
-        if: steps.report.outputs.unavoidable != '0' && steps.report.outputs.unavoidable != ''
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          UNAVOIDABLE: ${{ steps.report.outputs.unavoidable }}
         run: |
           set -euo pipefail
+          title="## \ud83d\uded1 Unavoidable breaking changes"
+          gh api "repos/$REPO/issues/$PR_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$title\")) | .id" 2>/dev/null \
+            | while read -r id; do
+                [[ -n "$id" ]] && gh api -X DELETE "repos/$REPO/issues/comments/$id" >/dev/null 2>&1 || true
+              done
+          if [[ -z "$UNAVOIDABLE" || "$UNAVOIDABLE" == "0" ]]; then
+            echo "no tier-2 changes this run; old comment (if any) deleted, nothing to post"
+            exit 0
+          fi
           body=$(jq -r '
             "## \ud83d\uded1 Unavoidable breaking changes\n\n" +
             "These changes are tier-2: the facade cannot absorb them. Customer code WILL break at compile or runtime. The `spec-idiomatic/breaking-acked` status check is failing; a CODEOWNER must apply the `regen/breaking-acked` label after deciding the break is acceptable, which re-runs the check and unblocks merge.\n\n" +
@@ -162,45 +186,17 @@ jobs:
               | join("\n")) +
             "\n\nMigration guidance lives in `BREAKING_CHANGES.md` at the repo root."
           ' "${RUNNER_TEMP}/spec-idiomatic-report.json")
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
-            --body "$body"
-
-      - name: Set spec-idiomatic/breaking-acked status check
-        if: always()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          sha="${{ github.event.pull_request.head.sha }}"
-          unavoidable="${{ steps.report.outputs.unavoidable }}"
-          if [[ -z "$unavoidable" || "$unavoidable" == "0" ]]; then
-            state="success"
-            desc="no unavoidable breaking changes"
-          else
-            labels=$(gh pr view ${{ github.event.pull_request.number }} \
-              --repo ${{ github.repository }} \
-              --json labels --jq '.labels[].name' || echo "")
-            if echo "$labels" | grep -qx "regen/breaking-acked"; then
-              state="success"
-              desc="$unavoidable unavoidable breaking change(s); acked"
-            else
-              state="failure"
-              desc="$unavoidable unavoidable breaking change(s); apply regen/breaking-acked to unblock"
-            fi
-          fi
-          gh api -X POST "repos/${{ github.repository }}/statuses/$sha" \
-            -f state="$state" \
-            -f context="spec-idiomatic/breaking-acked" \
-            -f description="$desc"
+          gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
 
       - name: Commit facade updates
+        id: commit
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
           if [[ -z "$(git status --porcelain pkg/ BREAKING_CHANGES.md 2>/dev/null)" ]]; then
             echo "no facade changes; nothing to commit"
+            echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "spec-idiomatic-bot"
@@ -208,14 +204,55 @@ jobs:
           git add pkg/ BREAKING_CHANGES.md 2>/dev/null || git add pkg/
           git commit -m "chore(facade): regenerate idiomatic layer for api/ changes"
           git push origin "HEAD:$HEAD_REF"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Set spec-idiomatic/breaking-acked status check
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          UNAVOIDABLE: ${{ steps.report.outputs.unavoidable }}
+        run: |
+          set -euo pipefail
+          sha="${{ steps.commit.outputs.head_sha }}"
+          if [[ -z "$sha" ]]; then
+            sha="${{ github.event.pull_request.head.sha }}"
+          fi
+          if [[ -z "$UNAVOIDABLE" || "$UNAVOIDABLE" == "0" ]]; then
+            state="success"
+            desc="no unavoidable breaking changes"
+          else
+            labels=$(gh pr view "$PR_NUM" --repo "$REPO" \
+              --json labels --jq '.labels[].name' || echo "")
+            if echo "$labels" | grep -qx "regen/breaking-acked"; then
+              state="success"
+              desc="$UNAVOIDABLE unavoidable breaking change(s); acked"
+            else
+              state="failure"
+              desc="$UNAVOIDABLE unavoidable breaking change(s); apply regen/breaking-acked to unblock"
+            fi
+          fi
+          gh api -X POST "repos/$REPO/statuses/$sha" \
+            -f state="$state" \
+            -f context="spec-idiomatic/breaking-acked" \
+            -f description="$desc"
 
       - name: Post work-done checklist
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
+          set -euo pipefail
+          title="## spec-idiomatic — work done"
+          gh api "repos/$REPO/issues/$PR_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$title\")) | .id" 2>/dev/null \
+            | while read -r id; do
+                [[ -n "$id" ]] && gh api -X DELETE "repos/$REPO/issues/comments/$id" >/dev/null 2>&1 || true
+              done
+          gh pr comment "$PR_NUM" --repo "$REPO" \
             --body "$(cat <<'EOF'
           ## spec-idiomatic — work done
 
