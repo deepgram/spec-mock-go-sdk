@@ -28,16 +28,25 @@ import (
 // HTTPRoute carries per-operation HTTP binding metadata derived from
 // Smithy @http, @httpQuery, @httpHeader, @httpLabel, @httpPayload
 // traits at codegen time. The QueryFields / HeaderFields / PathParams
-// slices name struct fields on the operation's input type; the
-// PayloadField names the single member (if any) that binds to the
-// request body via @httpPayload.
+// slices pair Go struct field names on the operation's input type
+// with their wire-protocol names; the PayloadField names the single
+// member (if any) that binds to the request body via @httpPayload.
 type HTTPRoute struct {
 	Method       string
 	Path         string
-	QueryFields  []string
-	HeaderFields []string
-	PathParams   []string
+	QueryFields  []FieldBinding
+	HeaderFields []FieldBinding
+	PathParams   []FieldBinding
 	PayloadField string
+}
+
+// FieldBinding links a Go input struct field name to its wire-protocol
+// name. Used by Invoke to translate typed input fields into HTTP
+// query / header / path components named per Smithy @httpQuery /
+// @httpHeader / @httpLabel traits.
+type FieldBinding struct {
+	GoField  string
+	WireName string
 }
 
 // Authenticator applies credentials to an outgoing HTTP request. The
