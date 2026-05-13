@@ -96,3 +96,29 @@ jobs:
           git add pkg/ BREAKING_CHANGES.md 2>/dev/null || git add pkg/
           git commit -m "chore(facade): regenerate idiomatic layer for api/ changes"
           git push origin HEAD:${{ github.head_ref }}
+
+      - name: Post work-done checklist
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$(cat <<'EOF'
+          ## spec-idiomatic — work done
+
+          - Materialised `before/` and `after/` api/ snapshots from PR base SHA vs PR head
+          - Diffed api/ and produced a change plan classifying additive vs breaking shifts
+          - Parsed the pkg/ Go facade into an AST via the shelled-out Go AST helper
+          - Composed the orchestrator prompt from `prompts/system.md` + `prompts/language/go.md` + plan + AST + selected facade files
+          - Invoked claude-opus-4-7 to produce facade edits as a single JSON object
+          - Applied returned edits under `pkg/`, refusing any path containing `..` or escaping the facade root
+          - Wrote `BREAKING_CHANGES.md` for any changes the facade cannot silently absorb
+          - Ran `go build ./...` to verify the edited facade compiles against regenerated `api/`
+          - On build failure, retried up to 3 times with the build error appended to the prompt
+          - Committed and pushed facade updates to this PR branch (no-op if no edits were needed)
+
+          Items above are always run, in order; nothing is conditional on the diff content.
+          See [deepgram/spec-idiomatic](https://github.com/deepgram/spec-idiomatic) for runner internals.
+          EOF
+          )"
