@@ -1,0 +1,33 @@
+# spec-mock-go-sdk
+
+> Go consumer of the Deepgram Smithy spec pipeline. Mock SDK used to validate the agentic regen flow end-to-end. Ships generated wire types in `api/` and an idiomatic Go facade in `pkg/` that absorbs spec wobbles so customer call signatures stay stable. Not the official Deepgram Go SDK — see deepgram-go-sdk for that.
+
+## Architecture
+
+- [AGENTS.md](AGENTS.md): repo layout, edit policy per directory, how a change lands, skill index, substrate philosophy
+- [README.md](README.md): top-level overview, runtime support, contribution guide
+
+## Maintainer skills
+
+- [sdk-codegen-flow](.agents/skills/sdk-codegen-flow/SKILL.md): the four-repo pipeline (spec → spec-codegen-go → spec-mock-go-sdk → spec-idiomatic), what spec-idiomatic does on api/ PRs, when to edit pkg/ directly
+- [sdk-facade-conventions](.agents/skills/sdk-facade-conventions/SKILL.md): Go idioms for editing pkg/ — package layout, import aliases, deref helpers, pointer/value posture, naming idioms, server-stream type switches
+- [sdk-agentic-readiness](.agents/skills/sdk-agentic-readiness/SKILL.md): the five objectives from dx-stack/docs/sdk-agentic-retrieval.md, mapped to Go: Example_* tests, single-concept files, keyword-dense README opener, curated llms.txt
+- [sdk-local-regen](.agents/skills/sdk-local-regen/SKILL.md): running spec-idiomatic on your laptop against a synthetic api/ change without involving CI
+- [sdk-pr-review](.agents/skills/sdk-pr-review/SKILL.md): checklist for verifying an auto-regen PR did the right thing, signs the bot got it wrong, when to push back
+- [sdk-breaking-ceremony](.agents/skills/sdk-breaking-ceremony/SKILL.md): the 3-tier model (absorbed silently / absorbed with ceremony / unavoidable), the labels and status checks each tier triggers, reviewer playbook
+
+## Examples
+
+Examples are populated as `Example_*` functions in `*_test.go` files alongside the source they document. Once they exist, this section will index the canonical example per use case. See [sdk-agentic-readiness](.agents/skills/sdk-agentic-readiness/SKILL.md) for the requirements.
+
+## Related repos
+
+- [deepgram/spec](https://github.com/deepgram/spec): Smithy IDL source of truth
+- [deepgram/spec-codegen-go](https://github.com/deepgram/spec-codegen-go): Java SmithyBuildPlugin that emits api/
+- [deepgram/spec-idiomatic](https://github.com/deepgram/spec-idiomatic): agentic facade regenerator
+- [deepgram/dx-stack/docs/sdk-agentic-retrieval.md](https://github.com/deepgram/dx-stack/blob/main/docs/sdk-agentic-retrieval.md): the canonical strategy doc that the sdk-agentic-readiness skill implements
+
+## Optional
+
+- [BRANCH_AND_RELEASE_PROCESS.md](.github/BRANCH_AND_RELEASE_PROCESS.md): release branch and semver bump conventions
+- [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): PR template including the breaking-change checkbox
