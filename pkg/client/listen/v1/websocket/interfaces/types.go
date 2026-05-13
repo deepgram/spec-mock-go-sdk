@@ -23,7 +23,8 @@ type LiveTranscriptionOptions interfaces.LiveTranscriptionOptions
 
 // MessageType is the type-discriminator header. Kept for back-compat
 // with code that peeks at the type field directly; new code should use
-// ws.UnmarshalServerStream which handles the discriminator internally.
+// spectypes.UnmarshalServerStream (from api/types) which handles the
+// discriminator internally.
 type MessageType struct {
 	Type string `json:"type"`
 }

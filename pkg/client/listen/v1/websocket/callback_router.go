@@ -11,7 +11,6 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
-	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 )
@@ -83,7 +82,7 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 	// Generated dispatcher: see chan_router.go's Message() for the
 	// architectural rationale. Same approach mirrored here for the
 	// callback-based router.
-	msg, err := ws.UnmarshalServerStream(byMsg)
+	msg, err := spectypes.UnmarshalServerStream(byMsg)
 	if err != nil {
 		klog.V(1).Infof("UnmarshalServerStream failed. Err: %v\n", err)
 		klog.V(6).Infof("router.Message LEAVE\n")

@@ -12,7 +12,6 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
-	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	pkginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
@@ -167,7 +166,7 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 	// matching ServerStream variant. Replaces the legacy MessageType peek +
 	// switch + per-method json.Unmarshal pattern with one call that returns
 	// the already-parsed typed variant.
-	msg, err := ws.UnmarshalServerStream(byMsg)
+	msg, err := spectypes.UnmarshalServerStream(byMsg)
 	if err != nil {
 		klog.V(1).Infof("UnmarshalServerStream failed. Err: %v\n", err)
 		klog.V(6).Infof("router.Message LEAVE\n")
