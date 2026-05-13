@@ -1,17 +1,148 @@
 // Copyright Deepgram, Inc. All Rights Reserved.
 // SPDX-License-Identifier: MIT
 
-// Converters: spectypes.TranscribeOutput (generated, pointer-typed, in
-// api/types) -> *PreRecordedResponse (idiomatic, value-typed, in this
-// package). One pure-Go function per type pair. Nil pointer in =>
-// zero-value field out, so customer code can read response fields
-// without ever nil-checking.
+// Converters between the idiomatic facade types in this package and the
+// generated wire types in api/types.
+//
+// Output direction: spectypes.TranscribeOutput (generated, pointer-typed) ->
+// *PreRecordedResponse (idiomatic, value-typed). Nil pointer in => zero-value
+// field out, so customer code can read response fields without ever
+// nil-checking.
+//
+// Input direction: *PreRecordedTranscriptionOptions (idiomatic, value-typed)
+// -> *spectypes.TranscribeInput (generated, pointer-typed). Used by client.go
+// to translate the facade options struct into the shape that
+// httptransport.Invoke reflects on for HTTP query/header binding via the
+// TranscribeRoute metadata.
 
 package restv1
 
 import (
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
+	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces/v1"
 )
+
+// optionsToTranscribeInput translates an idiomatic *PreRecordedTranscriptionOptions
+// into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
+// zero-valued facade fields are left as nil pointers on the generated struct so
+// they don't surface in the wire query string. Fields the facade exposes but
+// the spec doesn't model (Alternatives, CustomIntent*, CustomTopic*, Dictation,
+// Numerals, Extra, Replace, UttSplit, Measurements, DetectTopics) are dropped
+// here; if/when they land in the spec the codegen-resident schema will pick
+// them up and this converter expands accordingly.
+func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
+	in := &spectypes.TranscribeInput{}
+	if o == nil {
+		return in
+	}
+	if o.Callback != "" {
+		v := o.Callback
+		in.Callback = &v
+	}
+	if o.CallbackMethod != "" {
+		in.CallbackMethod = spectypes.CallbackMethod(o.CallbackMethod)
+	}
+	if o.Channels != 0 {
+		v := int32(o.Channels)
+		in.Channels = &v
+	}
+	if o.DetectEntities {
+		v := o.DetectEntities
+		in.DetectEntities = &v
+	}
+	if o.DetectLanguage {
+		v := "true"
+		in.DetectLanguage = &v
+	}
+	if o.Diarize {
+		v := o.Diarize
+		in.Diarize = &v
+	}
+	if o.DiarizeVersion != "" {
+		v := o.DiarizeVersion
+		in.DiarizeVersion = &v
+	}
+	if o.Encoding != "" {
+		v := o.Encoding
+		in.Encoding = &v
+	}
+	if o.FillerWords {
+		v := o.FillerWords
+		in.FillerWords = &v
+	}
+	if o.Intents {
+		v := o.Intents
+		in.Intents = &v
+	}
+	if len(o.Keywords) > 0 {
+		in.Keywords = o.Keywords
+	}
+	if len(o.Keyterm) > 0 {
+		in.Keyterm = o.Keyterm
+	}
+	if o.Language != "" {
+		v := o.Language
+		in.Language = &v
+	}
+	if o.Model != "" {
+		v := o.Model
+		in.Model = &v
+	}
+	if o.Multichannel {
+		v := o.Multichannel
+		in.Multichannel = &v
+	}
+	if o.Paragraphs {
+		v := o.Paragraphs
+		in.Paragraphs = &v
+	}
+	if o.ProfanityFilter {
+		v := o.ProfanityFilter
+		in.ProfanityFilter = &v
+	}
+	if o.Punctuate {
+		v := o.Punctuate
+		in.Punctuate = &v
+	}
+	if len(o.Redact) > 0 {
+		in.Redact = o.Redact
+	}
+	if o.SampleRate != 0 {
+		v := int32(o.SampleRate)
+		in.SampleRate = &v
+	}
+	if len(o.Search) > 0 {
+		in.Search = o.Search
+	}
+	if o.Sentiment {
+		v := o.Sentiment
+		in.Sentiment = &v
+	}
+	if o.SmartFormat {
+		v := o.SmartFormat
+		in.SmartFormat = &v
+	}
+	if o.Summarize != "" {
+		v := o.Summarize
+		in.Summarize = &v
+	}
+	if len(o.Tag) > 0 {
+		in.Tag = o.Tag
+	}
+	if o.Topics {
+		v := o.Topics
+		in.Topics = &v
+	}
+	if o.Utterances {
+		v := o.Utterances
+		in.Utterances = &v
+	}
+	if o.Version != "" {
+		v := o.Version
+		in.Version = &v
+	}
+	return in
+}
 
 func derefStr(p *string) string {
 	if p == nil {
