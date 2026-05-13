@@ -2,27 +2,31 @@
 //
 // Generic HTTP REST transport primitive shared by every @http-bound
 // operation in the Smithy model. Invoke uses reflection over input
-// struct fields named in HTTPRoute.QueryFields, HeaderFields,
-// PathParams, and PayloadField to translate a typed *I into an
-// *http.Request, then decodes the JSON response body into a typed *O.
+// struct fields named in HTTPRoute.QueryFields, HeaderFields, and
+// PathParams to translate a typed *I into an *http.Request, then
+// decodes the JSON response body into a typed *O. The request body
+// is supplied as a separate io.Reader so the caller owns payload
+// marshalling (some operations encode a union variant or stream
+// raw bytes; the generic primitive stays out of that).
 //
 // Route values are emitted alongside the typed shapes in api/types/
 // (e.g. api/types/listen_route.go for the Listen service). This file
 // is the runtime primitive; the route values are the per-operation
 // metadata.
-//
-// Status: the Invoke body is intentionally stubbed pending the Phase 4
-// wire-up of the endpoint-agnostic transport migration. The signature
-// is final; consumers can already depend on the symbol. The body will
-// be filled in once route metadata emission (Phase 2) lands.
 
 package http
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
+	"fmt"
+	"io"
+	"reflect"
+	"strconv"
+	"strings"
 
 	nethttp "net/http"
+	"net/url"
 )
 
 // HTTPRoute carries per-operation HTTP binding metadata derived from
@@ -58,14 +62,16 @@ type Authenticator interface {
 }
 
 // Invoke executes one HTTP operation. It reads HTTP binding fields off
-// the typed *input via reflection, builds an *http.Request, sends it
-// through client, and decodes a JSON response body into a newly
-// allocated *O.
+// the typed *input via reflection, builds an *http.Request with the
+// supplied body io.Reader, applies auth, sends the request through
+// client, and decodes a JSON response body into a newly allocated *O.
 //
-// PHASE 1 STATUS: this is a stub. The body is implemented in Phase 4
-// of the endpoint-agnostic transport migration once Phase 2 has
-// emitted the per-operation route metadata in api/types/. The
-// signature is the contract; callers can build against it.
+// body MAY be nil for operations with no request payload (e.g. GETs).
+// For operations whose @httpPayload is a union or carries raw audio
+// bytes, the caller pre-marshals the payload and passes it as body;
+// Invoke does not introspect input.<PayloadField>. The PayloadField
+// in the route metadata is documentary - it tells the caller which
+// input field should be marshalled into body.
 func Invoke[I any, O any](
 	ctx context.Context,
 	client *nethttp.Client,
@@ -73,13 +79,143 @@ func Invoke[I any, O any](
 	route HTTPRoute,
 	auth Authenticator,
 	input *I,
+	body io.Reader,
 ) (*O, error) {
-	_ = ctx
-	_ = client
-	_ = baseURL
-	_ = route
-	_ = auth
-	_ = input
-	return nil, errors.New(
-		"http.Invoke: not yet wired (phase 4 of endpoint-agnostic transports)")
+	if client == nil {
+		client = nethttp.DefaultClient
+	}
+
+	u, err := url.Parse(baseURL + route.Path)
+	if err != nil {
+		return nil, fmt.Errorf("http.Invoke: parse URL: %w", err)
+	}
+
+	var inputVal reflect.Value
+	if input != nil {
+		inputVal = reflect.ValueOf(input).Elem()
+	}
+
+	if inputVal.IsValid() {
+		for _, b := range route.PathParams {
+			f := inputVal.FieldByName(b.GoField)
+			if !f.IsValid() {
+				continue
+			}
+			val := stringifyField(f)
+			if val == "" {
+				return nil, fmt.Errorf("http.Invoke: path param %s is empty", b.WireName)
+			}
+			u.Path = strings.ReplaceAll(u.Path, "{"+b.WireName+"}", url.PathEscape(val))
+		}
+
+		q := u.Query()
+		for _, b := range route.QueryFields {
+			f := inputVal.FieldByName(b.GoField)
+			if !f.IsValid() || isZeroField(f) {
+				continue
+			}
+			for _, v := range stringifyMultiField(f) {
+				q.Add(b.WireName, v)
+			}
+		}
+		u.RawQuery = q.Encode()
+	}
+
+	req, err := nethttp.NewRequestWithContext(ctx, route.Method, u.String(), body)
+	if err != nil {
+		return nil, fmt.Errorf("http.Invoke: build request: %w", err)
+	}
+
+	if inputVal.IsValid() {
+		for _, b := range route.HeaderFields {
+			f := inputVal.FieldByName(b.GoField)
+			if !f.IsValid() || isZeroField(f) {
+				continue
+			}
+			req.Header.Set(b.WireName, stringifyField(f))
+		}
+	}
+
+	if auth != nil {
+		if err := auth.Apply(req); err != nil {
+			return nil, fmt.Errorf("http.Invoke: apply auth: %w", err)
+		}
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("http.Invoke: send: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf(
+			"http.Invoke: %s %s: %d %s",
+			route.Method, u.String(), resp.StatusCode, string(respBody))
+	}
+
+	var out O
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil && err != io.EOF {
+		return nil, fmt.Errorf("http.Invoke: decode response: %w", err)
+	}
+	return &out, nil
+}
+
+// isZeroField reports whether v should be treated as unset for the
+// purposes of HTTP query/header binding. Pointers, slices, maps and
+// strings count as unset when nil/empty; other kinds fall back to
+// reflect.Value.IsZero.
+func isZeroField(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	case reflect.Slice, reflect.Map:
+		return v.Len() == 0
+	case reflect.String:
+		return v.Len() == 0
+	default:
+		return v.IsZero()
+	}
+}
+
+// stringifyField renders v as a wire-protocol string. Pointers are
+// dereferenced; ints/floats/bools format via strconv; strings and
+// string-backed enum types return their underlying value; anything
+// else falls through to fmt.Sprintf("%v").
+func stringifyField(v reflect.Value) string {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return ""
+		}
+		v = v.Elem()
+	}
+	switch v.Kind() {
+	case reflect.String:
+		return v.String()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(v.Int(), 10)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(v.Uint(), 10)
+	case reflect.Float32, reflect.Float64:
+		return strconv.FormatFloat(v.Float(), 'g', -1, 64)
+	case reflect.Bool:
+		return strconv.FormatBool(v.Bool())
+	}
+	return fmt.Sprintf("%v", v.Interface())
+}
+
+// stringifyMultiField renders v as one or more wire-protocol strings.
+// For slices each element becomes its own string (for repeated query
+// params like ?tag=a&tag=b); for everything else the single
+// stringifyField output is wrapped in a single-element slice.
+func stringifyMultiField(v reflect.Value) []string {
+	if v.Kind() == reflect.Slice {
+		out := make([]string, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			out = append(out, stringifyField(v.Index(i)))
+		}
+		return out
+	}
+	return []string{stringifyField(v)}
 }
