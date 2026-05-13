@@ -54,7 +54,7 @@ jobs:
           repository: deepgram/spec-idiomatic
           path: .spec-idiomatic
           ref: main
-          token: ${{ secrets.SPEC_IDIOMATIC_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.TEMP_SPEC_TOKEN }}
 
       - name: Build runner
         working-directory: .spec-idiomatic
