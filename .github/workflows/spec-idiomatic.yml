@@ -35,6 +35,12 @@ jobs:
             | tar -x -C "${RUNNER_TEMP}/api-before/"
           cp -r api/. "${RUNNER_TEMP}/api-after/api/"
 
+      - name: Install portaudio
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends portaudio19-dev
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
