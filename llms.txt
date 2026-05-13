@@ -18,7 +18,15 @@
 
 ## Examples
 
-Examples are populated as `Example_*` functions in `*_test.go` files alongside the source they document. Once they exist, this section will index the canonical example per use case. See [sdk-agentic-readiness](.agents/skills/sdk-agentic-readiness/SKILL.md) for the requirements.
+Canonical examples live as `Example_*` functions in `*_test.go` files alongside the source they document. Each one is runnable via `go test ./...` and visible in `go doc` and pkg.go.dev.
+
+- [REST client construction](pkg/client/listen/v1/rest/example_test.go): `ExampleNewWithDefaults`
+- [Prerecorded response shape](pkg/client/listen/v1/rest/example_test.go): `ExamplePreRecordedResponse`
+- [Response metadata access](pkg/client/listen/v1/rest/example_test.go): `ExampleMetadata`
+- [URL vs file detection](pkg/client/listen/v1/rest/example_test.go): `ExampleIsURL`
+- [WebSocket transcription event](pkg/api/listen/v1/websocket/interfaces/example_test.go): `ExampleMessageResponse`
+- [WebSocket session metadata](pkg/api/listen/v1/websocket/interfaces/example_test.go): `ExampleMetadataResponse`
+- [WebSocket utterance end](pkg/api/listen/v1/websocket/interfaces/example_test.go): `ExampleUtteranceEndResponse`
 
 ## Related repos
 
