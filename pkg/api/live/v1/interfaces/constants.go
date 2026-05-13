@@ -5,7 +5,7 @@
 package legacy
 
 import (
-	interfacesv1 "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	interfacesv1 "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 )
 
 const (

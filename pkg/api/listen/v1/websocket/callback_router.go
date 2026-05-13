@@ -13,7 +13,7 @@ import (
 
 	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
-	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 )
 
 // NewWithDefault creates a CallbackRouter with the default callback handler

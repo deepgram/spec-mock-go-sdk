@@ -10,7 +10,7 @@ package listen
 import (
 	"context"
 
-	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
 	listenv1rest "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/rest"
 	listenv1ws "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket"

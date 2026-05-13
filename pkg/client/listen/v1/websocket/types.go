@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	common "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1"
 	commoninterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"

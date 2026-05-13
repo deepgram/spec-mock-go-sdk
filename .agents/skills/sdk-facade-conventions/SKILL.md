@@ -176,7 +176,7 @@ When a new server message variant appears in `api/`, extend this switch
 AND emit a new customer-side struct in the WebSocket facade's
 `interfaces/types.go`. Wire it through the router and handler-call code
 path the same way the existing events are wired. (Today that interfaces
-package still lives at `pkg/api/listen/v1/websocket/interfaces/`; the
+package still lives at `pkg/client/listen/v1/websocket/interfaces/`; the
 target home is `pkg/client/listen/v1/websocket/interfaces/` — see
 "Legacy: pkg/api/" above.)
 

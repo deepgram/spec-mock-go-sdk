@@ -24,9 +24,9 @@ Canonical examples live as `Example_*` functions in `*_test.go` files alongside 
 - [Prerecorded response shape](pkg/client/listen/v1/rest/example_test.go): `ExamplePreRecordedResponse`
 - [Response metadata access](pkg/client/listen/v1/rest/example_test.go): `ExampleMetadata`
 - [URL vs file detection](pkg/client/listen/v1/rest/example_test.go): `ExampleIsURL`
-- [WebSocket transcription event](pkg/api/listen/v1/websocket/interfaces/example_test.go): `ExampleMessageResponse`
-- [WebSocket session metadata](pkg/api/listen/v1/websocket/interfaces/example_test.go): `ExampleMetadataResponse`
-- [WebSocket utterance end](pkg/api/listen/v1/websocket/interfaces/example_test.go): `ExampleUtteranceEndResponse`
+- [WebSocket transcription event](pkg/client/listen/v1/websocket/interfaces/example_test.go): `ExampleMessageResponse`
+- [WebSocket session metadata](pkg/client/listen/v1/websocket/interfaces/example_test.go): `ExampleMetadataResponse`
+- [WebSocket utterance end](pkg/client/listen/v1/websocket/interfaces/example_test.go): `ExampleUtteranceEndResponse`
 
 ## Related repos
 

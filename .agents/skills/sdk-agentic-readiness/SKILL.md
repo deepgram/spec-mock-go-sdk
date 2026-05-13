@@ -163,7 +163,7 @@ the SDK's major use cases.
 
 ## Examples
 - [Prerecorded transcription](pkg/client/listen/v1/rest/example_test.go): ExamplePreRecordedClient_FromURL
-- [Live WebSocket](pkg/api/listen/v1/websocket/interfaces/example_test.go): ExampleMessageResponse
+- [Live WebSocket](pkg/client/listen/v1/websocket/interfaces/example_test.go): ExampleMessageResponse
 - ...
 ```
 

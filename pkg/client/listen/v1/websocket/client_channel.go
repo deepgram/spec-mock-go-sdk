@@ -18,7 +18,7 @@ import (
 	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"
 
-	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	version "github.com/deepgram/spec-mock-go-sdk/pkg/api/version"
 	common "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1"
 )

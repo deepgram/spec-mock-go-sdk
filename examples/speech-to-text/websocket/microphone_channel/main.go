@@ -15,7 +15,7 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	microphone "github.com/deepgram/spec-mock-go-sdk/pkg/audio/microphone"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen"

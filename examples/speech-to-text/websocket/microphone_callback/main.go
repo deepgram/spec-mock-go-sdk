@@ -12,7 +12,7 @@ import (
 	"os"
 	"strings"
 
-	api "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	api "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	microphone "github.com/deepgram/spec-mock-go-sdk/pkg/audio/microphone"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen"

@@ -23,6 +23,7 @@ deepgram/spec               (Smithy IDL, source of truth)
        │
        ▼
 deepgram/spec-codegen-go    (Java SmithyBuildPlugin)
+       │
        │  emits api/
        ▼
 deepgram/spec-mock-go-sdk   (this repo — api/ + pkg/ + tests + examples)
