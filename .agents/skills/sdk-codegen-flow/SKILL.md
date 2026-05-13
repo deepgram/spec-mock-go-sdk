@@ -64,9 +64,8 @@ When a PR touches `api/**`, `.github/workflows/spec-idiomatic.yml` runs:
 3. Parses `pkg/` into an AST.
 4. Loads `AGENTS.md` and every `.agents/skills/*/SKILL.md` from this repo
    and injects them into the LLM prompt as SDK-resident conventions.
-5. Prompts an LLM with: dx-stack agentic-readiness rules, this repo's
-   facade conventions, the change plan, the AST, and the relevant facade
-   files.
+5. Prompts an LLM with this repo's facade conventions, agentic-readiness
+   rules, the change plan, the AST, and the relevant facade files.
 6. Applies the returned edits under `pkg/` (plus `BREAKING_CHANGES.md` at
    repo root if the LLM flagged anything).
 7. Runs `go build ./...` and `go test ./...` (the latter executes every

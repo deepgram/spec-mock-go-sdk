@@ -1,16 +1,15 @@
 ---
 name: sdk-agentic-readiness
-description: Use when writing or reviewing any public API surface in this repo. The rules for scoring well on agentic retrieval tools (Context7, Fern agent-score, Mintlify, DeepScore) — runnable doc examples next to source, CI-validated examples, single-concept files, keyword-dense README opener, and a curated llms.txt. Sourced from dx-stack/docs/sdk-agentic-retrieval.md.
+description: Use when writing or reviewing any public API surface in this repo. The rules for scoring well on agentic retrieval tools (Context7, Fern agent-score, Mintlify, DeepScore) — runnable doc examples next to source, CI-validated examples, single-concept files, keyword-dense README opener, and a curated llms.txt.
 ---
 
 # Agentic readiness
 
-This skill ports
-[`deepgram/dx-stack/docs/sdk-agentic-retrieval.md`](https://github.com/deepgram/dx-stack/blob/main/docs/sdk-agentic-retrieval.md)
-into this repo. That doc is the canonical strategy; this skill is the
-Go-specific implementation guide for it.
+How this SDK stays scorable on agentic retrieval tools (Context7, Fern
+agent-score, Mintlify, DeepScore). The pattern came from analysing
+libraries that consistently score high on these tools.
 
-## The pattern (from dx-stack)
+## The pattern
 
 > High-scoring libraries on agentic retrieval tools share three traits.
 >
@@ -130,7 +129,7 @@ The first 500 characters set the library's representation in retrieval
 indexes. Open with a one-sentence keyword-dense description and a
 runtime-support sentence. Move badges below the fold.
 
-Pattern (matching `dx-stack/docs/js-ecosystem.md:17-23`):
+Pattern:
 
 ```
 # spec-mock-go-sdk
@@ -202,9 +201,13 @@ artifacts moved together with the code.
 
 ## How to measure
 
-Per dx-stack: behavioural benchmark on every release, comparable across
-SDKs. `deepscore` is the planned tool. Week-over-week deltas tracked in
-`dx-stack/docs/metrics.md`. Don't grade plumbing; grade outcomes.
+Adopt one behavioural benchmark — simulate an agent doing a real task,
+score whether it succeeds — and run it on every release. Use the same
+benchmark across SDKs so scores are comparable. Heuristic crawlers
+grade plumbing; behavioural benchmarks grade outcomes. Only the latter
+tells you whether the work moved the needle.
+
+Track week-over-week deltas. Don't grade plumbing; grade outcomes.
 
 ## Related skills
 

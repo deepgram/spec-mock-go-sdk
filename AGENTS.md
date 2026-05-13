@@ -54,21 +54,13 @@ This repo is one of four:
 - [`deepgram/spec-mock-go-sdk`](https://github.com/deepgram/spec-mock-go-sdk) — this repo.
 - [`deepgram/spec-idiomatic`](https://github.com/deepgram/spec-idiomatic) — agentic facade regenerator.
 
-Higher-level architecture lives in
-[`deepgram/dx-stack/docs/sdk-agentic-retrieval.md`](https://github.com/deepgram/dx-stack/blob/main/docs/sdk-agentic-retrieval.md)
-(why we measure for agentic retrieval) and
-[`deepgram/dx-stack/docs/engineering.md`](https://github.com/deepgram/dx-stack/blob/main/docs/engineering.md)
-(repo conventions across DX-managed packages).
-
 ## Substrate philosophy
 
-Per [`dx-stack/docs/architecture.md`](https://github.com/deepgram/dx-stack/blob/main/docs/architecture.md):
-
-> Documentation in `docs/*.md` and `AGENTS.md` is human-readable narrative
-> derived from this substrate, not parallel to it.
-
-For this SDK, the **substrate is the source code**. `Example_*` functions,
-the README opening paragraph, and `llms.txt` are **derived**. When the
+The **source code is the substrate**. `Example_*` functions, the README
+opening paragraph, and `llms.txt` are **derived** from it. When the
 substrate changes, the derived layer must be regenerated to match — that is
 `spec-idiomatic`'s job, not yours, but you are responsible for verifying it
 in review.
+
+Prose that contradicts the substrate is wrong by definition. If you find a
+mismatch, fix the prose, not the code.
