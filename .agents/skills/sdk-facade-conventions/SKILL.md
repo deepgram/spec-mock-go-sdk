@@ -11,25 +11,42 @@ These conventions are how it does that consistently.
 
 ## Package layout
 
+Target layout — every transport for every product lives under
+`pkg/client/{product}/{ver}/{transport}/`:
+
 ```
 pkg/
-├── api/                                # public re-export surface
-├── client/{product}/{ver}/{transport}/ # REST/HTTP-style entry points
-│   ├── client.go                       # exported client constructor + entry methods
-│   ├── {operation}.go                  # one file per RPC (prerecorded.go etc.)
-│   ├── response.go                     # customer-facing response value types
-│   ├── convert.go                      # generated → customer converters + helpers
-│   ├── types.go                        # customer-facing request types + options
-│   └── constants.go                    # customer-visible enum values
-└── api/{product}/{ver}/{transport}/interfaces/   # streaming surfaces
-    ├── interfaces.go                   # handler interfaces customers implement
-    ├── types.go                        # customer-facing event value types
-    ├── convert.go                      # generated event → customer event converter
-    └── constants.go                    # customer-visible message-type strings
+└── client/{product}/{ver}/{transport}/   # REST, WebSocket, SageMaker, WebRTC
+    ├── client.go                         # constructor + entry methods
+    ├── {operation}.go                    # one file per RPC (prerecorded.go etc.)
+    ├── response.go                       # customer-facing response value types
+    ├── convert.go                        # generated → customer converters + helpers
+    ├── types.go                          # customer-facing request types + options
+    ├── constants.go                      # customer-visible enum values
+    └── interfaces/                       # streaming-only sub-package
+        ├── interfaces.go                 # handler interfaces customers implement
+        ├── types.go                      # customer-facing event value types
+        ├── convert.go                    # generated event → customer event converter
+        └── constants.go                  # customer-visible message-type strings
 ```
 
 Per `sdk-agentic-readiness`, every `.go` file in `pkg/` should be
 single-concept. Don't co-locate REST and WebSocket types in one file.
+
+### Legacy: `pkg/api/`
+
+`pkg/api/{product}/.../interfaces/` is **legacy bootstrap** inherited
+from `deepgram-go-sdk`. The split (REST under `pkg/client/`, WebSocket
+under `pkg/api/`) was an accident of history; nothing about the spec
+pipeline requires it. The migration plan: as each product moves through
+`deepgram/spec` → `deepgram/spec-codegen-go` → here, its
+`pkg/api/{product}/` subtree gets retired in favour of
+`pkg/client/{product}/{ver}/{transport}/`.
+
+When you add new code, use the target layout. When you edit existing
+code at `pkg/api/listen/...` (the only product partly plumbed today),
+match the surrounding style — the wholesale move is deferred to its
+own refactor to avoid mid-flight risk.
 
 ## Import aliases
 
@@ -156,10 +173,12 @@ func ConvertServerMessage(m ws.ServerStream) any {
 ```
 
 When a new server message variant appears in `api/`, extend this switch
-AND emit a new customer-side struct in
-`pkg/api/listen/v1/websocket/interfaces/types.go`. Wire it through the
-router and handler-call code path the same way the existing events are
-wired.
+AND emit a new customer-side struct in the WebSocket facade's
+`interfaces/types.go`. Wire it through the router and handler-call code
+path the same way the existing events are wired. (Today that interfaces
+package still lives at `pkg/api/listen/v1/websocket/interfaces/`; the
+target home is `pkg/client/listen/v1/websocket/interfaces/` — see
+"Legacy: pkg/api/" above.)
 
 ## When in doubt
 
