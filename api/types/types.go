@@ -559,6 +559,11 @@ func (*TranscribeRequestBodyMemberUrlSource) isTranscribeRequestBody() {}
 
 type TranscribeInput struct {
 	
+	// Number of alternative transcripts to return per channel. When >1 the API
+	// returns up to alternatives candidate transcripts ranked by confidence; the
+	// first element is the top hypothesis. Default 1.
+	Alternatives *int32 `json:"-"`
+	
 	// POST /v1/listen accepts two request body shapes selected by Content-Type . See LISTEN-004.
 	Body TranscribeRequestBody `json:"-"`
 	
