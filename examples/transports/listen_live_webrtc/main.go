@@ -24,9 +24,12 @@ import (
 func main() {
 	ctx := context.Background()
 
-	stream, err := wrtc.OpenListenLiveStream(ctx)
+	stream, err := wrtc.OpenStream[spectypes.ClientStream, spectypes.ServerStream](
+		ctx, "wss://example.invalid/signaling",
+		spectypes.MarshalClientStream,
+		spectypes.UnmarshalServerStream)
 	if err != nil {
-		fmt.Printf("OpenListenLiveStream: %v\n", err)
+		fmt.Printf("wrtc.OpenStream: %v\n", err)
 		return
 	}
 	defer stream.Close()

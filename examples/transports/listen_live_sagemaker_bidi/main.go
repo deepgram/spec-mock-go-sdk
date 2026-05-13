@@ -25,9 +25,12 @@ func main() {
 	ctx := context.Background()
 	endpoint := "your-deepgram-listen-live-endpoint"
 
-	stream, err := sm.OpenListenLiveStream(ctx, endpoint)
+	stream, err := sm.OpenStream[spectypes.ClientStream, spectypes.ServerStream](
+		ctx, endpoint,
+		spectypes.MarshalClientStream,
+		spectypes.UnmarshalServerStream)
 	if err != nil {
-		fmt.Printf("OpenListenLiveStream: %v\n", err)
+		fmt.Printf("sm.OpenStream: %v\n", err)
 		return
 	}
 	defer stream.Close()

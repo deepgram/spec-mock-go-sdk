@@ -43,9 +43,10 @@ func main() {
 		Language: &language,
 	}
 
-	out, err := sm.InvokeTranscribe(ctx, smr, endpoint, input)
+	out, err := sm.Invoke[spectypes.TranscribeInput, spectypes.TranscribeOutput](
+		ctx, smr, endpoint, input)
 	if err != nil {
-		log.Fatalf("InvokeTranscribe: %v", err)
+		log.Fatalf("sm.Invoke: %v", err)
 	}
 
 	if out.RequestId != nil {
