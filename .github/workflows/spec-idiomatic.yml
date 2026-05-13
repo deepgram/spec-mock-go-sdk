@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      statuses: write
 
     steps:
       - name: Checkout PR head
@@ -76,15 +77,120 @@ jobs:
         run: |
           set -euo pipefail
           gradle --quiet run --args="\
-            --before-api ${RUNNER_TEMP}/api-before/api \
-            --after-api  ${RUNNER_TEMP}/api-after/api \
-            --facade-dir ${{ github.workspace }}/pkg \
-            --language   go \
-            --pr-body    ${RUNNER_TEMP}/pr-body.md \
+            --before-api  ${RUNNER_TEMP}/api-before/api \
+            --after-api   ${RUNNER_TEMP}/api-after/api \
+            --facade-dir  ${{ github.workspace }}/pkg \
+            --language    go \
+            --pr-body     ${RUNNER_TEMP}/pr-body.md \
+            --report-out  ${RUNNER_TEMP}/spec-idiomatic-report.json \
             --apply \
             --max-retries 3"
 
+      - name: Parse spec-idiomatic report
+        id: report
+        if: always()
+        run: |
+          set -euo pipefail
+          REPORT="${RUNNER_TEMP}/spec-idiomatic-report.json"
+          if [[ ! -f "$REPORT" ]]; then
+            echo "no report file; ceremony steps will treat counts as 0"
+            echo "absorbed=0" >> "$GITHUB_OUTPUT"
+            echo "unavoidable=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          absorbed=$(jq -r '.result.absorbed_with_ceremony_count // 0' "$REPORT")
+          unavoidable=$(jq -r '.result.unavoidable_count // 0' "$REPORT")
+          echo "absorbed=$absorbed" >> "$GITHUB_OUTPUT"
+          echo "unavoidable=$unavoidable" >> "$GITHUB_OUTPUT"
+          echo "report tier counts: absorbed=$absorbed unavoidable=$unavoidable"
+
+      - name: Apply regen/breaking-absorbed label
+        if: steps.report.outputs.absorbed != '0' && steps.report.outputs.absorbed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --add-label "regen/breaking-absorbed"
+
+      - name: Apply regen/breaking-unavoidable label
+        if: steps.report.outputs.unavoidable != '0' && steps.report.outputs.unavoidable != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --add-label "regen/breaking-unavoidable"
+
+      - name: Post absorbed-breaking comment
+        if: steps.report.outputs.absorbed != '0' && steps.report.outputs.absorbed != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          body=$(jq -r '
+            "## \u26a0\ufe0f Absorbed breaking changes\n\n" +
+            "These changes are tier-1: the facade absorbed them by zero-defaulting the affected customer fields, but the semantic contract has shifted. Reviewer attention required; no hard merge block.\n\n" +
+            ((.result.breaking_changes // [])
+              | map(select(.tier == "absorbed-with-ceremony"))
+              | map("- **" + .type + (if .member != "" then "." + .member else "" end) + "** — " + .reason)
+              | join("\n")) +
+            "\n\nFull descriptions live in `BREAKING_CHANGES.md` at the repo root."
+          ' "${RUNNER_TEMP}/spec-idiomatic-report.json")
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$body"
+
+      - name: Post unavoidable-breaking comment
+        if: steps.report.outputs.unavoidable != '0' && steps.report.outputs.unavoidable != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          body=$(jq -r '
+            "## \ud83d\uded1 Unavoidable breaking changes\n\n" +
+            "These changes are tier-2: the facade cannot absorb them. Customer code WILL break at compile or runtime. The `spec-idiomatic/breaking-acked` status check is failing; a CODEOWNER must apply the `regen/breaking-acked` label after deciding the break is acceptable, which re-runs the check and unblocks merge.\n\n" +
+            ((.result.breaking_changes // [])
+              | map(select(.tier == "unavoidable"))
+              | map("- **" + .type + (if .member != "" then "." + .member else "" end) + "** — " + .reason)
+              | join("\n")) +
+            "\n\nMigration guidance lives in `BREAKING_CHANGES.md` at the repo root."
+          ' "${RUNNER_TEMP}/spec-idiomatic-report.json")
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$body"
+
+      - name: Set spec-idiomatic/breaking-acked status check
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          sha="${{ github.event.pull_request.head.sha }}"
+          unavoidable="${{ steps.report.outputs.unavoidable }}"
+          if [[ -z "$unavoidable" || "$unavoidable" == "0" ]]; then
+            state="success"
+            desc="no unavoidable breaking changes"
+          else
+            labels=$(gh pr view ${{ github.event.pull_request.number }} \
+              --repo ${{ github.repository }} \
+              --json labels --jq '.labels[].name' || echo "")
+            if echo "$labels" | grep -qx "regen/breaking-acked"; then
+              state="success"
+              desc="$unavoidable unavoidable breaking change(s); acked"
+            else
+              state="failure"
+              desc="$unavoidable unavoidable breaking change(s); apply regen/breaking-acked to unblock"
+            fi
+          fi
+          gh api -X POST "repos/${{ github.repository }}/statuses/$sha" \
+            -f state="$state" \
+            -f context="spec-idiomatic/breaking-acked" \
+            -f description="$desc"
+
       - name: Commit facade updates
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
           if [[ -z "$(git status --porcelain pkg/ BREAKING_CHANGES.md 2>/dev/null)" ]]; then
@@ -95,7 +201,7 @@ jobs:
           git config user.email "spec-idiomatic-bot@users.noreply.github.com"
           git add pkg/ BREAKING_CHANGES.md 2>/dev/null || git add pkg/
           git commit -m "chore(facade): regenerate idiomatic layer for api/ changes"
-          git push origin HEAD:${{ github.head_ref }}
+          git push origin "HEAD:$HEAD_REF"
 
       - name: Post work-done checklist
         if: always()
@@ -108,14 +214,19 @@ jobs:
           ## spec-idiomatic — work done
 
           - Materialised `before/` and `after/` api/ snapshots from PR base SHA vs PR head
-          - Diffed api/ and produced a change plan classifying additive vs breaking shifts
+          - Diffed api/ and classified every change into a tier: `absorbed-silently` / `absorbed-with-ceremony` / `unavoidable`
           - Parsed the pkg/ Go facade into an AST via the shelled-out Go AST helper
-          - Composed the orchestrator prompt from `prompts/system.md` + `prompts/language/go.md` + plan + AST + selected facade files
-          - Invoked claude-opus-4-7 to produce facade edits as a single JSON object
-          - Applied returned edits under `pkg/`, refusing any path containing `..` or escaping the facade root
-          - Wrote `BREAKING_CHANGES.md` for any changes the facade cannot silently absorb
-          - Ran `go build ./...` to verify the edited facade compiles against regenerated `api/`
+          - Loaded the consumer's `AGENTS.md` and every `.agents/skills/*/SKILL.md` so the prompt carries SDK-resident conventions
+          - Composed the orchestrator prompt from `prompts/system.md` + `prompts/language/go.md` + plan + AST + sdk-conventions + selected facade files
+          - Invoked claude-opus-4-7 to produce facade edits + breaking_changes[] entries as a single JSON object
+          - Applied returned edits under `pkg/`, with `README.md` / `llms.txt` / `BREAKING_CHANGES.md` routed to the repo root; refused any path containing `..`
+          - Wrote `BREAKING_CHANGES.md` for tier-1 and tier-2 changes the LLM flagged (LLM is sole author)
+          - Ran `go test -count=1 ./pkg/...` to verify the edited facade compiles and every `Example_*` passes its `// Output:` assertion
           - On build failure, retried up to 3 times with the build error appended to the prompt
+          - Wrote a structured JSON report (`spec-idiomatic-report.json`) capturing tier counts and per-change classification
+          - Applied `regen/breaking-absorbed` and/or `regen/breaking-unavoidable` labels per the report's tier counts
+          - Posted dedicated tier-1 and tier-2 comments when applicable
+          - Set the `spec-idiomatic/breaking-acked` status check based on tier-2 count and the `regen/breaking-acked` label
           - Committed and pushed facade updates to this PR branch (no-op if no edits were needed)
 
           Items above are always run, in order; nothing is conditional on the diff content.
