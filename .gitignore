@@ -29,6 +29,55 @@ _testmain.go
 .idea/
 *.iml
 
+# Built example/test binaries dropped at repo root.
+# `go build ./examples/foo/bar/baz` writes a binary named "baz" at $PWD.
+# When $PWD is the repo root, that binary clutters the tree. Each name
+# below corresponds to an examples/ or tests/edge_cases/ subdirectory.
+# Add an entry here if a new example starts producing root-level cruft;
+# better, run examples via `go run ./examples/...` (no binary emitted)
+# or `go build -o /tmp/foo ./examples/...`.
+/arbitrary_keys
+/balances
+/cancel
+/callback
+/failed_retry
+/file
+/grant-token
+/hello-world
+/http_callback
+/http_channel
+/intent
+/interactive_callback
+/interactive_channel
+/invitations
+/keepalive
+/keys
+/listen_live_sagemaker_bidi
+/listen_live_webrtc
+/listen_live_websocket
+/listen_rest_sagemaker
+/members
+/microphone_callback
+/microphone_channel
+/models
+/no_mic
+/projects
+/reconnect_client
+/replay
+/scopes
+/sentiment
+/simple
+/simple_callback
+/simple_channel
+/stream
+/summary
+/test
+/timeout
+/topic
+/url
+/usage
+/woodchuck
+
 # Example outputs
 *.wav
 *.mp3
