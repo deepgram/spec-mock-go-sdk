@@ -766,10 +766,6 @@ type TranscribeOutput struct {
 	
 	// Populated on synchronous responses. Absent on the immediate response when
 	// ?callback= is set; appears in the callback delivery instead.
-	Metadata *ResponseMetadata `json:"metadata,omitempty"`
-	
-	// Populated on synchronous responses. Absent on the immediate response when
-	// ?callback= is set; appears in the callback delivery instead.
 	Results *ResponseResults `json:"results,omitempty"`
 	
 	noSmithyDocumentSerde
