@@ -5,10 +5,13 @@ job is to validate the regen flow end-to-end: every change to the spec lands
 here as generated code in `api/`, and the idiomatic facade in `pkg/` absorbs
 the wobble so customer-facing signatures stay stable.
 
-This is **not** the official Deepgram Go SDK. It is the mock consumer the DX
-team uses to develop and stress-test the agentic regen system (spec →
-spec-codegen-go → spec-mock-go-sdk, with spec-idiomatic auto-regenerating the
-facade on every spec change).
+This is the **prototype of the spec-driven replacement** for
+`deepgram/deepgram-go-sdk`. The pipeline that produces it is
+spec → spec-codegen-go → spec-mock-go-sdk, with spec-idiomatic
+auto-regenerating the facade on every spec change. Today only
+`/v1/listen` is wired through the new pipeline; the rest of the
+surface is carried over from `deepgram-go-sdk` and gets cut over
+product by product.
 
 ## Repo layout
 

@@ -1,22 +1,20 @@
-// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
-// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// Copyright Deepgram, Inc. All Rights Reserved.
 // SPDX-License-Identifier: MIT
 
-/*
-	This SDK provides Go library for performing Prerecorded and Live/Streaming operations
-	on the Deepgram.com Platform.
-
-	GitHub repo: https://github.com/deepgram/deepgram-go-sdk
-	Go SDK Examples: https://github.com/deepgram/deepgram-go-sdk/tree/main/examples
-
-	Deepgram Platform API reference: https://developers.deepgram.com/reference
-	Documentation: https://developers.deepgram.com/docs
-
-	The main entry point for this SDK is:
-	1. pkg/client/live - contains the SDK objects, functions, etc for performing Live/Stream operations
-	2. pkg/client/prerecorded - contains the SDK objects, functions, etc for performing operations on Prerecorded media
-*/
-
+// Package sdk is the top-level marker for spec-mock-go-sdk, the Go
+// consumer of the Deepgram Smithy spec pipeline. The package itself
+// holds no exported symbols; its only job is the blank-import block
+// below, which forces every client and api/-side package to compile
+// as part of `go build ./...`. Add a new package here when its
+// compilation should gate the build.
+//
+// Repo layout:
+//   - api/   machine-generated wire types and transports
+//   - pkg/   idiomatic Go facade (the part customers consume)
+//
+// See AGENTS.md and .agents/skills/ for the maintainer-facing
+// conventions. Not for customer use; see deepgram/deepgram-go-sdk
+// for the official Go SDK.
 package sdk
 
 import (
