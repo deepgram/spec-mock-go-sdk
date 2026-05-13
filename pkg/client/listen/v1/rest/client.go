@@ -27,6 +27,7 @@ import (
 
 	httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
+	pkgcommon "github.com/deepgram/spec-mock-go-sdk/pkg/common"
 	common "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces/v1"
 )
@@ -138,10 +139,14 @@ func (c *Client) invoke(
 }
 
 // baseURL returns the scheme + host the Invoke primitive prepends to route.Path.
-// If options.Host already carries a scheme prefix, it's returned verbatim;
-// otherwise https:// is assumed.
+// Empty Host falls back to pkgcommon.DefaultHost (api.deepgram.com); if Host
+// already carries a scheme prefix it's returned verbatim; otherwise https://
+// is assumed.
 func (c *Client) baseURL() string {
 	host := c.Options.Host
+	if host == "" {
+		host = pkgcommon.DefaultHost
+	}
 	if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
 		return host
 	}
