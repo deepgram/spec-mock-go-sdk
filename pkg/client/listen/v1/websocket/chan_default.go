@@ -14,7 +14,7 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
-	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
+	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 )
 
 // NewDefaultChanHandler creates a new DefaultChanHandler
@@ -32,13 +32,13 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 	handler := &DefaultChanHandler{
 		debugWebsocket:        strings.EqualFold(debugStr, "true"),
 		debugWebsocketVerbose: strings.EqualFold(debugExtStr, "true"),
-		openChan:              make(chan *interfaces.OpenResponse),
-		messageChan:           make(chan *interfaces.MessageResponse),
-		metadataChan:          make(chan *interfaces.MetadataResponse),
-		speechStartedChan:     make(chan *interfaces.SpeechStartedResponse),
-		utteranceEndChan:      make(chan *interfaces.UtteranceEndResponse),
-		closeChan:             make(chan *interfaces.CloseResponse),
-		errorChan:             make(chan *interfaces.ErrorResponse),
+		openChan:              make(chan *msginterface.OpenResponse),
+		messageChan:           make(chan *msginterface.MessageResponse),
+		metadataChan:          make(chan *msginterface.MetadataResponse),
+		speechStartedChan:     make(chan *msginterface.SpeechStartedResponse),
+		utteranceEndChan:      make(chan *msginterface.UtteranceEndResponse),
+		closeChan:             make(chan *msginterface.CloseResponse),
+		errorChan:             make(chan *msginterface.ErrorResponse),
 		unhandledChan:         make(chan *[]byte),
 	}
 
@@ -53,38 +53,38 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 }
 
 // GetOpen returns the open channels
-func (dch DefaultChanHandler) GetOpen() []*chan *interfaces.OpenResponse {
-	return []*chan *interfaces.OpenResponse{&dch.openChan}
+func (dch DefaultChanHandler) GetOpen() []*chan *msginterface.OpenResponse {
+	return []*chan *msginterface.OpenResponse{&dch.openChan}
 }
 
 // GetMessage returns the message channels
-func (dch DefaultChanHandler) GetMessage() []*chan *interfaces.MessageResponse {
-	return []*chan *interfaces.MessageResponse{&dch.messageChan}
+func (dch DefaultChanHandler) GetMessage() []*chan *msginterface.MessageResponse {
+	return []*chan *msginterface.MessageResponse{&dch.messageChan}
 }
 
 // GetMetadata returns the metadata channels
-func (dch DefaultChanHandler) GetMetadata() []*chan *interfaces.MetadataResponse {
-	return []*chan *interfaces.MetadataResponse{&dch.metadataChan}
+func (dch DefaultChanHandler) GetMetadata() []*chan *msginterface.MetadataResponse {
+	return []*chan *msginterface.MetadataResponse{&dch.metadataChan}
 }
 
 // GetSpeechStarted returns the speech started channels
-func (dch DefaultChanHandler) GetSpeechStarted() []*chan *interfaces.SpeechStartedResponse {
-	return []*chan *interfaces.SpeechStartedResponse{&dch.speechStartedChan}
+func (dch DefaultChanHandler) GetSpeechStarted() []*chan *msginterface.SpeechStartedResponse {
+	return []*chan *msginterface.SpeechStartedResponse{&dch.speechStartedChan}
 }
 
 // GetUtteranceEnd returns the utterance end channels
-func (dch DefaultChanHandler) GetUtteranceEnd() []*chan *interfaces.UtteranceEndResponse {
-	return []*chan *interfaces.UtteranceEndResponse{&dch.utteranceEndChan}
+func (dch DefaultChanHandler) GetUtteranceEnd() []*chan *msginterface.UtteranceEndResponse {
+	return []*chan *msginterface.UtteranceEndResponse{&dch.utteranceEndChan}
 }
 
 // GetClose returns the close channels
-func (dch DefaultChanHandler) GetClose() []*chan *interfaces.CloseResponse {
-	return []*chan *interfaces.CloseResponse{&dch.closeChan}
+func (dch DefaultChanHandler) GetClose() []*chan *msginterface.CloseResponse {
+	return []*chan *msginterface.CloseResponse{&dch.closeChan}
 }
 
 // GetError returns the error channels
-func (dch DefaultChanHandler) GetError() []*chan *interfaces.ErrorResponse {
-	return []*chan *interfaces.ErrorResponse{&dch.errorChan}
+func (dch DefaultChanHandler) GetError() []*chan *msginterface.ErrorResponse {
+	return []*chan *msginterface.ErrorResponse{&dch.errorChan}
 }
 
 // GetUnhandled returns the unhandled event channels

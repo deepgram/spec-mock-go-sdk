@@ -13,7 +13,7 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
-	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
+	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 )
 
 // NewDefaultCallbackHandler creates a new DefaultCallbackHandler
@@ -35,7 +35,7 @@ func NewDefaultCallbackHandler() *DefaultCallbackHandler {
 }
 
 // Open is the callback for when the connection opens
-func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
+func (dch DefaultCallbackHandler) Open(or *msginterface.OpenResponse) error {
 	if dch.debugWebsocket {
 		data, err := json.Marshal(or)
 		if err != nil {
@@ -60,7 +60,7 @@ func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
 }
 
 // Message is the callback for a transcription message
-func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error {
+func (dch DefaultCallbackHandler) Message(mr *msginterface.MessageResponse) error {
 	if dch.debugWebsocket {
 		data, err := json.Marshal(mr)
 		if err != nil {
@@ -99,7 +99,7 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 }
 
 // Metadata is the callback for information about the connection
-func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) error {
+func (dch DefaultCallbackHandler) Metadata(md *msginterface.MetadataResponse) error {
 	if dch.debugWebsocket {
 		data, err := json.Marshal(md)
 		if err != nil {
@@ -126,7 +126,7 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 }
 
 // SpeechStarted is when VAD detects noise
-func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedResponse) error {
+func (dch DefaultCallbackHandler) SpeechStarted(ssr *msginterface.SpeechStartedResponse) error {
 	if dch.debugWebsocket {
 		data, err := json.Marshal(ssr)
 		if err != nil {
@@ -159,7 +159,7 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 }
 
 // UtteranceEnd is the callback for when a channel goes silent
-func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndResponse) error {
+func (dch DefaultCallbackHandler) UtteranceEnd(ur *msginterface.UtteranceEndResponse) error {
 	fmt.Printf("\n[UtteranceEnd]\n")
 	if dch.debugWebsocketVerbose {
 		fmt.Printf("\nUtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
@@ -169,7 +169,7 @@ func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndRespon
 }
 
 // Close is the callback for when the connection closes
-func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
+func (dch DefaultCallbackHandler) Close(or *msginterface.CloseResponse) error {
 	if dch.debugWebsocket {
 		data, err := json.Marshal(or)
 		if err != nil {
@@ -194,7 +194,7 @@ func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
 }
 
 // Error is the callback for a error messages
-func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
+func (dch DefaultCallbackHandler) Error(er *msginterface.ErrorResponse) error {
 	if dch.debugWebsocket {
 		data, err := json.Marshal(er)
 		if err != nil {

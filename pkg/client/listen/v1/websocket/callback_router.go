@@ -13,7 +13,7 @@ import (
 
 	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
-	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
+	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 )
 
 // NewWithDefault creates a CallbackRouter with the default callback handler
@@ -27,14 +27,8 @@ func NewCallbackWithDefault() *CallbackRouter {
 	return NewCallbackRouter(NewDefaultCallbackHandler())
 }
 
-// New creates a CallbackRouter with a user-defined callback
-// Deprecated: Use NewCallbackRouter instead
-func New(callback interfaces.LiveMessageCallback) *CallbackRouter {
-	return NewCallbackRouter(callback)
-}
-
-// New creates a CallbackRouter with a user-defined callback
-func NewCallbackRouter(callback interfaces.LiveMessageCallback) *CallbackRouter {
+// NewCallbackRouter creates a CallbackRouter with a user-defined callback
+func NewCallbackRouter(callback msginterface.LiveMessageCallback) *CallbackRouter {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
 		klog.V(4).Infof("DEEPGRAM_DEBUG found")
@@ -47,17 +41,17 @@ func NewCallbackRouter(callback interfaces.LiveMessageCallback) *CallbackRouter 
 }
 
 // Open sends an OpenResponse message to the callback
-func (r *CallbackRouter) Open(or *interfaces.OpenResponse) error {
+func (r *CallbackRouter) Open(or *msginterface.OpenResponse) error {
 	return r.callback.Open(or)
 }
 
 // Close sends an CloseResponse message to the callback
-func (r *CallbackRouter) Close(or *interfaces.CloseResponse) error {
+func (r *CallbackRouter) Close(or *msginterface.CloseResponse) error {
 	return r.callback.Close(or)
 }
 
 // Error sends an ErrorResponse message to the callback
-func (r *CallbackRouter) Error(er *interfaces.ErrorResponse) error {
+func (r *CallbackRouter) Error(er *msginterface.ErrorResponse) error {
 	return r.callback.Error(er)
 }
 
@@ -98,13 +92,13 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 
 	switch m := msg.(type) {
 	case *spectypes.ServerStreamMemberResults:
-		err = r.callback.Message(interfaces.FromStreamingResponse(&m.Value))
+		err = r.callback.Message(msginterface.FromStreamingResponse(&m.Value))
 	case *spectypes.ServerStreamMemberMetadata:
-		err = r.callback.Metadata(interfaces.FromWsMetadata(&m.Value))
+		err = r.callback.Metadata(msginterface.FromWsMetadata(&m.Value))
 	case *spectypes.ServerStreamMemberSpeechStarted:
-		err = r.callback.SpeechStarted(interfaces.FromSpeechStarted(&m.Value))
+		err = r.callback.SpeechStarted(msginterface.FromSpeechStarted(&m.Value))
 	case *spectypes.ServerStreamMemberUtteranceEnd:
-		err = r.callback.UtteranceEnd(interfaces.FromUtteranceEnd(&m.Value))
+		err = r.callback.UtteranceEnd(msginterface.FromUtteranceEnd(&m.Value))
 	case *spectypes.ServerStreamMemberError:
 		err = r.callback.Error(wsErrorToSDKError(&m.Value))
 	case *spectypes.ServerStreamMemberSync:

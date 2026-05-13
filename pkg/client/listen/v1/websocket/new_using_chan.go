@@ -10,7 +10,6 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	websocketv1api "github.com/deepgram/spec-mock-go-sdk/pkg/api/listen/v1/websocket"
 	msginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	common "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1"
 	commoninterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/common/v1/interfaces"
@@ -87,12 +86,12 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 
 	if chans == nil {
 		klog.V(2).Infof("Using DefaultCallbackHandler.\n")
-		chans = websocketv1api.NewDefaultChanHandler()
+		chans = NewDefaultChanHandler()
 	}
 
 	// init
 	var router commoninterfaces.Router
-	router = websocketv1api.NewChanRouter(chans)
+	router = NewChanRouter(chans)
 
 	conn := WSChannel{
 		cOptions:  cOptions,

@@ -57,3 +57,56 @@ type WSChannel struct {
 	lastDatagram *time.Time
 	muFinal      sync.RWMutex
 }
+
+/*
+Using Channels
+*/
+// DefaultChanHandler is a default channel handler for live transcription
+// Simply prints the transcript to stdout
+type DefaultChanHandler struct {
+	debugWebsocket        bool
+	debugWebsocketVerbose bool
+
+	openChan          chan *msginterface.OpenResponse
+	messageChan       chan *msginterface.MessageResponse
+	metadataChan      chan *msginterface.MetadataResponse
+	speechStartedChan chan *msginterface.SpeechStartedResponse
+	utteranceEndChan  chan *msginterface.UtteranceEndResponse
+	closeChan         chan *msginterface.CloseResponse
+	errorChan         chan *msginterface.ErrorResponse
+	unhandledChan     chan *[]byte
+}
+
+// ChanRouter routes events to channels
+type ChanRouter struct {
+	debugWebsocket bool
+
+	openChan          []*chan *msginterface.OpenResponse
+	messageChan       []*chan *msginterface.MessageResponse
+	metadataChan      []*chan *msginterface.MetadataResponse
+	speechStartedChan []*chan *msginterface.SpeechStartedResponse
+	utteranceEndChan  []*chan *msginterface.UtteranceEndResponse
+	closeChan         []*chan *msginterface.CloseResponse
+	errorChan         []*chan *msginterface.ErrorResponse
+	unhandledChan     []*chan *[]byte
+}
+
+/*
+Using Callbacks
+*/
+// DefaultCallbackHandler is a default callback handler for live transcription
+// Simply prints the transcript to stdout
+type DefaultCallbackHandler struct {
+	debugWebsocket        bool
+	debugWebsocketVerbose bool
+}
+
+// CallbackRouter routes events to callbacks
+type CallbackRouter struct {
+	debugWebsocket bool
+	callback       msginterface.LiveMessageCallback
+}
+
+// MessageRouter is the interface for routing messages
+// Deprecated: Use CallbackRouter instead
+type MessageRouter = CallbackRouter

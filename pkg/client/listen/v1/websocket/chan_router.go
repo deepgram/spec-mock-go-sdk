@@ -14,7 +14,7 @@ import (
 
 	ws "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
-	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
+	msginterface "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket/interfaces"
 	pkginterfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces"
 )
 
@@ -33,7 +33,7 @@ func NewChanWithDefault() *ChanRouter {
 
 // New creates a ChanRouter with a user-defined channels
 // gocritic:ignore
-func NewChanRouter(chans interfaces.LiveMessageChan) *ChanRouter {
+func NewChanRouter(chans msginterface.LiveMessageChan) *ChanRouter {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
 		klog.V(4).Infof("DEEPGRAM_DEBUG found")
@@ -42,13 +42,13 @@ func NewChanRouter(chans interfaces.LiveMessageChan) *ChanRouter {
 
 	router := &ChanRouter{
 		debugWebsocket:    strings.EqualFold(strings.ToLower(debugStr), "true"),
-		openChan:          make([]*chan *interfaces.OpenResponse, 0),
-		messageChan:       make([]*chan *interfaces.MessageResponse, 0),
-		metadataChan:      make([]*chan *interfaces.MetadataResponse, 0),
-		speechStartedChan: make([]*chan *interfaces.SpeechStartedResponse, 0),
-		utteranceEndChan:  make([]*chan *interfaces.UtteranceEndResponse, 0),
-		closeChan:         make([]*chan *interfaces.CloseResponse, 0),
-		errorChan:         make([]*chan *interfaces.ErrorResponse, 0),
+		openChan:          make([]*chan *msginterface.OpenResponse, 0),
+		messageChan:       make([]*chan *msginterface.MessageResponse, 0),
+		metadataChan:      make([]*chan *msginterface.MetadataResponse, 0),
+		speechStartedChan: make([]*chan *msginterface.SpeechStartedResponse, 0),
+		utteranceEndChan:  make([]*chan *msginterface.UtteranceEndResponse, 0),
+		closeChan:         make([]*chan *msginterface.CloseResponse, 0),
+		errorChan:         make([]*chan *msginterface.ErrorResponse, 0),
 		unhandledChan:     make([]*chan *[]byte, 0),
 	}
 
@@ -67,7 +67,7 @@ func NewChanRouter(chans interfaces.LiveMessageChan) *ChanRouter {
 }
 
 // Open sends an OpenResponse message to the callback
-func (r *ChanRouter) Open(or *interfaces.OpenResponse) error {
+func (r *ChanRouter) Open(or *msginterface.OpenResponse) error {
 	byMsg, err := json.Marshal(or)
 	if err != nil {
 		klog.V(1).Infof("json.Marshal(or) failed. Err: %v\n", err)
@@ -75,7 +75,7 @@ func (r *ChanRouter) Open(or *interfaces.OpenResponse) error {
 	}
 
 	action := func(data []byte) error {
-		var msg interfaces.OpenResponse
+		var msg msginterface.OpenResponse
 		if err := json.Unmarshal(data, &msg); err != nil {
 			klog.V(1).Infof("json.Unmarshal(OpenResponse) failed. Err: %v\n", err)
 			return err
@@ -87,11 +87,11 @@ func (r *ChanRouter) Open(or *interfaces.OpenResponse) error {
 		return nil
 	}
 
-	return r.processGeneric(string(interfaces.TypeOpenResponse), byMsg, action)
+	return r.processGeneric(string(msginterface.TypeOpenResponse), byMsg, action)
 }
 
 // Close sends an CloseResponse message to the callback
-func (r *ChanRouter) Close(cr *interfaces.CloseResponse) error {
+func (r *ChanRouter) Close(cr *msginterface.CloseResponse) error {
 	byMsg, err := json.Marshal(cr)
 	if err != nil {
 		klog.V(1).Infof("json.Marshal(or) failed. Err: %v\n", err)
@@ -99,7 +99,7 @@ func (r *ChanRouter) Close(cr *interfaces.CloseResponse) error {
 	}
 
 	action := func(data []byte) error {
-		var msg interfaces.CloseResponse
+		var msg msginterface.CloseResponse
 		if err := json.Unmarshal(data, &msg); err != nil {
 			klog.V(1).Infof("json.Unmarshal(CloseResponse) failed. Err: %v\n", err)
 			return err
@@ -111,11 +111,11 @@ func (r *ChanRouter) Close(cr *interfaces.CloseResponse) error {
 		return nil
 	}
 
-	return r.processGeneric(string(interfaces.TypeCloseResponse), byMsg, action)
+	return r.processGeneric(string(msginterface.TypeCloseResponse), byMsg, action)
 }
 
 // Error sends an ErrorResponse message to the callback
-func (r *ChanRouter) Error(er *interfaces.ErrorResponse) error {
+func (r *ChanRouter) Error(er *msginterface.ErrorResponse) error {
 	byMsg, err := json.Marshal(er)
 	if err != nil {
 		klog.V(1).Infof("json.Marshal(er) failed. Err: %v\n", err)
@@ -123,7 +123,7 @@ func (r *ChanRouter) Error(er *interfaces.ErrorResponse) error {
 	}
 
 	action := func(data []byte) error {
-		var msg interfaces.ErrorResponse
+		var msg msginterface.ErrorResponse
 		if err := json.Unmarshal(data, &msg); err != nil {
 			klog.V(1).Infof("json.Unmarshal(ErrorResponse) failed. Err: %v\n", err)
 			return err
@@ -135,7 +135,7 @@ func (r *ChanRouter) Error(er *interfaces.ErrorResponse) error {
 		return nil
 	}
 
-	return r.processGeneric(string(interfaces.TypeErrorResponse), byMsg, action)
+	return r.processGeneric(string(msginterface.TypeErrorResponse), byMsg, action)
 }
 
 // processGeneric generalizes the handling of all message types
@@ -176,13 +176,13 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 
 	switch m := msg.(type) {
 	case *spectypes.ServerStreamMemberResults:
-		err = r.fanoutMessage(interfaces.FromStreamingResponse(&m.Value))
+		err = r.fanoutMessage(msginterface.FromStreamingResponse(&m.Value))
 	case *spectypes.ServerStreamMemberMetadata:
-		err = r.fanoutMetadata(interfaces.FromWsMetadata(&m.Value))
+		err = r.fanoutMetadata(msginterface.FromWsMetadata(&m.Value))
 	case *spectypes.ServerStreamMemberSpeechStarted:
-		err = r.fanoutSpeechStarted(interfaces.FromSpeechStarted(&m.Value))
+		err = r.fanoutSpeechStarted(msginterface.FromSpeechStarted(&m.Value))
 	case *spectypes.ServerStreamMemberUtteranceEnd:
-		err = r.fanoutUtteranceEnd(interfaces.FromUtteranceEnd(&m.Value))
+		err = r.fanoutUtteranceEnd(msginterface.FromUtteranceEnd(&m.Value))
 	case *spectypes.ServerStreamMemberError:
 		err = r.fanoutError(wsErrorToSDKError(&m.Value))
 	case *spectypes.ServerStreamMemberSync:
@@ -205,35 +205,35 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 // UnmarshalServerStream above; these just hand the typed value to
 // every registered channel.
 
-func (r *ChanRouter) fanoutMessage(m *interfaces.MessageResponse) error {
+func (r *ChanRouter) fanoutMessage(m *msginterface.MessageResponse) error {
 	for _, ch := range r.messageChan {
 		*ch <- m
 	}
 	return nil
 }
 
-func (r *ChanRouter) fanoutMetadata(m *interfaces.MetadataResponse) error {
+func (r *ChanRouter) fanoutMetadata(m *msginterface.MetadataResponse) error {
 	for _, ch := range r.metadataChan {
 		*ch <- m
 	}
 	return nil
 }
 
-func (r *ChanRouter) fanoutSpeechStarted(m *interfaces.SpeechStartedResponse) error {
+func (r *ChanRouter) fanoutSpeechStarted(m *msginterface.SpeechStartedResponse) error {
 	for _, ch := range r.speechStartedChan {
 		*ch <- m
 	}
 	return nil
 }
 
-func (r *ChanRouter) fanoutUtteranceEnd(m *interfaces.UtteranceEndResponse) error {
+func (r *ChanRouter) fanoutUtteranceEnd(m *msginterface.UtteranceEndResponse) error {
 	for _, ch := range r.utteranceEndChan {
 		*ch <- m
 	}
 	return nil
 }
 
-func (r *ChanRouter) fanoutError(m *interfaces.ErrorResponse) error {
+func (r *ChanRouter) fanoutError(m *msginterface.ErrorResponse) error {
 	for _, ch := range r.errorChan {
 		*ch <- m
 	}
@@ -244,7 +244,7 @@ func (r *ChanRouter) fanoutError(m *interfaces.ErrorResponse) error {
 // representation: variant + code + description + message) into the
 // SDK's DeepgramError so existing customer-facing error channels keep
 // their type signature.
-func wsErrorToSDKError(w *spectypes.WsError) *interfaces.ErrorResponse {
+func wsErrorToSDKError(w *spectypes.WsError) *msginterface.ErrorResponse {
 	out := &pkginterfaces.DeepgramError{}
 	if w == nil {
 		return out
