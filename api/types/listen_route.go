@@ -52,6 +52,8 @@ var TranscribeRoute = httptransport.HTTPRoute{
 		{GoField: "DetectLanguage", WireName: "detect_language"},
 		{GoField: "MipOptOut", WireName: "mip_opt_out"},
 		{GoField: "LogData", WireName: "log_data"},
+		{GoField: "Alternatives", WireName: "alternatives"},
+		{GoField: "Numerals", WireName: "numerals"},
 	},
 	HeaderFields: []httptransport.FieldBinding{
 		{GoField: "ContentType", WireName: "Content-Type"},
