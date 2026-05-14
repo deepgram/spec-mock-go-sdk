@@ -98,8 +98,14 @@ other call site uses it. The Go compiler will tell you.
 
 ## Converters
 
-Every customer-facing type has a converter. Top-level nil check returns
-nil. Inside, never nil-check primitives — use the deref helpers.
+The facade has converters going **both directions**. Each direction has
+its own naming pattern and its own rule for handling additive changes.
+
+### Output direction: `convert{GeneratedTypeName}`
+
+Every customer-facing response type has a converter from the generated
+shape. Top-level nil check returns nil. Inside, never nil-check
+primitives — use the deref helpers.
 
 ```go
 func convertTranscribeOutput(in *spectypes.TranscribeOutput) *PreRecordedResponse {
@@ -117,6 +123,110 @@ func convertTranscribeOutput(in *spectypes.TranscribeOutput) *PreRecordedRespons
 One converter per type pair. Name `convert{GeneratedTypeName}`. Place
 all converters in `convert.go`; helpers at the top, type converters
 below in dependency order (leaf types first).
+
+### Input direction: `optionsTo{GeneratedInputType}`
+
+Some operations have an idiomatic options struct (e.g.
+`PreRecordedTranscriptionOptions`) that maps onto a generated input
+type (e.g. `spectypes.TranscribeInput`). Those converters go the
+opposite direction — customer value-types → generated pointer-types —
+and follow a different naming pattern:
+
+```go
+func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
+	in := &spectypes.TranscribeInput{}
+	if o == nil {
+		return in
+	}
+	if o.Callback != "" {
+		v := o.Callback
+		in.Callback = &v
+	}
+	if o.Channels != 0 {
+		v := int32(o.Channels)
+		in.Channels = &v
+	}
+	if len(o.Keywords) > 0 {
+		in.Keywords = o.Keywords
+	}
+	// ...
+	return in
+}
+```
+
+One converter per `(options struct → generated input type)` pair.
+Name `optionsTo{GeneratedInputType}`. Each facade field gets a
+non-zero check + pointer allocation; zero-valued facade fields leave
+the generated field as `nil` so they don't surface in the wire query
+string. This is the canonical input-side wiring shape, and the LLM
+regen pipeline looks for exactly this pattern when extending the
+facade for additive spec changes.
+
+## Additive change rule
+
+When a generated input or output type gains a field (`FIELD_ADDED`
+classified as `absorbed-silently` by the regen pipeline), the facade
+MUST be updated — silently, but definitely. "Silently" means no PR
+comment, no `BREAKING_CHANGES.md` entry, no merge gate — the
+customer-facing signature stays compatible. It does NOT mean "ignore
+the change".
+
+### What "extend the facade" means concretely
+
+When `spectypes.{InputType}.{NewField}` appears:
+
+1. **Ensure the facade options struct exposes a matching field.** Look
+   at the options struct paired with this input type (e.g.
+   `PreRecordedTranscriptionOptions` for `TranscribeInput`). If it
+   already has the field with a sensible Go-idiomatic value type, leave
+   it. If not, add it — same field name in Go-idiomatic case (e.g.
+   `Numerals bool`, `Alternatives int`), positioned alphabetically.
+
+2. **Extend the `optionsTo{InputType}` converter.** Add a non-zero check
+   + pointer allocation block in alphabetical position. Match the
+   existing style exactly (helpers / casts / value lifting). Never
+   reorder existing blocks; insert in place.
+
+3. **Update inline comments that list "dropped fields".** If the
+   converter's docstring or inline comment enumerates fields the facade
+   doesn't currently wire, REMOVE the now-wired field from that list.
+   These lists must stay accurate or future runs will keep skipping the
+   field.
+
+When `spectypes.{OutputType}.{NewField}` appears:
+
+1. **Ensure the customer response type exposes a matching field.** The
+   value-type version with idiomatic case + JSON tag.
+
+2. **Extend the `convert{OutputType}` converter.** Add the deref/copy
+   line in alphabetical position alongside its peers.
+
+3. **Emit an `Example_*` test if a new public symbol was added.** See
+   `sdk-agentic-readiness`.
+
+### Why this is non-breaking
+
+The facade is designed so that additive changes never break customer
+code:
+
+- **Options structs are passed by pointer with named-field literals.**
+  `&interfaces.PreRecordedTranscriptionOptions{Model: "nova-3"}` keeps
+  compiling when new fields appear. Existing callers don't need to
+  set the new field.
+- **Response structs use value-type primitives.** Zero is the absence
+  signal; customers don't nil-check.
+- **Method signatures take options-by-pointer, not options-by-value.**
+  `FromURL(ctx, url, opts *Options)` keeps compiling when `Options`
+  grows. New convenience constructors / helpers can be added without
+  touching existing ones.
+- **Converters use the deref helpers**, which already handle nil
+  pointers. So a generated field that's optional in the wire shape
+  surfaces in the facade as a zero-valued primitive — no nil checks
+  needed in customer code.
+
+When you add a new field to the facade in response to a generated
+field, you are extending a stable, additive-friendly shape. You are
+not changing a contract.
 
 ## Naming idioms
 
