@@ -264,45 +264,69 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
+          ABSORBED: ${{ steps.report.outputs.absorbed }}
+          UNAVOIDABLE: ${{ steps.report.outputs.unavoidable }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           sentinel="<!-- spec-idiomatic:work-done -->"
           existing_id=$(gh api "repos/$REPO/issues/$PR_NUM/comments" \
             --jq ".[] | select(.body | startswith(\"$sentinel\")) | .id" 2>/dev/null \
             | head -1)
-          last_run="Last run: $(date -u +'%Y-%m-%d %H:%M:%S UTC') on commit \`${{ github.event.pull_request.head.sha }}\`."
-          body=$(cat <<EOF
-          $sentinel
-          ## spec-idiomatic — work done
 
-          $last_run
+          report="${RUNNER_TEMP}/spec-idiomatic-report.json"
+          if [[ -f "$report" ]]; then
+            EDITS_APPLIED=$(jq -r '.result.edits_applied // 0' "$report")
+            ATTEMPTS_USED=$(jq -r '.result.attempts_used // 1' "$report")
+            ATTEMPTS_MINUS_ONE=$((ATTEMPTS_USED - 1))
+            CHANGES_LIST=$(jq -r '
+              if (.plan.changes // []) | length == 0 then
+                "_No api/ changes detected this run._"
+              else
+                (.plan.changes
+                  | map("- `" + (.tier // "?") + "` " + .kind + " — `" + (.type // "?") + (if (.member // "") != "" then "." + .member else "" end) + "`" + (if (.reason // "") != "" then " (" + .reason + ")" else "" end))
+                  | join("\n"))
+              end
+            ' "$report")
+          else
+            EDITS_APPLIED="?"
+            ATTEMPTS_MINUS_ONE="?"
+            CHANGES_LIST="_Report file not produced — the runner likely failed before classification._"
+          fi
 
-          - Materialised \`before/\` and \`after/\` api/ snapshots from PR base SHA vs PR head
-          - Diffed api/ and classified every change into a tier: \`absorbed-silently\` / \`absorbed-with-ceremony\` / \`unavoidable\`
-          - Parsed the pkg/ Go facade into an AST via the shelled-out Go AST helper
-          - Loaded the consumer's \`AGENTS.md\` and every \`.agents/skills/*/SKILL.md\` so the prompt carries SDK-resident conventions
-          - Composed the orchestrator prompt from \`prompts/system.md\` + \`prompts/language/go.md\` + plan + AST + sdk-conventions + selected facade files
-          - Invoked claude-opus-4-7 to produce facade edits + breaking_changes[] entries as a single JSON object
-          - Applied returned edits under \`pkg/\`, with \`README.md\` / \`llms.txt\` / \`BREAKING_CHANGES.md\` routed to the repo root; refused any path containing \`..\`
-          - Wrote \`BREAKING_CHANGES.md\` for tier-1 and tier-2 changes the LLM flagged (LLM is sole author)
-          - Ran \`go test -count=1 ./pkg/...\` to verify the edited facade compiles and every \`Example_*\` passes its \`// Output:\` assertion
-          - On build failure, retried up to 3 times with the build error appended to the prompt
-          - Wrote a structured JSON report (\`spec-idiomatic-report.json\`) capturing tier counts and per-change classification
-          - Applied \`regen/breaking-absorbed\` and/or \`regen/breaking-unavoidable\` labels per the report's tier counts
-          - Posted dedicated tier-1 and tier-2 comments when applicable (edited in place across re-runs)
-          - Set the \`spec-idiomatic/breaking-acked\` status check based on tier-2 count and the \`regen/breaking-acked\` label
-          - Committed and pushed facade updates to this PR branch (no-op if no edits were needed)
+          LAST_RUN="$(date -u +'%Y-%m-%d %H:%M:%S UTC') on commit \`${HEAD_SHA}\`"
+          ABSORBED_COUNT="${ABSORBED:-?}"
+          UNAVOIDABLE_COUNT="${UNAVOIDABLE:-?}"
 
-          Items above are always run, in order; nothing is conditional on the diff content.
-          This comment is edited in place on every workflow run — check the timestamp above for the latest pass.
-          See [deepgram/spec-idiomatic](https://github.com/deepgram/spec-idiomatic) for runner internals.
-          EOF
-          )
+          export LAST_RUN ABSORBED_COUNT UNAVOIDABLE_COUNT EDITS_APPLIED ATTEMPTS_MINUS_ONE CHANGES_LIST
+          # shellcheck disable=SC2016 # single-quoted '${VAR}' list is intentional — envsubst whitelist
+          envsubst '${LAST_RUN} ${ABSORBED_COUNT} ${UNAVOIDABLE_COUNT} ${EDITS_APPLIED} ${ATTEMPTS_MINUS_ONE} ${CHANGES_LIST}' \
+            < "${GITHUB_WORKSPACE}/.github/workflows/templates/spec-idiomatic-work-done.md" \
+            > /tmp/work-done.md
+
           if [[ -n "$existing_id" ]]; then
             gh api -X PATCH "repos/$REPO/issues/comments/$existing_id" \
-              -f body="$body" >/dev/null
+              -F body=@/tmp/work-done.md >/dev/null
             echo "Updated work-done comment $existing_id"
           else
-            gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
+            gh pr comment "$PR_NUM" --repo "$REPO" --body-file /tmp/work-done.md
             echo "Posted new work-done comment"
           fi
+
+      - name: Tick idiomatic checkbox in PR body
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          body=$(gh pr view "$PR_NUM" --repo "$REPO" --json body --jq .body)
+          new_body=$(printf '%s' "$body" | sed 's|- \[ \] \(.*\)<!-- workflow-checkbox:idiomatic -->|- [x] \1<!-- workflow-checkbox:idiomatic -->|')
+          if [[ "$new_body" == "$body" ]]; then
+            echo "checkbox marker not found or already ticked; no-op"
+            exit 0
+          fi
+          printf '%s' "$new_body" > /tmp/new-body.md
+          gh pr edit "$PR_NUM" --repo "$REPO" --body-file /tmp/new-body.md
+          echo "ticked workflow-checkbox:idiomatic in PR body"
