@@ -137,26 +137,36 @@ jobs:
           ABSORBED: ${{ steps.report.outputs.absorbed }}
         run: |
           set -euo pipefail
-          title="## \u26a0\ufe0f Absorbed breaking changes"
-          gh api "repos/$REPO/issues/$PR_NUM/comments" \
-            --jq ".[] | select(.body | startswith(\"$title\")) | .id" 2>/dev/null \
-            | while read -r id; do
-                [[ -n "$id" ]] && gh api -X DELETE "repos/$REPO/issues/comments/$id" >/dev/null 2>&1 || true
-              done
+          sentinel="<!-- spec-idiomatic:tier1 -->"
+          existing_id=$(gh api "repos/$REPO/issues/$PR_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$sentinel\")) | .id" 2>/dev/null \
+            | head -1)
           if [[ -z "$ABSORBED" || "$ABSORBED" == "0" ]]; then
-            echo "no tier-1 changes this run; old comment (if any) deleted, nothing to post"
+            if [[ -n "$existing_id" ]]; then
+              gh api -X DELETE "repos/$REPO/issues/comments/$existing_id" >/dev/null 2>&1 || true
+              echo "0 tier-1 this run; deleted stale comment $existing_id"
+            else
+              echo "0 tier-1 this run; no prior comment to clean"
+            fi
             exit 0
           fi
-          body=$(jq -r '
-            "## \u26a0\ufe0f Absorbed breaking changes\n\n" +
+          body=$(jq -r --arg sentinel "$sentinel" '
+            $sentinel + "\n## \u26a0\ufe0f Absorbed breaking changes\n\n" +
             "These changes are tier-1: the facade absorbed them by zero-defaulting the affected customer fields, but the semantic contract has shifted. Reviewer attention required; no hard merge block.\n\n" +
             ((.result.breaking_changes // [])
               | map(select(.tier == "absorbed-with-ceremony"))
-              | map("- **" + .type + (if .member != "" then "." + .member else "" end) + "** — " + .reason)
+              | map("- **" + .type + (if .member != "" then "." + .member else "" end) + "** \u2014 " + .reason)
               | join("\n")) +
             "\n\nFull descriptions live in `BREAKING_CHANGES.md` at the repo root."
           ' "${RUNNER_TEMP}/spec-idiomatic-report.json")
-          gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
+          if [[ -n "$existing_id" ]]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing_id" \
+              -f body="$body" >/dev/null
+            echo "Updated tier-1 comment $existing_id"
+          else
+            gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
+            echo "Posted new tier-1 comment"
+          fi
 
       - name: Post unavoidable-breaking comment
         if: always()
@@ -167,26 +177,36 @@ jobs:
           UNAVOIDABLE: ${{ steps.report.outputs.unavoidable }}
         run: |
           set -euo pipefail
-          title="## \ud83d\uded1 Unavoidable breaking changes"
-          gh api "repos/$REPO/issues/$PR_NUM/comments" \
-            --jq ".[] | select(.body | startswith(\"$title\")) | .id" 2>/dev/null \
-            | while read -r id; do
-                [[ -n "$id" ]] && gh api -X DELETE "repos/$REPO/issues/comments/$id" >/dev/null 2>&1 || true
-              done
+          sentinel="<!-- spec-idiomatic:tier2 -->"
+          existing_id=$(gh api "repos/$REPO/issues/$PR_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$sentinel\")) | .id" 2>/dev/null \
+            | head -1)
           if [[ -z "$UNAVOIDABLE" || "$UNAVOIDABLE" == "0" ]]; then
-            echo "no tier-2 changes this run; old comment (if any) deleted, nothing to post"
+            if [[ -n "$existing_id" ]]; then
+              gh api -X DELETE "repos/$REPO/issues/comments/$existing_id" >/dev/null 2>&1 || true
+              echo "0 tier-2 this run; deleted stale comment $existing_id"
+            else
+              echo "0 tier-2 this run; no prior comment to clean"
+            fi
             exit 0
           fi
-          body=$(jq -r '
-            "## \ud83d\uded1 Unavoidable breaking changes\n\n" +
+          body=$(jq -r --arg sentinel "$sentinel" '
+            $sentinel + "\n## \ud83d\uded1 Unavoidable breaking changes\n\n" +
             "These changes are tier-2: the facade cannot absorb them. Customer code WILL break at compile or runtime. The `spec-idiomatic/breaking-acked` status check is failing; a CODEOWNER must apply the `regen/breaking-acked` label after deciding the break is acceptable, which re-runs the check and unblocks merge.\n\n" +
             ((.result.breaking_changes // [])
               | map(select(.tier == "unavoidable"))
-              | map("- **" + .type + (if .member != "" then "." + .member else "" end) + "** — " + .reason)
+              | map("- **" + .type + (if .member != "" then "." + .member else "" end) + "** \u2014 " + .reason)
               | join("\n")) +
             "\n\nMigration guidance lives in `BREAKING_CHANGES.md` at the repo root."
           ' "${RUNNER_TEMP}/spec-idiomatic-report.json")
-          gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
+          if [[ -n "$existing_id" ]]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing_id" \
+              -f body="$body" >/dev/null
+            echo "Updated tier-2 comment $existing_id"
+          else
+            gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
+            echo "Posted new tier-2 comment"
+          fi
 
       - name: Commit facade updates
         id: commit
@@ -246,33 +266,43 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          title="## spec-idiomatic — work done"
-          gh api "repos/$REPO/issues/$PR_NUM/comments" \
-            --jq ".[] | select(.body | startswith(\"$title\")) | .id" 2>/dev/null \
-            | while read -r id; do
-                [[ -n "$id" ]] && gh api -X DELETE "repos/$REPO/issues/comments/$id" >/dev/null 2>&1 || true
-              done
-          gh pr comment "$PR_NUM" --repo "$REPO" \
-            --body "$(cat <<'EOF'
+          sentinel="<!-- spec-idiomatic:work-done -->"
+          existing_id=$(gh api "repos/$REPO/issues/$PR_NUM/comments" \
+            --jq ".[] | select(.body | startswith(\"$sentinel\")) | .id" 2>/dev/null \
+            | head -1)
+          last_run="Last run: $(date -u +'%Y-%m-%d %H:%M:%S UTC') on commit \`${{ github.event.pull_request.head.sha }}\`."
+          body=$(cat <<EOF
+          $sentinel
           ## spec-idiomatic — work done
 
-          - Materialised `before/` and `after/` api/ snapshots from PR base SHA vs PR head
-          - Diffed api/ and classified every change into a tier: `absorbed-silently` / `absorbed-with-ceremony` / `unavoidable`
+          $last_run
+
+          - Materialised \`before/\` and \`after/\` api/ snapshots from PR base SHA vs PR head
+          - Diffed api/ and classified every change into a tier: \`absorbed-silently\` / \`absorbed-with-ceremony\` / \`unavoidable\`
           - Parsed the pkg/ Go facade into an AST via the shelled-out Go AST helper
-          - Loaded the consumer's `AGENTS.md` and every `.agents/skills/*/SKILL.md` so the prompt carries SDK-resident conventions
-          - Composed the orchestrator prompt from `prompts/system.md` + `prompts/language/go.md` + plan + AST + sdk-conventions + selected facade files
+          - Loaded the consumer's \`AGENTS.md\` and every \`.agents/skills/*/SKILL.md\` so the prompt carries SDK-resident conventions
+          - Composed the orchestrator prompt from \`prompts/system.md\` + \`prompts/language/go.md\` + plan + AST + sdk-conventions + selected facade files
           - Invoked claude-opus-4-7 to produce facade edits + breaking_changes[] entries as a single JSON object
-          - Applied returned edits under `pkg/`, with `README.md` / `llms.txt` / `BREAKING_CHANGES.md` routed to the repo root; refused any path containing `..`
-          - Wrote `BREAKING_CHANGES.md` for tier-1 and tier-2 changes the LLM flagged (LLM is sole author)
-          - Ran `go test -count=1 ./pkg/...` to verify the edited facade compiles and every `Example_*` passes its `// Output:` assertion
+          - Applied returned edits under \`pkg/\`, with \`README.md\` / \`llms.txt\` / \`BREAKING_CHANGES.md\` routed to the repo root; refused any path containing \`..\`
+          - Wrote \`BREAKING_CHANGES.md\` for tier-1 and tier-2 changes the LLM flagged (LLM is sole author)
+          - Ran \`go test -count=1 ./pkg/...\` to verify the edited facade compiles and every \`Example_*\` passes its \`// Output:\` assertion
           - On build failure, retried up to 3 times with the build error appended to the prompt
-          - Wrote a structured JSON report (`spec-idiomatic-report.json`) capturing tier counts and per-change classification
-          - Applied `regen/breaking-absorbed` and/or `regen/breaking-unavoidable` labels per the report's tier counts
-          - Posted dedicated tier-1 and tier-2 comments when applicable
-          - Set the `spec-idiomatic/breaking-acked` status check based on tier-2 count and the `regen/breaking-acked` label
+          - Wrote a structured JSON report (\`spec-idiomatic-report.json\`) capturing tier counts and per-change classification
+          - Applied \`regen/breaking-absorbed\` and/or \`regen/breaking-unavoidable\` labels per the report's tier counts
+          - Posted dedicated tier-1 and tier-2 comments when applicable (edited in place across re-runs)
+          - Set the \`spec-idiomatic/breaking-acked\` status check based on tier-2 count and the \`regen/breaking-acked\` label
           - Committed and pushed facade updates to this PR branch (no-op if no edits were needed)
 
           Items above are always run, in order; nothing is conditional on the diff content.
+          This comment is edited in place on every workflow run — check the timestamp above for the latest pass.
           See [deepgram/spec-idiomatic](https://github.com/deepgram/spec-idiomatic) for runner internals.
           EOF
-          )"
+          )
+          if [[ -n "$existing_id" ]]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing_id" \
+              -f body="$body" >/dev/null
+            echo "Updated work-done comment $existing_id"
+          else
+            gh pr comment "$PR_NUM" --repo "$REPO" --body "$body"
+            echo "Posted new work-done comment"
+          fi
