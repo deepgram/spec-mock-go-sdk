@@ -193,6 +193,41 @@ When `spectypes.{InputType}.{NewField}` appears:
    These lists must stay accurate or future runs will keep skipping the
    field.
 
+### Dropped-list ↔ wiring consistency (mandatory check)
+
+The dropped-fields list in `optionsTo{InputType}`'s docstring is a
+contract with future runs. It enumerates facade-struct fields that
+intentionally have NO wiring block in the converter (because the spec
+doesn't model them yet). Two invariants MUST hold after every regen:
+
+- **Every name in the dropped list has NO `if o.{Name}` block in the
+  converter body.** Listing implies dropping.
+- **Every facade-struct field NOT in the dropped list AND NOT a
+  no-op-on-zero scalar (every field, in practice) MUST have an
+  `if o.{Name}` block in the converter body.** Absence from the list
+  implies wired.
+
+Removing a name from the dropped list without adding the corresponding
+wiring block is the most common regen bug. Never do that. If you find
+yourself removing a name, the very next edit in the same response MUST
+be the wiring block.
+
+### Comprehensive scan rule (for multi-field syncs)
+
+When the api/ diff contains MORE than one `FIELD_ADDED` on the same
+input type — e.g., a big spec sync that adds ten or thirty fields at
+once — walk every facade-options field (e.g. every field of
+`PreRecordedTranscriptionOptions`) and ask:
+
+1. Does this facade field have a matching spec field on the new
+   `{InputType}`?
+2. Does the converter already have an `if o.{Name}` block for it?
+
+For every facade field where (1) is yes AND (2) is no, you owe a new
+wiring block in this response. Do not stop after wiring a few obvious
+ones; exhaustively cover the facade. A partial sync leaves silent
+gaps where the customer can set a field that never reaches the wire.
+
 When `spectypes.{OutputType}.{NewField}` appears:
 
 1. **Ensure the customer response type exposes a matching field.** The
