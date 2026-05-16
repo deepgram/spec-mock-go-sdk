@@ -114,6 +114,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		v := o.Paragraphs
 		in.Paragraphs = &v
 	}
+	if o.PhonemeLattice {
+		v := o.PhonemeLattice
+		in.PhonemeLattice = &v
+	}
 	if o.ProfanityFilter {
 		v := o.ProfanityFilter
 		in.ProfanityFilter = &v
@@ -139,6 +143,9 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.SmartFormat {
 		v := o.SmartFormat
 		in.SmartFormat = &v
+	}
+	if len(o.SpeakersOfInterest) > 0 {
+		in.SpeakersOfInterest = o.SpeakersOfInterest
 	}
 	if o.Summarize != "" {
 		v := o.Summarize
