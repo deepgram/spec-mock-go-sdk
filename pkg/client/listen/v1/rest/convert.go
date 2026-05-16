@@ -26,10 +26,10 @@ import (
 // into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
 // zero-valued facade fields are left as nil pointers on the generated struct so
 // they don't surface in the wire query string. Fields the facade exposes but
-// the spec doesn't model (CustomIntent*, CustomTopic*, Dictation, Extra,
-// Replace, UttSplit, Measurements, DetectTopics) are dropped here; if/when
-// they land in the spec the codegen-resident schema will pick them up and
-// this converter expands accordingly.
+// the spec doesn't model (CustomIntent*, CustomTopic*, Extra, Replace,
+// DetectTopics) are dropped here; if/when they land in the spec the
+// codegen-resident schema will pick them up and this converter expands
+// accordingly.
 func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
@@ -55,8 +55,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		in.DetectEntities = &v
 	}
 	if o.DetectLanguage {
-		v := "true"
-		in.DetectLanguage = &v
+		// DetectLanguage retyped in api/ from *string -> []string.
+		// Facade still exposes a bool; we send the canonical "true" sentinel
+		// as a single-element list to preserve wire compatibility.
+		in.DetectLanguage = []string{"true"}
 	}
 	if o.Diarize {
 		v := o.Diarize
@@ -65,6 +67,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.DiarizeVersion != "" {
 		v := o.DiarizeVersion
 		in.DiarizeVersion = &v
+	}
+	if o.Dictation {
+		v := o.Dictation
+		in.Dictation = &v
 	}
 	if o.Encoding != "" {
 		v := o.Encoding
@@ -87,6 +93,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.Language != "" {
 		v := o.Language
 		in.Language = &v
+	}
+	if o.Measurements {
+		v := o.Measurements
+		in.Measurements = &v
 	}
 	if o.Model != "" {
 		v := o.Model
@@ -140,6 +150,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.Topics {
 		v := o.Topics
 		in.Topics = &v
+	}
+	if o.UttSplit != 0 {
+		v := float32(o.UttSplit)
+		in.UttSplit = &v
 	}
 	if o.Utterances {
 		v := o.Utterances
