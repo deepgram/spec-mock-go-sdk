@@ -38,6 +38,8 @@ var TranscribeRoute = httptransport.HTTPRoute{
 		{GoField: "Keywords", WireName: "keywords"},
 		{GoField: "Keyterm", WireName: "keyterm"},
 		{GoField: "Search", WireName: "search"},
+		{GoField: "PhonemeLattice", WireName: "phoneme_lattice"},
+		{GoField: "SpeakersOfInterest", WireName: "soi"},
 		{GoField: "Tag", WireName: "tag"},
 		{GoField: "Encoding", WireName: "encoding"},
 		{GoField: "SampleRate", WireName: "sample_rate"},
