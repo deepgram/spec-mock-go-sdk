@@ -577,11 +577,39 @@ type TranscribeInput struct {
 	
 	Channels *int32 `json:"-"`
 	
+	// Chunker behavior preset. Selects between batch (whole-file) and streaming
+	// (incremental) chunking semantics.
+	Chunker Chunker `json:"-"`
+	
 	ContentType *string `json:"-"`
+	
+	// Pass-through context for callback deliveries. When set, the callback body
+	// echoes this value back so the caller can correlate the async result with the
+	// original request.
+	Context *bool `json:"-"`
+	
+	// Custom dataset identifier for usage tracking and analytics. Wire name is
+	// dataset-id (hyphenated, not snake_case) for historical compatibility.
+	DatasetId *string `json:"-"`
+	
+	// Date format string applied when dates=true . Uses strftime syntax; defaults to
+	// ISO 8601 when omitted.
+	DateFormat *string `json:"-"`
+	
+	// Detect and format dates in the transcript (e.g. "March fifteenth twenty
+	// twenty-six" → "2026-03-15").
+	Dates *bool `json:"-"`
 	
 	DetectEntities *bool `json:"-"`
 	
-	DetectLanguage *string `json:"-"`
+	// Detect spoken languages from a constrained candidate set. Each repeated value
+	// adds one allowed language code (BCP-47). When omitted, the request relies on the
+	// language parameter or stem's full-vocabulary detector.
+	DetectLanguage []string `json:"-"`
+	
+	// Pin a specific language-detection model version. Requires detect_language to
+	// also be set; rejected otherwise. Not publicly documented.
+	DetectLanguageVersion *string `json:"-"`
 	
 	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
 	// diarize=true continues to work for backward compatibility but is mutually
@@ -594,13 +622,42 @@ type TranscribeInput struct {
 	// Mutually exclusive with diarize_model .
 	DiarizeVersion *string `json:"-"`
 	
+	// Format dictation commands (e.g. "period" → ".", "new paragraph" → "\n\n") in
+	// the transcript.
+	Dictation *bool `json:"-"`
+	
+	// Convenience flag that emulates streaming behavior on the batch endpoint.
+	// Encapsulates a handful of lower-level chunker parameters that are error-prone to
+	// set individually.
+	EmulateStreaming *bool `json:"-"`
+	
 	Encoding *string `json:"-"`
 	
+	// Silence threshold (milliseconds) that triggers end-of-speech, OR the literal
+	// string false to disable VAD entirely. Stem accepts both an integer and a
+	// boolean string on the wire; modeled as String here so codegens that don't
+	// represent integer-or-string unions natively can still round-trip the literal
+	// value. Replaces vad_turnoff .
+	Endpointing *string `json:"-"`
+	
+	// Run batch entity detection with a custom guidance prompt.
+	EntityPrompt *string `json:"-"`
+	
 	FillerWords *bool `json:"-"`
+	
+	// Enable speaker identification. Distinct from diarization: identification
+	// attempts to match speakers to a known voiceprint set, while diarization only
+	// groups segments by speaker label.
+	Identify *bool `json:"-"`
 	
 	Intents *bool `json:"-"`
 	
 	Keyterm []string `json:"-"`
+	
+	// Boosting strategy for keywords . standard (default) applies
+	// boost-through-search for out-of-vocabulary keywords; legacy applies only to
+	// in-vocabulary terms.
+	KeywordBoost KeywordBoost `json:"-"`
 	
 	Keywords []string `json:"-"`
 	
@@ -611,6 +668,23 @@ type TranscribeInput struct {
 	// compatibility; sending both with conflicting values returns 400.
 	LogData *bool `json:"-"`
 	
+	// Maximum chunk duration in seconds, OR one of the named modes batch / streaming .
+	// See min_duration .
+	MaxDuration *string `json:"-"`
+	
+	// Cap on the number of distinct speakers diarization will return. When unset, the
+	// diarizer is unbounded.
+	MaxSpeakers *int32 `json:"-"`
+	
+	// Detect and format measurements (e.g. "five feet" → "5 ft", "two kilograms" → "2
+	// kg").
+	Measurements *bool `json:"-"`
+	
+	// Minimum chunk duration in seconds, OR one of the named modes batch / streaming .
+	// Modeled as String to capture both numeric and named-mode forms in a single
+	// field.
+	MinDuration *string `json:"-"`
+	
 	MipOptOut *bool `json:"-"`
 	
 	// A model identifier (e.g. nova-3-general , nova-2-medical ). Free-form string;
@@ -620,11 +694,30 @@ type TranscribeInput struct {
 	
 	Multichannel *bool `json:"-"`
 	
+	// Custom job name for usage tracking and logging.
+	Name *string `json:"-"`
+	
+	// Enable named-entity recognition. Stem also accepts the alias alphanumerics for
+	// backward compatibility; the canonical wire name is ner .
+	Ner *bool `json:"-"`
+	
+	// Detect and format numbers in the transcript. Distinct from numerals : numbers
+	// covers a broader set of numeric transformations including currency, ordinals,
+	// and units.
+	Numbers *bool `json:"-"`
+	
+	// Preserve whitespace in formatted numbers (e.g. keep "1 000" rather than
+	// collapsing to "1000").
+	NumbersSpaces *bool `json:"-"`
+	
 	// Convert spelled-out numbers to digits in the transcript (e.g. "twenty-five" →
 	// "25"). Boolean; default false.
 	Numerals *bool `json:"-"`
 	
 	Paragraphs *bool `json:"-"`
+	
+	// Include per-stage performance / latency metrics in the response metadata.
+	Performance *bool `json:"-"`
 	
 	ProfanityFilter *bool `json:"-"`
 	
@@ -638,24 +731,72 @@ type TranscribeInput struct {
 	
 	Sentiment *bool `json:"-"`
 	
+	// Include the redacted text alongside the redaction marker in the response.
+	// Without this, redacted spans are masked.
+	ShowRedactedText *bool `json:"-"`
+	
 	SmartFormat *bool `json:"-"`
 	
 	Summarize *string `json:"-"`
 	
+	// Length of the generated summary when summarize is enabled. One of short , medium
+	// , long .
+	SummarizeLength SummaryLength `json:"-"`
+	
 	Tag []string `json:"-"`
+	
+	// Threshold value used by sentiment and topic detection classifiers. Range and
+	// semantics vary by feature; consult the per-feature docs.
+	Threshold *int32 `json:"-"`
 	
 	Tier *string `json:"-"`
 	
+	// Detect and format times in the transcript (e.g. "five thirty PM" → "5:30 PM").
+	Times *bool `json:"-"`
+	
 	Topics *bool `json:"-"`
 	
+	// Unify speaker IDs across the channels of a multichannel source. Without this,
+	// each channel gets its own speaker-id numbering.
+	UnifySpeakerId *bool `json:"-"`
+	
+	// Maximum silence (seconds) between words within an utterance before a new
+	// utterance is started.
+	UttSplit *float32 `json:"-"`
+	
+	// Maximum silence (seconds) between words at an interruption boundary (e.g.
+	// crosstalk in multichannel).
+	UttSplitInterruptions *float32 `json:"-"`
+	
 	Utterances *bool `json:"-"`
+	
+	// Enable utterance segmentation on word boundaries. Independent of utterances ;
+	// controls the segmentation algorithm rather than the response shape.
+	Uttseg *bool `json:"-"`
+	
+	// Emit interim VAD events ( SpeechStarted , UtteranceEnd ) on the streaming
+	// WebSocket connection. Has no effect on the batch REST surface.
+	VadEvents *bool `json:"-"`
+	
+	// Suppress VAD-only segments where audio is detected but no speech is present.
+	// Reduces metadata noise on the wire.
+	VadSuppression *bool `json:"-"`
 	
 	// Deprecated: Use endpointing instead. vad_turnoff is rejected when endpointing
 	// is also an integer; if only vad_turnoff is set it is silently mapped onto
 	// endpointing .
 	VadTurnoff *int32 `json:"-"`
 	
+	// Counterpart to vad_turnoff : silence threshold (milliseconds) that triggers
+	// BEGINNING of speech detection.
+	VadTurnon *int32 `json:"-"`
+	
 	Version *string `json:"-"`
+	
+	// Detect and format all-caps emphasis ("yelling") in the transcript. Wire name is
+	// the upper-case literal YELLING (not the lower-case form). Preserved for
+	// historical reasons.
+	Yelling *bool `json:"-"`
 	
 	noSmithyDocumentSerde
 }
