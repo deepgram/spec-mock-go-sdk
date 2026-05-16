@@ -228,6 +228,33 @@ wiring block in this response. Do not stop after wiring a few obvious
 ones; exhaustively cover the facade. A partial sync leaves silent
 gaps where the customer can set a field that never reaches the wire.
 
+### Wire tests are the contract floor (do not edit or delete)
+
+The file `pkg/client/listen/v1/rest/wire_test.go` contains
+`TestWires_<Field>` / `TestDropped_<Field>` cases — one per facade
+field. They are the immutable contract that every regen must satisfy.
+
+- **You MUST NOT delete or shrink wire tests** as a side effect of
+  any api/ change. If a facade field is genuinely removed in the
+  spec (rare), removing the matching test still requires a human
+  directive in the triggering PR body. The file's header docstring
+  spells this out.
+- **You MUST add a new `TestWires_<Field>` (or `TestDropped_<Field>`)**
+  whenever you add a new facade-options field that goes through
+  `optionsTo{InputType}`. The build verifier runs the tests; missing
+  coverage on a new field is a regression.
+- **When a generated input field is retyped** (e.g. `*string` →
+  `[]string`), update the helper assertion shape via the file's
+  `requireWired` / `requireDropped` helpers if needed — but keep the
+  `TestWires_<Field>` function. The test name + entry point is the
+  stable handle.
+
+The build verifier in CI (`go test -count=1 ./pkg/...`) runs these
+tests on every regen attempt. Tests that fail block the auto-commit,
+so any silent gap in wiring (the LLM "removed Dictation from the
+dropped list but forgot to wire it" failure mode) is caught
+automatically. This is the floor — never lower it.
+
 When `spectypes.{OutputType}.{NewField}` appears:
 
 1. **Ensure the customer response type exposes a matching field.** The
