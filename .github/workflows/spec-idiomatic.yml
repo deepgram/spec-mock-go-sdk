@@ -14,7 +14,7 @@ jobs:
     name: regenerate idiomatic facade
     if: github.repository == 'deepgram/spec-mock-go-sdk'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
     permissions:
       contents: write
       pull-requests: write
@@ -75,6 +75,11 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: printf '%s' "$PR_BODY" > "${RUNNER_TEMP}/pr-body.md"
 
+      - name: Configure git identity for runner commits
+        run: |
+          git config user.name "spec-idiomatic-bot"
+          git config user.email "spec-idiomatic-bot@users.noreply.github.com"
+
       - name: Run spec-idiomatic
         working-directory: .spec-idiomatic
         env:
@@ -90,7 +95,9 @@ jobs:
             --pr-body     ${RUNNER_TEMP}/pr-body.md \
             --report-out  ${RUNNER_TEMP}/spec-idiomatic-report.json \
             --apply \
-            --max-retries 6"
+            --max-retries     8 \
+            --max-turns       4 \
+            --commit-progress"
 
       - name: Parse spec-idiomatic report
         id: report
@@ -208,22 +215,27 @@ jobs:
             echo "Posted new tier-2 comment"
           fi
 
-      - name: Commit facade updates
+      - name: Commit and push facade updates
         id: commit
+        if: always()
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
-          if [[ -z "$(git status --porcelain pkg/ BREAKING_CHANGES.md 2>/dev/null)" ]]; then
-            echo "no facade changes; nothing to commit"
+          if [[ -n "$(git status --porcelain pkg/ BREAKING_CHANGES.md 2>/dev/null)" ]]; then
+            git add pkg/ BREAKING_CHANGES.md 2>/dev/null || git add pkg/
+            git commit -m "chore(facade): regenerate idiomatic layer for api/ changes"
+            echo "committed uncommitted facade changes"
+          fi
+          git fetch origin "$HEAD_REF" 2>/dev/null || true
+          ahead=$(git rev-list --count "origin/$HEAD_REF..HEAD" 2>/dev/null || echo "0")
+          if [[ "$ahead" == "0" ]]; then
+            echo "no new commits to push"
             echo "head_sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          git config user.name "spec-idiomatic-bot"
-          git config user.email "spec-idiomatic-bot@users.noreply.github.com"
-          git add pkg/ BREAKING_CHANGES.md 2>/dev/null || git add pkg/
-          git commit -m "chore(facade): regenerate idiomatic layer for api/ changes"
           git push origin "HEAD:$HEAD_REF"
+          echo "pushed $ahead commit(s) to $HEAD_REF"
           echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Set spec-idiomatic/breaking-acked status check
