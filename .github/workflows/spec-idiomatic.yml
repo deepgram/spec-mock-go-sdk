@@ -90,7 +90,7 @@ jobs:
             --pr-body     ${RUNNER_TEMP}/pr-body.md \
             --report-out  ${RUNNER_TEMP}/spec-idiomatic-report.json \
             --apply \
-            --max-retries 3"
+            --max-retries 6"
 
       - name: Parse spec-idiomatic report
         id: report
