@@ -224,7 +224,8 @@ jobs:
           set -euo pipefail
           if [[ -n "$(git status --porcelain pkg/ BREAKING_CHANGES.md 2>/dev/null)" ]]; then
             git add pkg/ BREAKING_CHANGES.md 2>/dev/null || git add pkg/
-            git commit -m "chore(facade): regenerate idiomatic layer for api/ changes"
+            git commit -m "feat(pkg): absorb api/ changes into idiomatic facade" \
+              -m "Workflow fallback commit — runner did not run with --commit-progress, or exited before its own per-turn commit landed."
             echo "committed uncommitted facade changes"
           fi
           git fetch origin "$HEAD_REF" 2>/dev/null || true
