@@ -719,6 +719,12 @@ type TranscribeInput struct {
 	// Include per-stage performance / latency metrics in the response metadata.
 	Performance *bool `json:"-"`
 	
+	// Include phonetic alignment data ("phoneme lattice") in the response. When
+	// enabled, each transcript word/segment carries time-aligned phoneme detail used
+	// by downstream phonetic search and pronunciation analysis. Opt-in feature gated
+	// through usage tracking; not publicly documented.
+	PhonemeLattice *bool `json:"-"`
+	
 	ProfanityFilter *bool `json:"-"`
 	
 	Punctuate *bool `json:"-"`
@@ -736,6 +742,13 @@ type TranscribeInput struct {
 	ShowRedactedText *bool `json:"-"`
 	
 	SmartFormat *bool `json:"-"`
+	
+	// Speakers-of-Interest (SoI) — names that bias the diarization /
+	// speaker-identification pipeline toward known voices. Wire syntax is repeated
+	// ?soi=Name1&soi=Name2 (NOT a comma-joined list). Companion to soi_threshold when
+	// stricter matching is needed. Not publicly documented; consumed by enterprise
+	// speaker-analytics integrations.
+	SpeakersOfInterest []string `json:"-"`
 	
 	Summarize *string `json:"-"`
 	

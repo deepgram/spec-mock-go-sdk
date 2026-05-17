@@ -193,6 +193,11 @@ func TestWires_Paragraphs(t *testing.T) {
 	requireWired(t, in, "Paragraphs")
 }
 
+func TestWires_PhonemeLattice(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{PhonemeLattice: true})
+	requireWired(t, in, "PhonemeLattice")
+}
+
 func TestWires_ProfanityFilter(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{ProfanityFilter: true})
 	requireWired(t, in, "ProfanityFilter")
@@ -226,6 +231,11 @@ func TestWires_Sentiment(t *testing.T) {
 func TestWires_SmartFormat(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SmartFormat: true})
 	requireWired(t, in, "SmartFormat")
+}
+
+func TestWires_SpeakersOfInterest(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SpeakersOfInterest: []string{"0"}})
+	requireWired(t, in, "SpeakersOfInterest")
 }
 
 func TestWires_Summarize(t *testing.T) {
