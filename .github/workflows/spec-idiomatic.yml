@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "api/**"
+      - "pkg/**/*_generated.go"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
