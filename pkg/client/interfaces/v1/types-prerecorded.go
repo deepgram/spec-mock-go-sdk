@@ -21,7 +21,12 @@ type PreRecordedTranscriptionOptions struct {
 	DetectEntities     bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
 	DetectLanguage     bool     `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
 	DetectTopics       bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
+	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
+	// diarize=true continues to work for backward compatibility but is mutually
+	// exclusive with diarize_model .
 	Diarize            bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	// Mutually exclusive with diarize_model .
 	DiarizeVersion     string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation          bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
 	Encoding           string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
