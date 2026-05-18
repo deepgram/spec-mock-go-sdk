@@ -1,28 +1,51 @@
 // SAFETY-NET WIRE TESTS — DO NOT REMOVE WITHOUT EXPLICIT HUMAN DIRECTIVE.
 //
 // See .agents/skills/sdk-facade-conventions/SKILL.md.
-//
-// The requireWired / requireDropped / isZeroForWire helpers used here
-// live in wire_helpers.go (a non-_test.go file) so they remain visible
-// to the codegen-emitted wire_test_generated.go, which currently uses
-// the _generated.go suffix rather than _test.go.
-//
-// Facade options fields whose corresponding wire field has been removed
-// from the spec (Alternatives, Channels, SampleRate, plus the StreamInput
-// fields FillerWords/NoDelay/DiarizeModel and a long tail of audit
-// removals) get TestDropped_<Field> entries below so we lock in the
-// absorption. They share names with the generated TestWires_*_Generated
-// stubs by design — if a later spec regen brings the wire field back,
-// the generated stub will start passing and we can simultaneously remove
-// the TestDropped_ entry here.
 
 package restv1
 
 import (
+	"reflect"
 	"testing"
 
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces/v1"
 )
+
+func requireWired(t *testing.T, in *spectypes.TranscribeInput, fieldName string) {
+	t.Helper()
+	v := reflect.ValueOf(in).Elem().FieldByName(fieldName)
+	if !v.IsValid() {
+		t.Fatalf("spectypes.TranscribeInput has no field %q yet — spec needs to model it before the converter can wire it through.", fieldName)
+	}
+	if isZeroForWire(v) {
+		t.Fatalf("spectypes.TranscribeInput.%s exists but optionsToTranscribeInput didn't wire it.", fieldName)
+	}
+}
+
+func requireDropped(t *testing.T, in *spectypes.TranscribeInput, fieldName, reason string) {
+	t.Helper()
+	v := reflect.ValueOf(in).Elem().FieldByName(fieldName)
+	if !v.IsValid() {
+		return
+	}
+	if !isZeroForWire(v) {
+		t.Fatalf("spectypes.TranscribeInput.%s is documented as permanently dropped (%s) but the converter wired it anyway.", fieldName, reason)
+	}
+}
+
+func isZeroForWire(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	case reflect.Slice, reflect.Map:
+		return v.Len() == 0
+	case reflect.String:
+		return v.Len() == 0
+	default:
+		return v.IsZero()
+	}
+}
 
 func TestWires_Callback(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Callback: "https://example.invalid/cb"})
@@ -179,6 +202,21 @@ func TestWires_Version(t *testing.T) {
 	requireWired(t, in, "Version")
 }
 
+func TestDropped_Alternatives(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
+	requireDropped(t, in, "Alternatives", "removed from spec in regen")
+}
+
+func TestDropped_Channels(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
+	requireDropped(t, in, "Channels", "removed from spec in regen")
+}
+
+func TestDropped_SampleRate(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
+	requireDropped(t, in, "SampleRate", "removed from spec in regen")
+}
+
 func TestDropped_CustomIntent(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{CustomIntent: []string{"x"}})
 	requireDropped(t, in, "CustomIntent", "stem server-side only, not modeled in spec")
@@ -207,19 +245,4 @@ func TestDropped_DetectTopics(t *testing.T) {
 func TestDropped_Extra(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Extra: []string{"x=y"}})
 	requireDropped(t, in, "Extra", "stem-side metadata pass-through; request side not modeled")
-}
-
-func TestDropped_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spec; facade field kept for source-compat")
-}
-
-func TestDropped_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spec; facade field kept for source-compat")
-}
-
-func TestDropped_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spec; facade field kept for source-compat")
 }
