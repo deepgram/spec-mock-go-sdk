@@ -1,44 +1,67 @@
 # Breaking changes
 
-## TranscribeInput.Alternatives, Channels, SampleRate, FillerWords removed
+This file enumerates spec changes that the facade in `pkg/` could not
+fully absorb without a customer-visible behaviour shift, even though
+customer source code keeps compiling.
+
+## TranscribeInput.Alternatives removed
 
 - **Tier:** 1 (absorbed-breaking)
 - **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Members removed:** `Alternatives *int32`, `Channels *int32`, `SampleRate *int32`, `FillerWords *bool`
-- **Customer-visible impact:** The facade options struct
-  `PreRecordedTranscriptionOptions` still exposes `Alternatives`,
-  `Channels`, `SampleRate`, and `FillerWords` so existing customer
-  code keeps compiling. However, setting these fields is now a no-op:
-  they are dropped in `optionsToTranscribeInput` and never reach the
-  wire. Customers relying on these parameters reaching the Deepgram
-  API will observe a behavioural change (server defaults apply).
-- **Facade behaviour:** Wiring blocks for these four fields have been
-  removed from `optionsToTranscribeInput`. `TestDropped_<Field>` tests
-  in `wire_test.go` lock in the absorption to prevent silent re-wiring
-  in a future regen.
+- **Member:** `Alternatives *int32`
+- **Customer-visible impact:** The facade field
+  `PreRecordedTranscriptionOptions.Alternatives int` is preserved so
+  existing call sites still compile. The value is no longer wired
+  through to the wire request; setting it has no effect on the
+  transcription server.
+- **Facade behaviour:** `optionsToTranscribeInput` no longer references
+  `in.Alternatives`. `TestDropped_Alternatives` in `wire_test.go` locks
+  in the absorption.
 
-## TranscribeInput hygiene removals (Uttseg, Dates, Name, EntityPrompt, SummarizeLength, Threshold, EmulateStreaming, Tier, UttSplitInterruptions, NumbersSpaces, KeywordBoost, Endpointing, Performance, Yelling, VadTurnon, DatasetId, Numbers, UnifySpeakerId, VadEvents, VadSuppression, Context, ShowRedactedText, Chunker, Identify, DateFormat, MaxSpeakers, Times, Ner)
+## TranscribeInput.Channels removed
 
 - **Tier:** 1 (absorbed-breaking)
-- **Shape:** `spectypes.TranscribeInput`
-- **Customer-visible impact:** None of these fields were exposed on
-  the facade `PreRecordedTranscriptionOptions` struct nor wired in
-  `optionsToTranscribeInput` prior to this regen. They were dropped
-  from `api/types` and the facade simply no longer references them.
-  Customer code is unaffected.
-- **Facade behaviour:** No-op. No facade changes required for these.
+- **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
+- **Member:** `Channels *int32`
+- **Customer-visible impact:** The facade field
+  `PreRecordedTranscriptionOptions.Channels int` is preserved so
+  existing call sites still compile. The value is no longer wired
+  through to the wire request; setting it has no effect on the
+  transcription server.
+- **Facade behaviour:** `optionsToTranscribeInput` no longer references
+  `in.Channels`. `TestDropped_Channels` in `wire_test.go` locks in the
+  absorption.
 
-## StreamInput.FillerWords, NoDelay, DiarizeModel removed
+## TranscribeInput.SampleRate removed
 
 - **Tier:** 1 (absorbed-breaking)
-- **Shape:** `spectypes.StreamInput` (generated, in `api/types`)
-- **Customer-visible impact:** The websocket facade does not have a
-  `optionsToStreamInput` converter today — streaming options are
-  serialised by the legacy `version.GetLiveAPI` query-string builder,
-  not via the transport/http Invoke primitive. The facade
-  `LiveTranscriptionOptions` struct still exposes `FillerWords`,
-  `NoDelay`, and `DiarizeModel` for source-compatibility; whether
-  they reach the wire depends on the legacy URL builder, which is
-  out of scope for this regen.
-- **Facade behaviour:** No facade source change required. Documented
-  here so reviewers know the upstream removal is acknowledged.
+- **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
+- **Member:** `SampleRate *int32`
+- **Customer-visible impact:** The facade field
+  `PreRecordedTranscriptionOptions.SampleRate int` is preserved so
+  existing call sites still compile. The value is no longer wired
+  through to the wire request; setting it has no effect on the
+  transcription server.
+- **Facade behaviour:** `optionsToTranscribeInput` no longer references
+  `in.SampleRate`. `TestDropped_SampleRate` in `wire_test.go` locks in
+  the absorption.
+
+## Other removed fields (unwired prior to this regen)
+
+The following fields were removed from `TranscribeInput` and
+`StreamInput` in this regen. None of them were wired through the
+facade prior to the removal, so there is no behaviour change beyond
+the wire-shape contraction:
+
+- `StreamInput`: `FillerWords`, `NoDelay`, `DiarizeModel`
+- `TranscribeInput`: `Uttseg`, `Dates`, `Name`, `EntityPrompt`,
+  `SummarizeLength`, `Threshold`, `EmulateStreaming`, `Tier`,
+  `UttSplitInterruptions`, `NumbersSpaces`, `KeywordBoost`,
+  `Endpointing`, `Performance`, `Yelling`, `VadTurnon`, `DatasetId`,
+  `Numbers`, `UnifySpeakerId`, `VadEvents`, `VadSuppression`,
+  `Context`, `ShowRedactedText`, `Chunker`, `Identify`, `DateFormat`,
+  `MaxSpeakers`, `Times`, `Ner`
+
+These had no facade-options struct field wired through
+`optionsToTranscribeInput` and no converter wiring; the facade
+behaviour is unchanged.

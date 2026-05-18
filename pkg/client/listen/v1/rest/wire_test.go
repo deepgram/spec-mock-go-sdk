@@ -63,7 +63,7 @@ func TestWires_DetectEntities(t *testing.T) {
 }
 
 func TestWires_DetectLanguage(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectLanguage: []string{"true"}})
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectLanguage: true})
 	requireWired(t, in, "DetectLanguage")
 }
 
@@ -204,17 +204,17 @@ func TestWires_Version(t *testing.T) {
 
 func TestDropped_Alternatives(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spec TranscribeInput; facade field retained for source-compat only")
+	requireDropped(t, in, "Alternatives", "removed from spec; facade field retained for source-compat")
 }
 
 func TestDropped_Channels(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spec TranscribeInput; facade field retained for source-compat only")
+	requireDropped(t, in, "Channels", "removed from spec; facade field retained for source-compat")
 }
 
 func TestDropped_SampleRate(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spec TranscribeInput; facade field retained for source-compat only")
+	requireDropped(t, in, "SampleRate", "removed from spec; facade field retained for source-compat")
 }
 
 func TestDropped_CustomIntent(t *testing.T) {
