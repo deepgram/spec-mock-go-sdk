@@ -202,21 +202,6 @@ func TestWires_Version(t *testing.T) {
 	requireWired(t, in, "Version")
 }
 
-func TestDropped_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spec in regen")
-}
-
-func TestDropped_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spec in regen")
-}
-
-func TestDropped_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spec in regen")
-}
-
 func TestDropped_CustomIntent(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{CustomIntent: []string{"x"}})
 	requireDropped(t, in, "CustomIntent", "stem server-side only, not modeled in spec")
@@ -245,4 +230,27 @@ func TestDropped_DetectTopics(t *testing.T) {
 func TestDropped_Extra(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Extra: []string{"x=y"}})
 	requireDropped(t, in, "Extra", "stem-side metadata pass-through; request side not modeled")
+}
+
+// The following fields were removed from spectypes.TranscribeInput in this
+// regen. The facade PreRecordedTranscriptionOptions struct retains them for
+// source-compatibility (customer code that sets these continues to compile)
+// but optionsToTranscribeInput drops them at the wire boundary.
+// requireDropped is a no-op when the spec field no longer exists; the test
+// remains here as historical record and as a guard against accidental
+// re-introduction of wiring should the field reappear.
+
+func TestDropped_Alternatives(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
+	requireDropped(t, in, "Alternatives", "removed from spec; facade field retained but no longer wired")
+}
+
+func TestDropped_Channels(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
+	requireDropped(t, in, "Channels", "removed from spec; facade field retained but no longer wired")
+}
+
+func TestDropped_SampleRate(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
+	requireDropped(t, in, "SampleRate", "removed from spec; facade field retained but no longer wired")
 }

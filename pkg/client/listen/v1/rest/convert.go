@@ -18,7 +18,8 @@ import (
 //   - DetectTopics: deprecated by stem in favour of Topics.
 //   - Extra: stem-side metadata pass-through, request side not modeled.
 //   - Alternatives, Channels, SampleRate: removed from spec in regen; facade
-//     fields retained for source-compat but no longer reach the wire.
+//     options field retained for source-compat but no longer reaches the wire.
+//     See BREAKING_CHANGES.md.
 //
 // Fields removed from the spec as part of the @internal hygiene audit
 // (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
@@ -51,10 +52,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.DiarizeVersion != "" {
 		v := o.DiarizeVersion
 		in.DiarizeVersion = &v
-	}
-	if o.DiarizeModel != "" {
-		v := o.DiarizeModel
-		in.DiarizeModel = &v
 	}
 	if o.Dictation {
 		v := o.Dictation
