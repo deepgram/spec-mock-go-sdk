@@ -204,17 +204,17 @@ func TestWires_Version(t *testing.T) {
 
 func TestDropped_Alternatives(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spec; facade field retained for source-compat")
+	requireDropped(t, in, "Alternatives", "removed from spec in @internal hygiene audit")
 }
 
 func TestDropped_Channels(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spec; facade field retained for source-compat")
+	requireDropped(t, in, "Channels", "removed from spec in @internal hygiene audit")
 }
 
 func TestDropped_SampleRate(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spec; facade field retained for source-compat")
+	requireDropped(t, in, "SampleRate", "removed from spec in @internal hygiene audit")
 }
 
 func TestDropped_CustomIntent(t *testing.T) {
