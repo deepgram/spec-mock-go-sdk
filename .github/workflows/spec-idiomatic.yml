@@ -343,3 +343,92 @@ jobs:
           printf '%s' "$new_body" > /tmp/new-body.md
           gh pr edit "$PR_NUM" --repo "$REPO" --body-file /tmp/new-body.md
           echo "ticked workflow-checkbox:idiomatic in PR body"
+
+      - name: Summarise rolling PR title from accumulated commits
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin main >/dev/null 2>&1 || true
+          commits=$(git log --format='### %h: %s%n%n%b%n' "origin/main..HEAD" 2>/dev/null || echo "")
+          if [[ -z "$commits" ]]; then
+            echo "no commits beyond main; leaving title as-is"
+            exit 0
+          fi
+
+          read -r -d '' instructions <<'EOF' || true
+          You are summarising a GitHub PR into a conventional-commit-formatted title.
+
+          The PR is the rolling integration of upstream deepgram/spec changes into
+          this Go mock SDK. Commits below come from two sources:
+          - the orchestrator's `feat(api): regenerate api/ from upstream spec`
+            force-push (mechanical Smithy regen)
+          - per-turn `feat(pkg): ...` commits from the spec-idiomatic LLM runner
+            (idiomatic facade absorption + wire-test coverage)
+
+          Produce a SINGLE conventional-commit-formatted PR title that:
+          - Uses `feat(pkg):` prefix (or `feat(pkg)!:` if any commit on the
+            branch indicates an unavoidable breaking change).
+          - Is at most 72 characters total.
+          - Summarises the NEW customer-facing facade additions named in the
+            commit subjects (e.g. specific field names like PhonemeLattice,
+            SpeakersOfInterest, SoiThreshold). Prefer Go-side names.
+          - Imperative mood, lowercase verb, no trailing period.
+
+          Respond with the title text ONLY. No prefixes like "Title:", no
+          quotes, no markdown, no trailing punctuation, no newlines.
+          EOF
+
+          payload=$(jq -n \
+            --arg sys "$instructions" \
+            --arg user "<commits>"$'\n'"$commits"$'\n'"</commits>" '
+            {
+              model: "claude-opus-4-7",
+              max_tokens: 200,
+              system: $sys,
+              messages: [{role: "user", content: $user}]
+            }')
+
+          response=$(printf '%s' "$payload" | curl -sS \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            --max-time 60 \
+            --data @- \
+            https://api.anthropic.com/v1/messages)
+
+          title=$(printf '%s' "$response" | jq -r '.content[0].text // empty' \
+            | tr -d '\r\n' \
+            | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+          if [[ -z "$title" ]]; then
+            echo "LLM returned empty title; leaving PR title as-is"
+            echo "raw response: $response" | head -c 500
+            exit 0
+          fi
+          if ! printf '%s' "$title" | grep -qE '^(feat|fix|chore|refactor|docs|test|ci|build|perf|style)(\([a-z,!]+\))?!?:'; then
+            echo "LLM returned non-conventional title; leaving PR title as-is"
+            echo "got: $title"
+            exit 0
+          fi
+          if [[ ${#title} -gt 100 ]]; then
+            echo "LLM returned over-long title (${#title} chars); leaving PR title as-is"
+            echo "got: $title"
+            exit 0
+          fi
+
+          current_title=$(gh pr view "$PR_NUM" --repo "$REPO" --json title --jq .title)
+          if [[ "$current_title" == "$title" ]]; then
+            echo "PR title already matches summary; no-op"
+            exit 0
+          fi
+
+          echo "updating PR #$PR_NUM title:"
+          echo "  was: $current_title"
+          echo "  now: $title"
+          gh pr edit "$PR_NUM" --repo "$REPO" --title "$title"
