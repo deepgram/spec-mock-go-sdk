@@ -17,22 +17,14 @@ import (
 //   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
 //   - DetectTopics: deprecated by stem in favour of Topics.
 //   - Extra: stem-side metadata pass-through, request side not modeled.
-//   - Alternatives, Channels, SampleRate, FillerWords: removed from
-//     spectypes.TranscribeInput in the latest spec regen. Facade-options
-//     fields are preserved for source compatibility; the wiring block is
-//     dropped so setting them is a no-op on the wire. Customers who relied
-//     on these reaching the server will observe a behaviour change but
-//     their code keeps compiling.
-//
-// Fields removed from the spec as part of the @internal hygiene audit
-// (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
-// SpeakersOfInterest, DetectLanguageVersion — are also removed from the
-// facade options struct. Customer code referencing those fields will fail
-// to compile on this SDK upgrade, which is the intended ceremony.
 func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
 		return in
+	}
+	if o.Alternatives != 0 {
+		v := int32(o.Alternatives)
+		in.Alternatives = &v
 	}
 	if o.Callback != "" {
 		v := o.Callback
@@ -41,12 +33,16 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.CallbackMethod != "" {
 		in.CallbackMethod = spectypes.CallbackMethod(o.CallbackMethod)
 	}
+	if o.Channels != 0 {
+		v := int32(o.Channels)
+		in.Channels = &v
+	}
 	if o.DetectEntities {
 		v := o.DetectEntities
 		in.DetectEntities = &v
 	}
-	if o.DetectLanguage {
-		in.DetectLanguage = []string{"true"}
+	if len(o.DetectLanguage) > 0 {
+		in.DetectLanguage = o.DetectLanguage
 	}
 	if o.Diarize {
 		v := o.Diarize
@@ -63,6 +59,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.Encoding != "" {
 		v := o.Encoding
 		in.Encoding = &v
+	}
+	if o.FillerWords {
+		v := o.FillerWords
+		in.FillerWords = &v
 	}
 	if o.Intents {
 		v := o.Intents
@@ -111,6 +111,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	}
 	if len(o.Replace) > 0 {
 		in.Replace = o.Replace
+	}
+	if o.SampleRate != 0 {
+		v := int32(o.SampleRate)
+		in.SampleRate = &v
 	}
 	if len(o.Search) > 0 {
 		in.Search = o.Search

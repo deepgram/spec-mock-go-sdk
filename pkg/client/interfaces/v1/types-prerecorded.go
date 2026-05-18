@@ -4,11 +4,13 @@
 
 package interfacesv1
 
-// PreRecordedTranscriptionOptions contain all of the knobs and dials to control a Prerecorded transcription
-// from the Deepgram API
-//
-// Please see the prerecorded audio documentation for more details:
-// https://developers.deepgram.com/reference/pre-recorded
+/*
+PreRecordedTranscriptionOptions contain all of the knobs and dials to control a Prerecorded transcription
+from the Deepgram API
+
+Please see the prerecorded audio documentation for more details:
+https://developers.deepgram.com/reference/pre-recorded
+*/
 type PreRecordedTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives,omitempty" schema:"alternatives,omitempty"`
 	Callback         string   `json:"callback,omitempty" schema:"callback,omitempty"`
@@ -19,7 +21,7 @@ type PreRecordedTranscriptionOptions struct {
 	CustomTopic      []string `json:"custom_topic,omitempty" schema:"custom_topic,omitempty"`
 	CustomTopicMode  string   `json:"custom_topic_mode,omitempty" schema:"custom_topic_mode,omitempty"`
 	DetectEntities   bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
-	DetectLanguage   bool     `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
+	DetectLanguage   []string `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
 	DetectTopics     bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
 	Diarize          bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
@@ -29,8 +31,8 @@ type PreRecordedTranscriptionOptions struct {
 	Extra            []string `json:"extra,omitempty" schema:"extra,omitempty"`
 	FillerWords      bool     `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
 	Intents          bool     `json:"intents,omitempty" schema:"intents,omitempty"`
-	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Keyterm          []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
+	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Language         string   `json:"language,omitempty" schema:"language,omitempty"`
 	LogData          bool     `json:"log_data,omitempty" schema:"log_data,omitempty"`
 	Measurements     bool     `json:"measurements,omitempty" schema:"measurements,omitempty"`

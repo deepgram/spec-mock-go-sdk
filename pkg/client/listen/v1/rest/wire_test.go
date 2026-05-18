@@ -47,6 +47,11 @@ func isZeroForWire(v reflect.Value) bool {
 	}
 }
 
+func TestWires_Alternatives(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
+	requireWired(t, in, "Alternatives")
+}
+
 func TestWires_Callback(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Callback: "https://example.invalid/cb"})
 	requireWired(t, in, "Callback")
@@ -57,13 +62,18 @@ func TestWires_CallbackMethod(t *testing.T) {
 	requireWired(t, in, "CallbackMethod")
 }
 
+func TestWires_Channels(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
+	requireWired(t, in, "Channels")
+}
+
 func TestWires_DetectEntities(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectEntities: true})
 	requireWired(t, in, "DetectEntities")
 }
 
 func TestWires_DetectLanguage(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectLanguage: true})
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectLanguage: []string{"true"}})
 	requireWired(t, in, "DetectLanguage")
 }
 
@@ -85,6 +95,11 @@ func TestWires_Dictation(t *testing.T) {
 func TestWires_Encoding(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Encoding: "linear16"})
 	requireWired(t, in, "Encoding")
+}
+
+func TestWires_FillerWords(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{FillerWords: true})
+	requireWired(t, in, "FillerWords")
 }
 
 func TestWires_Intents(t *testing.T) {
@@ -150,6 +165,11 @@ func TestWires_Redact(t *testing.T) {
 func TestWires_Replace(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Replace: []string{"foo:bar"}})
 	requireWired(t, in, "Replace")
+}
+
+func TestWires_SampleRate(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
+	requireWired(t, in, "SampleRate")
 }
 
 func TestWires_Search(t *testing.T) {
@@ -225,24 +245,4 @@ func TestDropped_DetectTopics(t *testing.T) {
 func TestDropped_Extra(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Extra: []string{"x=y"}})
 	requireDropped(t, in, "Extra", "stem-side metadata pass-through; request side not modeled")
-}
-
-func TestDropped_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
-}
-
-func TestDropped_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
-}
-
-func TestDropped_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
-}
-
-func TestDropped_FillerWords(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{FillerWords: true})
-	requireDropped(t, in, "FillerWords", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
 }
