@@ -1,51 +1,28 @@
 // SAFETY-NET WIRE TESTS — DO NOT REMOVE WITHOUT EXPLICIT HUMAN DIRECTIVE.
 //
 // See .agents/skills/sdk-facade-conventions/SKILL.md.
+//
+// The requireWired / requireDropped / isZeroForWire helpers used here
+// live in wire_helpers.go (a non-_test.go file) so they remain visible
+// to the codegen-emitted wire_test_generated.go, which currently uses
+// the _generated.go suffix rather than _test.go.
+//
+// Facade options fields whose corresponding wire field has been removed
+// from the spec (Alternatives, Channels, SampleRate, plus the StreamInput
+// fields FillerWords/NoDelay/DiarizeModel and a long tail of audit
+// removals) get TestDropped_<Field> entries below so we lock in the
+// absorption. They share names with the generated TestWires_*_Generated
+// stubs by design — if a later spec regen brings the wire field back,
+// the generated stub will start passing and we can simultaneously remove
+// the TestDropped_ entry here.
 
 package restv1
 
 import (
-	"reflect"
 	"testing"
 
-	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces/v1"
 )
-
-func requireWired(t *testing.T, in *spectypes.TranscribeInput, fieldName string) {
-	t.Helper()
-	v := reflect.ValueOf(in).Elem().FieldByName(fieldName)
-	if !v.IsValid() {
-		t.Fatalf("spectypes.TranscribeInput has no field %q yet — spec needs to model it before the converter can wire it through.", fieldName)
-	}
-	if isZeroForWire(v) {
-		t.Fatalf("spectypes.TranscribeInput.%s exists but optionsToTranscribeInput didn't wire it.", fieldName)
-	}
-}
-
-func requireDropped(t *testing.T, in *spectypes.TranscribeInput, fieldName, reason string) {
-	t.Helper()
-	v := reflect.ValueOf(in).Elem().FieldByName(fieldName)
-	if !v.IsValid() {
-		return
-	}
-	if !isZeroForWire(v) {
-		t.Fatalf("spectypes.TranscribeInput.%s is documented as permanently dropped (%s) but the converter wired it anyway.", fieldName, reason)
-	}
-}
-
-func isZeroForWire(v reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Ptr, reflect.Interface:
-		return v.IsNil()
-	case reflect.Slice, reflect.Map:
-		return v.Len() == 0
-	case reflect.String:
-		return v.Len() == 0
-	default:
-		return v.IsZero()
-	}
-}
 
 func TestWires_Callback(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Callback: "https://example.invalid/cb"})
