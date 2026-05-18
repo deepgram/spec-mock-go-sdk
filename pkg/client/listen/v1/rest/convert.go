@@ -1,20 +1,6 @@
 // Copyright Deepgram, Inc. All Rights Reserved.
 // SPDX-License-Identifier: MIT
 
-// Converters between the idiomatic facade types in this package and the
-// generated wire types in api/types.
-//
-// Output direction: spectypes.TranscribeOutput (generated, pointer-typed) ->
-// *PreRecordedResponse (idiomatic, value-typed). Nil pointer in => zero-value
-// field out, so customer code can read response fields without ever
-// nil-checking.
-//
-// Input direction: *PreRecordedTranscriptionOptions (idiomatic, value-typed)
-// -> *spectypes.TranscribeInput (generated, pointer-typed). Used by client.go
-// to translate the facade options struct into the shape that
-// httptransport.Invoke reflects on for HTTP query/header binding via the
-// TranscribeRoute metadata.
-
 package restv1
 
 import (
@@ -25,11 +11,18 @@ import (
 // optionsToTranscribeInput translates an idiomatic *PreRecordedTranscriptionOptions
 // into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
 // zero-valued facade fields are left as nil pointers on the generated struct so
-// they don't surface in the wire query string. Fields the facade exposes but
-// the spec doesn't model (CustomIntent*, CustomTopic*, Extra, Replace,
-// DetectTopics) are dropped here; if/when they land in the spec the
-// codegen-resident schema will pick them up and this converter expands
-// accordingly.
+// they don't surface in the wire query string.
+//
+// Dropped fields (intentionally NOT wired; see TestDropped_* in wire_test.go):
+//   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
+//   - DetectTopics: deprecated by stem in favour of Topics.
+//   - Extra: stem-side metadata pass-through, request side not modeled.
+//
+// Fields removed from the spec as part of the @internal hygiene audit
+// (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
+// SpeakersOfInterest, DetectLanguageVersion — are also removed from the
+// facade options struct. Customer code referencing those fields will fail
+// to compile on this SDK upgrade, which is the intended ceremony.
 func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
@@ -55,9 +48,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		in.DetectEntities = &v
 	}
 	if o.DetectLanguage {
-		// DetectLanguage retyped in api/ from *string -> []string.
-		// Facade still exposes a bool; we send the canonical "true" sentinel
-		// as a single-element list to preserve wire compatibility.
 		in.DetectLanguage = []string{"true"}
 	}
 	if o.Diarize {
@@ -114,10 +104,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		v := o.Paragraphs
 		in.Paragraphs = &v
 	}
-	if o.PhonemeLattice {
-		v := o.PhonemeLattice
-		in.PhonemeLattice = &v
-	}
 	if o.ProfanityFilter {
 		v := o.ProfanityFilter
 		in.ProfanityFilter = &v
@@ -128,6 +114,9 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	}
 	if len(o.Redact) > 0 {
 		in.Redact = o.Redact
+	}
+	if len(o.Replace) > 0 {
+		in.Replace = o.Replace
 	}
 	if o.SampleRate != 0 {
 		v := int32(o.SampleRate)
@@ -143,9 +132,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.SmartFormat {
 		v := o.SmartFormat
 		in.SmartFormat = &v
-	}
-	if len(o.SpeakersOfInterest) > 0 {
-		in.SpeakersOfInterest = o.SpeakersOfInterest
 	}
 	if o.Summarize != "" {
 		v := o.Summarize

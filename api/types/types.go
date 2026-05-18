@@ -607,10 +607,6 @@ type TranscribeInput struct {
 	// language parameter or stem's full-vocabulary detector.
 	DetectLanguage []string `json:"-"`
 	
-	// Pin a specific language-detection model version. Requires detect_language to
-	// also be set; rejected otherwise. Not publicly documented.
-	DetectLanguageVersion *string `json:"-"`
-	
 	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
 	// diarize=true continues to work for backward compatibility but is mutually
 	// exclusive with diarize_model .
@@ -668,10 +664,6 @@ type TranscribeInput struct {
 	// compatibility; sending both with conflicting values returns 400.
 	LogData *bool `json:"-"`
 	
-	// Maximum chunk duration in seconds, OR one of the named modes batch / streaming .
-	// See min_duration .
-	MaxDuration *string `json:"-"`
-	
 	// Cap on the number of distinct speakers diarization will return. When unset, the
 	// diarizer is unbounded.
 	MaxSpeakers *int32 `json:"-"`
@@ -679,11 +671,6 @@ type TranscribeInput struct {
 	// Detect and format measurements (e.g. "five feet" → "5 ft", "two kilograms" → "2
 	// kg").
 	Measurements *bool `json:"-"`
-	
-	// Minimum chunk duration in seconds, OR one of the named modes batch / streaming .
-	// Modeled as String to capture both numeric and named-mode forms in a single
-	// field.
-	MinDuration *string `json:"-"`
 	
 	MipOptOut *bool `json:"-"`
 	
@@ -719,17 +706,18 @@ type TranscribeInput struct {
 	// Include per-stage performance / latency metrics in the response metadata.
 	Performance *bool `json:"-"`
 	
-	// Include phonetic alignment data ("phoneme lattice") in the response. When
-	// enabled, each transcript word/segment carries time-aligned phoneme detail used
-	// by downstream phonetic search and pronunciation analysis. Opt-in feature gated
-	// through usage tracking; not publicly documented.
-	PhonemeLattice *bool `json:"-"`
-	
 	ProfanityFilter *bool `json:"-"`
 	
 	Punctuate *bool `json:"-"`
 	
 	Redact []string `json:"-"`
+	
+	// Find-and-replace substitution pairs applied during post-processing. Wire syntax
+	// is repeated ?replace=find:with pairs (colon-separated key/value, NOT a
+	// comma-joined list). Stem parses these into a HashMap<String, String> and
+	// rewrites transcript tokens before emission. Billable as Feature::Replace when
+	// non-empty.
+	Replace []string `json:"-"`
 	
 	SampleRate *int32 `json:"-"`
 	
@@ -742,13 +730,6 @@ type TranscribeInput struct {
 	ShowRedactedText *bool `json:"-"`
 	
 	SmartFormat *bool `json:"-"`
-	
-	// Speakers-of-Interest (SoI) — names that bias the diarization /
-	// speaker-identification pipeline toward known voices. Wire syntax is repeated
-	// ?soi=Name1&soi=Name2 (NOT a comma-joined list). Companion to soi_threshold when
-	// stricter matching is needed. Not publicly documented; consumed by enterprise
-	// speaker-analytics integrations.
-	SpeakersOfInterest []string `json:"-"`
 	
 	Summarize *string `json:"-"`
 	

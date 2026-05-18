@@ -21,7 +21,12 @@ type PreRecordedTranscriptionOptions struct {
 	DetectEntities     bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
 	DetectLanguage     bool     `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
 	DetectTopics       bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
+	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
+	// diarize=true continues to work for backward compatibility but is mutually
+	// exclusive with diarize_model .
 	Diarize            bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	// Mutually exclusive with diarize_model .
 	DiarizeVersion     string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation          bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
 	Encoding           string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
@@ -36,7 +41,6 @@ type PreRecordedTranscriptionOptions struct {
 	Multichannel       bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`
 	Numerals           bool     `json:"numerals,omitempty" schema:"numerals,omitempty"`
 	Paragraphs         bool     `json:"paragraphs,omitempty" schema:"paragraphs,omitempty"`
-	PhonemeLattice     bool     `json:"phoneme_lattice,omitempty" schema:"phoneme_lattice,omitempty"`
 	ProfanityFilter    bool     `json:"profanity_filter,omitempty" schema:"profanity_filter,omitempty"`
 	Punctuate          bool     `json:"punctuate,omitempty" schema:"punctuate,omitempty"`
 	Redact             []string `json:"redact,omitempty" schema:"redact,omitempty"`
@@ -45,7 +49,6 @@ type PreRecordedTranscriptionOptions struct {
 	Search             []string `json:"search,omitempty" schema:"search,omitempty"`
 	Sentiment          bool     `json:"sentiment,omitempty" schema:"sentiment,omitempty"`
 	SmartFormat        bool     `json:"smart_format,omitempty" schema:"smart_format,omitempty"`
-	SpeakersOfInterest []string `json:"speakers_of_interest,omitempty" schema:"speakers_of_interest,omitempty"`
 	Summarize          string   `json:"summarize,omitempty" schema:"summarize,omitempty"`
 	Tag                []string `json:"tag,omitempty" schema:"tag,omitempty"`
 	Topics             bool     `json:"topics,omitempty" schema:"topics,omitempty"`

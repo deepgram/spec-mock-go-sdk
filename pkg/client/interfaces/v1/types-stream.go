@@ -16,7 +16,12 @@ type LiveTranscriptionOptions struct {
 	Callback        string   `json:"callback,omitempty" schema:"callback,omitempty"`
 	CallbackMethod  string   `json:"callback_method,omitempty" schema:"callback_method,omitempty"`
 	Channels        int      `json:"channels,omitempty" schema:"channels,omitempty"`
+	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
+	// diarize=true continues to work for backward compatibility but is mutually
+	// exclusive with diarize_model .
 	Diarize         bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	// Mutually exclusive with diarize_model .
 	DiarizeVersion  string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation       bool     `json:"dictation,omitempty" schema:"dictation,omitempty"` // Option to format spoken punctuated commands, must be enabled with punctuate parameter to true. Eg: "i went to the store comma new paragraph then i went home period" --> "i went to the store, <\n> then i went home."
 	Encoding        string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
