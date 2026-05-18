@@ -9,9 +9,7 @@ import (
 )
 
 // optionsToTranscribeInput translates an idiomatic *PreRecordedTranscriptionOptions
-// into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
-// zero-valued facade fields are left as nil pointers on the generated struct so
-// they don't surface in the wire query string.
+// into a *spectypes.TranscribeInput suitable for httptransport.Invoke.
 //
 // Dropped fields (intentionally NOT wired; see TestDropped_* in wire_test.go):
 //   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
@@ -20,12 +18,6 @@ import (
 //   - Alternatives, Channels, SampleRate: removed from spec in this regen.
 //     Facade struct field retained for source-compat; wiring dropped so the
 //     value never reaches the wire (it has no representation there anyway).
-//
-// Fields removed from the spec as part of the @internal hygiene audit
-// (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
-// SpeakersOfInterest, DetectLanguageVersion — are also removed from the
-// facade options struct. Customer code referencing those fields will fail
-// to compile on this SDK upgrade, which is the intended ceremony.
 func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
@@ -42,8 +34,8 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		v := o.DetectEntities
 		in.DetectEntities = &v
 	}
-	if o.DetectLanguage {
-		in.DetectLanguage = []string{"true"}
+	if len(o.DetectLanguage) > 0 {
+		in.DetectLanguage = o.DetectLanguage
 	}
 	if o.Diarize {
 		v := o.Diarize
