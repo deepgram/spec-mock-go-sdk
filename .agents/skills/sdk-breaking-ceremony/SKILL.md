@@ -37,11 +37,52 @@ from change kind to tier:
 | `OP_REMOVED` (operation gone from the spec) | 2 |
 | `TYPE_KIND_FLIPPED` (struct ↔ enum, etc.) | 2 |
 | `FIELD_REMOVED` where the customer surface depends on it irrecoverably | 2 |
+| `FIELD_REMOVED` where the removal is intentional spec hygiene | 2 |
 | `FIELD_TYPE_NARROWED` with no safe conversion | 2 |
 | Any change the LLM explicitly declares unabsorbable | 2 |
 
 The LLM may upgrade a change from tier 0 or 1 to tier 2 if it cannot
 produce facade edits that compile cleanly. It cannot downgrade.
+
+### Spec-hygiene removals are tier 2, not tier 1
+
+The default for `FIELD_REMOVED` is tier 1: keep the customer field on
+the facade struct, drop the wiring in `optionsTo{InputType}`, write a
+`TestDropped_<Field>` to lock in the absorption. That's the right move
+for accidental or hot-fix removals where customer source-compat is
+worth more than wire fidelity.
+
+It is **not** the right move when the removal is intentional spec
+hygiene — a field being pulled out of the public API because it should
+never have been exposed in the first place. Indicators that a removal
+is hygiene rather than accident:
+
+- The triggering spec PR body mentions `@internal` tagging, deprecation
+  cleanup, or "fields that shouldn't be public" / "audit" / "stem-only".
+- The removed field corresponds to a stem parameter explicitly marked
+  "not publicly documented" or "for internal use only" in
+  `stem/src/handlers/queries.rs`.
+- The removed field is absent from `developers.deepgram.com`.
+
+For hygiene removals, upgrade the classification to tier 2:
+
+- Remove the member from the facade `*Options` struct entirely.
+- Remove the corresponding `TestWires_<Field>` / `TestDropped_<Field>`
+  test (the field no longer exists on the facade, so neither test
+  applies).
+- Emit a tier-2 `breaking_changes[]` entry with `reason` explaining
+  the hygiene justification (e.g. "internal-only stem parameter,
+  removed from public spec; facade field dropped to surface the break
+  to customers rather than silently no-op the setter").
+- The runner labels the PR `regen/breaking-unavoidable` and the
+  `spec-idiomatic/breaking-acked` status check fails until a CODEOWNER
+  acks. That gate is the correct ceremony: customer code that referenced
+  the field will fail to compile on the next SDK upgrade, exactly as
+  the audit intends.
+
+Customers using docs already had no reason to set these fields, so the
+compile break only catches customers reaching into undocumented stem
+parameters — exactly the population that should be flagged.
 
 ## Ceremony per tier
 
