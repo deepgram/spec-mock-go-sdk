@@ -17,9 +17,12 @@ import (
 //   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
 //   - DetectTopics: deprecated by stem in favour of Topics.
 //   - Extra: stem-side metadata pass-through, request side not modeled.
-//   - Alternatives, Channels, SampleRate: removed from spec TranscribeInput
-//     (FIELD_REMOVED). Facade option fields are retained so customer code
-//     keeps compiling, but they no longer reach the wire.
+//   - Alternatives, Channels, SampleRate, FillerWords: removed from
+//     spectypes.TranscribeInput in the latest spec regen. Facade-options
+//     fields are preserved for source compatibility; the wiring block is
+//     dropped so setting them is a no-op on the wire. Customers who relied
+//     on these reaching the server will observe a behaviour change but
+//     their code keeps compiling.
 //
 // Fields removed from the spec as part of the @internal hygiene audit
 // (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
@@ -60,10 +63,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.Encoding != "" {
 		v := o.Encoding
 		in.Encoding = &v
-	}
-	if o.FillerWords {
-		v := o.FillerWords
-		in.FillerWords = &v
 	}
 	if o.Intents {
 		v := o.Intents

@@ -1,62 +1,44 @@
 # Breaking changes
 
-This file is maintained by `spec-idiomatic` on every regen. Each entry
-describes a single shape/member change classified by tier per
-`.agents/skills/sdk-breaking-ceremony/SKILL.md`.
-
-## TranscribeInput.Alternatives removed
+## TranscribeInput.Alternatives, Channels, SampleRate, FillerWords removed
 
 - **Tier:** 1 (absorbed-breaking)
 - **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Member:** `Alternatives *int32`
-- **Customer-visible impact:** The facade option
-  `PreRecordedTranscriptionOptions.Alternatives int` is preserved so
-  customer code keeps compiling, but it no longer reaches the wire.
-  Requests that previously set `Alternatives` to influence the number
-  of ranked interpretations returned will be sent without that query
-  parameter and the server default will apply.
-- **Facade behaviour:** `optionsToTranscribeInput` no longer references
-  `in.Alternatives`. `TestDropped_Alternatives` locks in the absorption.
+- **Members removed:** `Alternatives *int32`, `Channels *int32`, `SampleRate *int32`, `FillerWords *bool`
+- **Customer-visible impact:** The facade options struct
+  `PreRecordedTranscriptionOptions` still exposes `Alternatives`,
+  `Channels`, `SampleRate`, and `FillerWords` so existing customer
+  code keeps compiling. However, setting these fields is now a no-op:
+  they are dropped in `optionsToTranscribeInput` and never reach the
+  wire. Customers relying on these parameters reaching the Deepgram
+  API will observe a behavioural change (server defaults apply).
+- **Facade behaviour:** Wiring blocks for these four fields have been
+  removed from `optionsToTranscribeInput`. `TestDropped_<Field>` tests
+  in `wire_test.go` lock in the absorption to prevent silent re-wiring
+  in a future regen.
 
-## TranscribeInput.Channels removed
-
-- **Tier:** 1 (absorbed-breaking)
-- **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Member:** `Channels *int32`
-- **Customer-visible impact:** The facade option
-  `PreRecordedTranscriptionOptions.Channels int` is preserved but no
-  longer wired. Customers setting `Channels` to declare interleaved
-  channel count for raw audio uploads will silently rely on the server
-  default.
-- **Facade behaviour:** `optionsToTranscribeInput` no longer references
-  `in.Channels`. `TestDropped_Channels` locks in the absorption.
-
-## TranscribeInput.SampleRate removed
+## TranscribeInput hygiene removals (Uttseg, Dates, Name, EntityPrompt, SummarizeLength, Threshold, EmulateStreaming, Tier, UttSplitInterruptions, NumbersSpaces, KeywordBoost, Endpointing, Performance, Yelling, VadTurnon, DatasetId, Numbers, UnifySpeakerId, VadEvents, VadSuppression, Context, ShowRedactedText, Chunker, Identify, DateFormat, MaxSpeakers, Times, Ner)
 
 - **Tier:** 1 (absorbed-breaking)
-- **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Member:** `SampleRate *int32`
-- **Customer-visible impact:** The facade option
-  `PreRecordedTranscriptionOptions.SampleRate int` is preserved but no
-  longer wired. Customers setting `SampleRate` to declare raw audio
-  sample rate will silently rely on the server default.
-- **Facade behaviour:** `optionsToTranscribeInput` no longer references
-  `in.SampleRate`. `TestDropped_SampleRate` locks in the absorption.
+- **Shape:** `spectypes.TranscribeInput`
+- **Customer-visible impact:** None of these fields were exposed on
+  the facade `PreRecordedTranscriptionOptions` struct nor wired in
+  `optionsToTranscribeInput` prior to this regen. They were dropped
+  from `api/types` and the facade simply no longer references them.
+  Customer code is unaffected.
+- **Facade behaviour:** No-op. No facade changes required for these.
 
-## Other TranscribeInput / StreamInput fields removed in this regen
+## StreamInput.FillerWords, NoDelay, DiarizeModel removed
 
-The spec also removed the following `TranscribeInput` fields, none of
-which were wired through the facade prior to this regen, so the
-absorption is a no-op on the customer surface (the converter had no
-`if o.X` block for them):
-
-- `Uttseg`, `Dates`, `Name`, `EntityPrompt`, `SummarizeLength`,
-  `Threshold`, `EmulateStreaming`, `Tier`, `UttSplitInterruptions`,
-  `NumbersSpaces`, `KeywordBoost`, `Endpointing`, `Performance`,
-  `Yelling`, `VadTurnon`, `DatasetId`, `Numbers`, `UnifySpeakerId`,
-  `VadEvents`, `VadSuppression`, `Context`, `ShowRedactedText`,
-  `Chunker`, `Identify`, `DateFormat`, `MaxSpeakers`, `Times`, `Ner`
-
-The streaming `StreamInput` fields `FillerWords`, `NoDelay`, and
-`DiarizeModel` were also removed; the streaming facade does not
-currently expose those knobs, so no customer-visible change.
+- **Tier:** 1 (absorbed-breaking)
+- **Shape:** `spectypes.StreamInput` (generated, in `api/types`)
+- **Customer-visible impact:** The websocket facade does not have a
+  `optionsToStreamInput` converter today — streaming options are
+  serialised by the legacy `version.GetLiveAPI` query-string builder,
+  not via the transport/http Invoke primitive. The facade
+  `LiveTranscriptionOptions` struct still exposes `FillerWords`,
+  `NoDelay`, and `DiarizeModel` for source-compatibility; whether
+  they reach the wire depends on the legacy URL builder, which is
+  out of scope for this regen.
+- **Facade behaviour:** No facade source change required. Documented
+  here so reviewers know the upstream removal is acknowledged.

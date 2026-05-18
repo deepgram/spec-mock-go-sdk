@@ -87,11 +87,6 @@ func TestWires_Encoding(t *testing.T) {
 	requireWired(t, in, "Encoding")
 }
 
-func TestWires_FillerWords(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{FillerWords: true})
-	requireWired(t, in, "FillerWords")
-}
-
 func TestWires_Intents(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Intents: true})
 	requireWired(t, in, "Intents")
@@ -202,21 +197,6 @@ func TestWires_Version(t *testing.T) {
 	requireWired(t, in, "Version")
 }
 
-func TestDropped_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spec TranscribeInput")
-}
-
-func TestDropped_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spec TranscribeInput")
-}
-
-func TestDropped_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spec TranscribeInput")
-}
-
 func TestDropped_CustomIntent(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{CustomIntent: []string{"x"}})
 	requireDropped(t, in, "CustomIntent", "stem server-side only, not modeled in spec")
@@ -245,4 +225,24 @@ func TestDropped_DetectTopics(t *testing.T) {
 func TestDropped_Extra(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Extra: []string{"x=y"}})
 	requireDropped(t, in, "Extra", "stem-side metadata pass-through; request side not modeled")
+}
+
+func TestDropped_Alternatives(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
+	requireDropped(t, in, "Alternatives", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
+}
+
+func TestDropped_Channels(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
+	requireDropped(t, in, "Channels", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
+}
+
+func TestDropped_SampleRate(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
+	requireDropped(t, in, "SampleRate", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
+}
+
+func TestDropped_FillerWords(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{FillerWords: true})
+	requireDropped(t, in, "FillerWords", "removed from spectypes.TranscribeInput in latest regen; facade keeps option for source-compat")
 }
