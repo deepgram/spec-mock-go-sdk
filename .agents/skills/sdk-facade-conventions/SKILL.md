@@ -1,6 +1,6 @@
 ---
 name: sdk-facade-conventions
-description: Use when editing or reviewing Go code in pkg/ in THIS repo. Repo-specific layout notes (where listen lives today, the pkg/api legacy split, which transports are wired) plus pointers to where the universal facade rules are documented. Route facade-author rules (3-tier model, converter naming, additive rule, wire-test contract) to spec-idiomatic's system.md and language/go.md.
+description: Use when editing or reviewing Go code in pkg/ in THIS repo. Repo-local layout notes (which products are wired, where wire tests live) plus pointers to where the universal facade rules are documented. Route facade-author rules (3-tier model, converter naming, additive rule, wire-test contract) to spec-idiomatic's system.md and language/go.md.
 ---
 
 # Facade conventions (repo-local)
@@ -17,64 +17,41 @@ This skill only documents what's specific to **this** repo.
 
 ## Package layout
 
-Target layout — every transport for every product lives under
-`pkg/client/{product}/{ver}/{transport}/`:
+Every transport for every product lives under
+`pkg/client/{product}/{ver}/{transport}/`, with options + response +
+converters + client + wire tests co-located in a single package:
 
 ```
-pkg/
-└── client/{product}/{ver}/{transport}/   # REST, WebSocket, SageMaker, WebRTC
-    ├── client.go                         # constructor + entry methods
-    ├── {operation}.go                    # one file per RPC (prerecorded.go etc.)
-    ├── response.go                       # customer-facing response value types
-    ├── convert.go                        # generated → customer converters + helpers
-    ├── types.go                          # customer-facing request types + options
-    ├── constants.go                      # customer-visible enum values
-    └── interfaces/                       # streaming-only sub-package
-        ├── interfaces.go                 # handler interfaces customers implement
-        ├── types.go                      # customer-facing event value types
-        ├── convert.go                    # generated event → customer event converter
-        └── constants.go                  # customer-visible message-type strings
+pkg/client/{product}/{ver}/{transport}/
+├── client.go         # Client + Connect / FromURL / FromFile / FromStream
+├── options.go        # <Operation>Options facade struct
+├── response.go       # customer-facing response value types  (REST)
+├── events.go         # customer-facing event types           (streaming)
+├── convert.go        # deref helpers + optionsTo<X> + convert<X> / fromX
+├── example_test.go   # Example_* smoke tests
+├── wire_helpers.go   # requireWired / requireDropped helpers
+└── wire_test.go      # one TestWires_<Field> per facade-options field
 ```
 
 Per [`sdk-agentic-readiness`](../sdk-agentic-readiness/SKILL.md), every
-`.go` file in `pkg/` should be single-concept. Don't co-locate REST and
-WebSocket types in one file.
+`.go` file in `pkg/` should be single-concept.
 
-## Legacy: `pkg/api/`
+## Products wired today
 
-`pkg/api/{product}/.../interfaces/` is legacy bootstrap inherited from
-`deepgram-go-sdk`. The split (REST under `pkg/client/`, WebSocket under
-`pkg/api/`) was an accident of history; nothing about the spec pipeline
-requires it. The migration plan: as each product moves through
-`deepgram/spec` → `deepgram/spec-codegen-go` → here, its
-`pkg/api/{product}/` subtree gets retired in favour of
-`pkg/client/{product}/{ver}/{transport}/`.
+| Product | REST | WebSocket |
+|---|---|---|
+| listen (transcribe / live) | ✅ | ✅ |
 
-When you add new code, use the target layout. When you edit existing
-code at `pkg/api/listen/...`, match the surrounding style — the
-wholesale move is deferred to its own refactor.
+Other products return per-product as each migrates into the spec
+pipeline. When a regen PR touches `api/**`, `spec-idiomatic` only
+modifies facades for products whose api/ shapes changed.
 
-## What's wired through the new pipeline today
+## Wire tests at `pkg/client/listen/v1/{rest,websocket}/wire_test.go`
 
-| Product | REST | WebSocket | Status |
-|---|---|---|---|
-| listen (transcribe) | ✅ | ⚠️ partial | Only product wired through `deepgram/spec` + `spec-codegen-go` + `spec-idiomatic` |
-| speak | — | — | Legacy from `deepgram-go-sdk`, not yet plumbed |
-| agent | — | — | Legacy |
-| manage / projects | — | — | Legacy |
-
-When a regen PR touches `api/**`, `spec-idiomatic` only modifies the
-facade for products whose api/ shapes changed — which today means
-`pkg/client/listen/v1/rest/` and `pkg/client/listen/v1/websocket/`.
-Legacy `pkg/api/{other-product}/` subtrees stay frozen until they
-migrate.
-
-## Wire tests at `pkg/client/listen/v1/rest/wire_test.go`
-
-This is the contract floor for the REST listen transport. One
-`TestWires_<Field>` per facade-options field that flows through
-`optionsToTranscribeInput`. Universal rules (when to add, when to
-remove) are in spec-idiomatic's `system.md`; the file's own header
+These are the contract floor for each transport. One
+`TestWires_<Field>` per facade-options field that flows through the
+matching `optionsTo<X>` converter. Universal rules (when to add, when
+to remove) are in spec-idiomatic's `system.md`; the file's own header
 docstring spells out the per-field rule.
 
 The build verifier runs `go test -count=1 ./pkg/...` on every regen

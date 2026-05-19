@@ -8,10 +8,9 @@ the wobble so customer-facing signatures stay stable.
 This is the **prototype of the spec-driven replacement** for
 `deepgram/deepgram-go-sdk`. The pipeline that produces it is
 spec → spec-codegen-go → spec-mock-go-sdk, with spec-idiomatic
-auto-regenerating the facade on every spec change. Today only
-`/v1/listen` is wired through the new pipeline; the rest of the
-surface is carried over from `deepgram-go-sdk` and gets cut over
-product by product.
+auto-regenerating the facade on every spec change. Listen is the only
+product wired today; others return per-product as each migrates into
+the pipeline.
 
 ## Repo layout
 
@@ -19,8 +18,6 @@ product by product.
 |---|---|---|
 | `api/` | Machine-generated wire types, transports, errors. Source of truth for the wire format. | **DO NOT EDIT.** Regenerated from spec every codegen run. Any edit will be wiped on the next regen. |
 | `pkg/` | Idiomatic Go facade. Customer-facing types and call surfaces. Converts pointer-heavy generated types into value-heavy idiomatic types. | Edit freely. The facade exists to absorb api/ wobbles. |
-| `examples/` | Runnable code samples per transport / use case. | Edit freely. Examples should compile and pass `go test ./examples/...`. |
-| `tests/` | Unit and integration tests. | Edit freely. |
 | `.agents/skills/` | Maintainer-facing skills (this directory). | Edit when conventions change. |
 | `llms.txt` | Hand-curated index of canonical examples and docs for agentic retrieval tools. | Edit when public surface changes. |
 
@@ -32,7 +29,9 @@ product by product.
    `go build ./...`, posts a work-done checklist comment, and pushes any
    edits back to the PR branch.
 4. Human reviewer checks the diff per `sdk-pr-review`, acks any breaking
-   ceremony per `sdk-breaking-ceremony`, merges.
+   ceremony documented in
+   [`spec-idiomatic/prompts/system.md`](https://github.com/deepgram/spec-idiomatic/blob/main/prompts/system.md),
+   merges.
 
 ## Skills
 
@@ -42,11 +41,15 @@ task you're about to do.
 | Skill | Use when |
 |---|---|
 | [`sdk-codegen-flow`](.agents/skills/sdk-codegen-flow/SKILL.md) | You need to understand the api/ ↔ pkg/ split, the regen pipeline, or what `spec-idiomatic` does to a PR. |
-| [`sdk-facade-conventions`](.agents/skills/sdk-facade-conventions/SKILL.md) | You're writing or reviewing Go code in `pkg/`. Deref helpers, pointer/value posture, naming idioms, type-switch patterns. |
-| [`sdk-agentic-readiness`](.agents/skills/sdk-agentic-readiness/SKILL.md) | You're writing or reviewing any public API surface. The Example_*test, README-opener, single-concept-file, and llms.txt rules that keep this SDK scorable on retrieval benchmarks. |
+| [`sdk-facade-conventions`](.agents/skills/sdk-facade-conventions/SKILL.md) | You're writing or reviewing Go code in `pkg/`. Repo-local layout notes + pointers to spec-idiomatic's universal rules. |
+| [`sdk-agentic-readiness`](.agents/skills/sdk-agentic-readiness/SKILL.md) | You're writing or reviewing any public API surface. The Example_* test, README-opener, single-concept-file, and llms.txt rules that keep this SDK scorable on retrieval benchmarks. |
 | [`sdk-local-regen`](.agents/skills/sdk-local-regen/SKILL.md) | You want to run `spec-idiomatic` on your laptop against a synthetic api/ change before pushing anything to CI. |
 | [`sdk-pr-review`](.agents/skills/sdk-pr-review/SKILL.md) | You're reviewing an auto-regen PR. Checklist for verifying the bot did the right thing. |
-| [`sdk-breaking-ceremony`](.agents/skills/sdk-breaking-ceremony/SKILL.md) | The PR has a `regen/breaking-*` label or you're trying to decide what counts as breaking. The 3-tier model and reviewer playbook. |
+
+Universal facade-author rules (3-tier breaking model, converter naming
+patterns, additive rule, facade-mirror rule, wire-test contract,
+BREAKING_CHANGES.md ownership) live in
+[`spec-idiomatic/prompts/system.md`](https://github.com/deepgram/spec-idiomatic/blob/main/prompts/system.md).
 
 ## Cross-repo context
 

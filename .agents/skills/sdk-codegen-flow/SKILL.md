@@ -47,20 +47,17 @@ and the surrounding code in
   Touching anything here will be undone on the next regen.
 
 - **`pkg/`** — idiomatic facade. Customer-facing types live here. The
-  target convention is `pkg/client/{product}/{ver}/{transport}/` for
-  every transport; streaming transports add an `interfaces/`
-  sub-package for handler interfaces and event types. A legacy split
-  at `pkg/api/{product}/...` is being retired one product at a time as
-  each migrates through the spec pipeline. See
+  convention is `pkg/client/{product}/{ver}/{transport}/` with
+  options + response/events + converters + client + wire tests
+  co-located in a single package. See
   [`sdk-facade-conventions`](../sdk-facade-conventions/SKILL.md) for
   full layout rules.
 
-- **`examples/`** — one runnable program per transport × use case.
-  These are the canonical surface for agentic retrieval engines; treat
-  them as load-bearing.
-
-- **`tests/`** — unit and edge-case tests, plus the `Example_*` functions
-  required by `sdk-agentic-readiness`.
+- **`Example_*` test functions** — co-located in each package's
+  `example_test.go`. These are the canonical surface for agentic
+  retrieval engines; treat them as load-bearing. Other test surfaces
+  (cross-package examples, edge-case suites) return per-product as
+  each migrates into the spec pipeline.
 
 ## When you'd run codegen manually
 
