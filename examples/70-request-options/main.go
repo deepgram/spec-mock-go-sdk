@@ -1,16 +1,8 @@
 // Example: Request Options
 //
-// The Python SDK exposes an `additional_query_parameters` dict for
-// passing arbitrary query parameters Deepgram might accept that the
-// SDK does not have a typed field for. This Go SDK is spec-driven
-// (every option is a typed field corresponding to a Smithy @httpQuery
-// member) and intentionally does NOT have an arbitrary-param escape
-// hatch — adding a new field is a spec change followed by a codegen
-// roll-forward.
-//
-// What this example demonstrates instead: the most common reason to
-// reach for arbitrary params in the Python SDK is DetectLanguage,
-// which is a typed field on PreRecordedTranscriptionOptions.
+// Every option on PreRecordedTranscriptionOptions corresponds to one
+// @httpQuery on the Smithy spec. There is no arbitrary-param escape
+// hatch — adding a new field requires a spec change.
 
 package main
 
@@ -25,7 +17,6 @@ import (
 func main() {
 	client := restv1.NewWithDefaults()
 
-	fmt.Println("Transcribing with DetectLanguage (the typed equivalent of Python's request_options escape hatch)...")
 	response, err := client.FromURL(
 		context.Background(),
 		"https://dpgr.am/spacewalk.wav",
@@ -42,6 +33,6 @@ func main() {
 		return
 	}
 	if len(response.Results.Channels[0].Alternatives) > 0 {
-		fmt.Printf("Transcript: %s\n", response.Results.Channels[0].Alternatives[0].Transcript)
+		fmt.Println(response.Results.Channels[0].Alternatives[0].Transcript)
 	}
 }
