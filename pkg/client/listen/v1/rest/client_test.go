@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 )
 
 func TestFromURL_HappyPath(t *testing.T) {
@@ -172,5 +173,110 @@ func TestFromURL_HTTPErrorIsTypedAndDiscriminable(t *testing.T) {
 	}
 	if httpErr.Method != "POST" {
 		t.Errorf("Method: got %q, want %q", httpErr.Method, "POST")
+	}
+}
+
+func TestFromURL_HTTPErrorTypedPopulatedFor400(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("dg-error", "invalid model: bogus")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"err_code":"INVALID_QUERY_PARAMETER","err_msg":"invalid model: bogus","request_id":"01HXYZ-deadbeef"}`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://dpgr.am/spacewalk.wav",
+		&PreRecordedTranscriptionOptions{Model: "bogus"})
+	if err == nil {
+		t.Fatal("FromURL with 400 response should return an error")
+	}
+
+	var httpErr *httptransport.HTTPError
+	if !errors.As(err, &httpErr) {
+		t.Fatalf("err should be assertable to *HTTPError; got %T: %v", err, err)
+	}
+	if httpErr.Typed == nil {
+		t.Fatal("HTTPError.Typed should be populated for a declared 400 error")
+	}
+
+	var queryErr *spectypes.InvalidQueryParameterError
+	if !errors.As(httpErr.Typed, &queryErr) {
+		t.Fatalf("Typed should be *InvalidQueryParameterError; got %T", httpErr.Typed)
+	}
+
+	if queryErr.ErrCode == nil || *queryErr.ErrCode != "INVALID_QUERY_PARAMETER" {
+		t.Errorf("ErrCode: got %v, want \"INVALID_QUERY_PARAMETER\"", queryErr.ErrCode)
+	}
+	if queryErr.ErrMsg == nil || *queryErr.ErrMsg != "invalid model: bogus" {
+		t.Errorf("ErrMsg: got %v, want \"invalid model: bogus\"", queryErr.ErrMsg)
+	}
+	if queryErr.RequestId == nil || *queryErr.RequestId != "01HXYZ-deadbeef" {
+		t.Errorf("RequestId: got %v, want \"01HXYZ-deadbeef\"", queryErr.RequestId)
+	}
+	if queryErr.DgError == nil || *queryErr.DgError != "invalid model: bogus" {
+		t.Errorf("DgError (from header): got %v, want \"invalid model: bogus\"", queryErr.DgError)
+	}
+}
+
+func TestFromURL_HTTPErrorTypedPopulatedFor429WithRetryAfter(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Retry-After", "60")
+		w.Header().Set("dg-error", "rate limit hit")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`{"err_code":"RATE_LIMITED","err_msg":"rate limit hit","request_id":"abc"}`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://dpgr.am/spacewalk.wav", nil)
+	if err == nil {
+		t.Fatal("FromURL with 429 response should return an error")
+	}
+
+	var httpErr *httptransport.HTTPError
+	if !errors.As(err, &httpErr) {
+		t.Fatalf("err should be assertable to *HTTPError; got %T", err)
+	}
+
+	var rateLimited *spectypes.RateLimitedError
+	if !errors.As(httpErr.Typed, &rateLimited) {
+		t.Fatalf("Typed should be *RateLimitedError; got %T", httpErr.Typed)
+	}
+	if rateLimited.RetryAfter == nil || *rateLimited.RetryAfter != "60" {
+		t.Errorf("RetryAfter: got %v, want \"60\"", rateLimited.RetryAfter)
+	}
+}
+
+func TestFromURL_HTTPErrorTypedNilForUndecodableBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusBadGateway)
+		_, _ = w.Write([]byte(`<html><body>502 Bad Gateway</body></html>`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://dpgr.am/spacewalk.wav", nil)
+	if err == nil {
+		t.Fatal("FromURL with 502 response should return an error")
+	}
+
+	var httpErr *httptransport.HTTPError
+	if !errors.As(err, &httpErr) {
+		t.Fatalf("err should be assertable to *HTTPError; got %T", err)
+	}
+	if httpErr.StatusCode != http.StatusBadGateway {
+		t.Errorf("StatusCode: got %d, want %d", httpErr.StatusCode, http.StatusBadGateway)
+	}
+	if httpErr.Typed != nil {
+		t.Errorf("Typed should be nil for unrecognised status (502 not declared); got %T", httpErr.Typed)
+	}
+	if !strings.Contains(string(httpErr.Body), "502 Bad Gateway") {
+		t.Errorf("Body should still contain raw response; got %q", string(httpErr.Body))
 	}
 }

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	restv1 "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/rest"
 	wsv1 "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket"
 )
@@ -30,8 +31,9 @@ import (
 func main() {
 	example1HTTPErrorExtraction()
 	example2DiscriminateByStatusCode()
-	example3NonHTTPNetworkErrors()
-	example4WebSocketErrors()
+	example3TypedErrorViaErrorsAs()
+	example4NonHTTPNetworkErrors()
+	example5WebSocketErrors()
 }
 
 func example1HTTPErrorExtraction() {
@@ -94,8 +96,55 @@ func example2DiscriminateByStatusCode() {
 	}
 }
 
-func example3NonHTTPNetworkErrors() {
-	fmt.Println("\nExample 3: Non-HTTP transport failures (DNS, connection refused, context)")
+func example3TypedErrorViaErrorsAs() {
+	fmt.Println("\nExample 3: Typed error via errors.As on HTTPError.Typed")
+	client := restv1.NewWithDefaults()
+
+	_, err := client.FromURL(
+		context.Background(),
+		"",
+		&restv1.PreRecordedTranscriptionOptions{Model: "nova-3"},
+	)
+
+	var httpErr *httptransport.HTTPError
+	if !errors.As(err, &httpErr) {
+		fmt.Printf("  Not an HTTP error: %v\n", err)
+		return
+	}
+	if httpErr.Typed == nil {
+		fmt.Printf("  Typed nil — status %d is not in Transcribe's declared errors, or body was undecodable.\n", httpErr.StatusCode)
+		return
+	}
+
+	var queryErr *spectypes.InvalidQueryParameterError
+	if errors.As(httpErr.Typed, &queryErr) {
+		fmt.Println("  Typed extracted as *spectypes.InvalidQueryParameterError:")
+		if queryErr.ErrCode != nil {
+			fmt.Printf("    ErrCode:   %s\n", *queryErr.ErrCode)
+		}
+		if queryErr.ErrMsg != nil {
+			fmt.Printf("    ErrMsg:    %s\n", *queryErr.ErrMsg)
+		}
+		if queryErr.RequestId != nil {
+			fmt.Printf("    RequestId: %s\n", *queryErr.RequestId)
+		}
+		return
+	}
+
+	var rateLimited *spectypes.RateLimitedError
+	if errors.As(httpErr.Typed, &rateLimited) {
+		fmt.Println("  Typed extracted as *spectypes.RateLimitedError")
+		if rateLimited.RetryAfter != nil {
+			fmt.Printf("    Retry-After: %s seconds\n", *rateLimited.RetryAfter)
+		}
+		return
+	}
+
+	fmt.Printf("  Typed is set but did not match expected variants: %T\n", httpErr.Typed)
+}
+
+func example4NonHTTPNetworkErrors() {
+	fmt.Println("\nExample 4: Non-HTTP transport failures (DNS, connection refused, context)")
 	client := restv1.NewWithDefaults()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
@@ -122,8 +171,8 @@ func example3NonHTTPNetworkErrors() {
 	}
 }
 
-func example4WebSocketErrors() {
-	fmt.Println("\nExample 4: WebSocket error handling")
+func example5WebSocketErrors() {
+	fmt.Println("\nExample 5: WebSocket error handling")
 	fmt.Println("")
 	fmt.Println("  Server-emitted errors arrive through stream.Recv() as a")
 	fmt.Println("  *wsv1.ErrorEvent variant of the Event union. Handle them in")

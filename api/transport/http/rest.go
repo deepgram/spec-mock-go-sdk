@@ -35,6 +35,11 @@ import (
 // slices pair Go struct field names on the operation's input type
 // with their wire-protocol names; the PayloadField names the single
 // member (if any) that binds to the request body via @httpPayload.
+//
+// DecodeError is populated by the route emitter for operations whose
+// spec declares @error structures. Invoke calls it on responses
+// with status >= 400 to populate HTTPError.Typed. Nil means the
+// operation declares no @error shapes.
 type HTTPRoute struct {
 	Method       string
 	Path         string
@@ -42,6 +47,7 @@ type HTTPRoute struct {
 	HeaderFields []FieldBinding
 	PathParams   []FieldBinding
 	PayloadField string
+	DecodeError  func(status int, body []byte, headers nethttp.Header) error
 }
 
 // FieldBinding links a Go input struct field name to its wire-protocol
@@ -59,6 +65,14 @@ type FieldBinding struct {
 // handling (retry on 429, re-auth on 401, surface the response
 // body for 400-class debugging, etc.).
 //
+// The Typed field carries an operation-specific error structure
+// when the operation's spec declares @error shapes AND the
+// response body decodes into one of them. Customers reach the
+// typed error via errors.As(httpErr.Typed, &target). Nil means
+// either the operation declares no @error shapes, or the body
+// could not be decoded into any of them (e.g. an upstream
+// gateway returned a non-JSON 5xx).
+//
 // The Error() string format is stable: "http.Invoke: METHOD URL:
 // STATUS BODY". Code that previously string-matched the error
 // message keeps working unchanged.
@@ -68,6 +82,7 @@ type HTTPError struct {
 	StatusCode int
 	Body       []byte
 	Headers    nethttp.Header
+	Typed      error
 }
 
 // Error renders the failure as "http.Invoke: METHOD URL: STATUS
@@ -175,13 +190,17 @@ func Invoke[I any, O any](
 
 	if resp.StatusCode >= 400 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return nil, &HTTPError{
+		httpErr := &HTTPError{
 			Method:     route.Method,
 			URL:        u.String(),
 			StatusCode: resp.StatusCode,
 			Body:       respBody,
 			Headers:    resp.Header.Clone(),
 		}
+		if route.DecodeError != nil {
+			httpErr.Typed = route.DecodeError(resp.StatusCode, respBody, resp.Header)
+		}
+		return nil, httpErr
 	}
 
 	var out O

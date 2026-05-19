@@ -27,8 +27,52 @@ Fields available on `*HTTPError`:
 | `StatusCode` | `int` | Wire status code. Match against `http.Status*` constants. |
 | `Body` | `[]byte` | Raw response body. Decode if you need structured fields. |
 | `Headers` | `http.Header` | Response headers. Notably `Retry-After`, `X-Dg-Request-Id`. |
+| `Typed` | `error` | Operation-specific decoded error (see below). Nil when the status is not in the operation's declared errors or the body couldn't decode. |
 
 The `.Error()` string format is stable: `"http.Invoke: METHOD URL: STATUS BODY"`. Older code that string-matched the error message keeps working — new code should prefer `errors.As`.
+
+## REST typed errors via `HTTPError.Typed`
+
+For an even sharper handle, `HTTPError.Typed` carries the spec-driven typed error. Each operation declares its possible error types via Smithy `errors: [...]`; the codegen-emitted route metadata includes a decoder that maps the response into one of those types:
+
+```go
+var httpErr *httptransport.HTTPError
+if errors.As(err, &httpErr) && httpErr.Typed != nil {
+    var queryErr *spectypes.InvalidQueryParameterError
+    if errors.As(httpErr.Typed, &queryErr) {
+        log.Printf("err_code=%s err_msg=%s request_id=%s",
+            *queryErr.ErrCode, *queryErr.ErrMsg, *queryErr.RequestId)
+        // queryErr.DgError mirrors the dg-error response header
+    }
+
+    var rateLimited *spectypes.RateLimitedError
+    if errors.As(httpErr.Typed, &rateLimited) {
+        // rateLimited.RetryAfter mirrors the Retry-After response header
+        time.Sleep(parseRetryAfter(*rateLimited.RetryAfter))
+    }
+}
+```
+
+For Listen REST (`Transcribe` operation), the declared error types and their status codes are:
+
+| Type | Status |
+|---|---|
+| `*spectypes.InvalidQueryParameterError` | 400 |
+| `*spectypes.UnauthorizedError` | 401 |
+| `*spectypes.PaymentRequiredError` | 402 |
+| `*spectypes.ForbiddenError` | 403 |
+| `*spectypes.NotFoundError` | 404 |
+| `*spectypes.SlowUploadError` | 408 |
+| `*spectypes.PayloadTooLargeError` | 413 |
+| `*spectypes.UnsupportedMediaTypeError` | 415 |
+| `*spectypes.RateLimitedError` | 429 |
+| `*spectypes.InternalServerError` | 500 |
+
+Every type carries the same Legacy-shape body fields — `ErrCode *string`, `ErrMsg *string`, `RequestId *string`, plus `DgError *string` from the `dg-error` response header. `RateLimitedError` also carries `RetryAfter *string` from the `Retry-After` header.
+
+For finer discrimination within a status (e.g. distinguishing `INVALID_QUERY_PARAMETER` from `KEYWORD_LIMIT_EXCEEDED` within 400), inspect the `ErrCode` field of the typed struct. The full set of known err_code values is documented in [`deepgram/spec/model/common/primitives.smithy`](https://github.com/deepgram/spec/blob/main/model/common/primitives.smithy) on the `ErrCode` type.
+
+When the status isn't in the operation's declared list (e.g. an upstream `502 Bad Gateway` returns an HTML body), `Typed` is `nil` — `Body` and `StatusCode` are still populated so customer code can log the raw failure.
 
 ## WebSocket: `*wsv1.ErrorEvent` via Recv-loop type-switch
 
@@ -93,8 +137,6 @@ The example runs four sub-cases. Sections 1 + 2 exercise a real 400 response; se
 | `except Exception as e` (network catch-all) | `errors.As` returns false → handle as transport error |
 | `connection.on(EventType.ERROR, on_error)` callback | `case *wsv1.ErrorEvent:` arm of the Recv-loop type-switch |
 
-### Known gap (intentional)
+### Closed gap (was a known gap in v0.0.x)
 
-The Python SDK has Fern-generated typed subclasses for each documented status code (`BadRequestError`, future `UnauthorizedError`, etc.). This Go SDK currently has the generic `*HTTPError` container; spec-driven per-status typed errors are a follow-up that requires adding `@error` + `@httpError(N)` structures to the Smithy spec and extending the codegen to decode response bodies into them.
-
-Until then, customers discriminate on `httpErr.StatusCode` rather than on Go type. Status-code switching is structurally identical and works against the typed error you already have.
+Earlier versions of this SDK shipped only the generic `*HTTPError` container with no per-status typed sub-errors — customers had to discriminate on `httpErr.StatusCode` and decode `httpErr.Body` themselves. That gap is now closed: each operation's Smithy spec declares `errors: [...]`, the codegen emits a per-operation decoder, and `HTTPError.Typed` carries the typed error directly. See the "REST typed errors via `HTTPError.Typed`" section above.

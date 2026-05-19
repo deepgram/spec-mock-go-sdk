@@ -7,12 +7,139 @@
 // / @httpLabel traits. PayloadField names the single member (if
 // any) carrying the request body via @httpPayload.
 //
+// DecodeError on each *Route, when non-nil, is a per-operation
+// decoder that maps a non-2xx response into one of the
+// operation's declared @error structures (smithy-go-generated,
+// in this same package). Customer code reaches the typed error
+// via errors.As(httpErr.Typed, &target).
+//
 // These values feed transport/http.Invoke[I, O any] which uses
 // reflection on the named fields to assemble *http.Request objects.
 
 package types
 
-import httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
+import (
+	"encoding/json"
+
+	nethttp "net/http"
+
+	httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
+)
+
+// decodeTranscribeError matches a non-2xx response to one of Transcribe's declared
+// @error structures by HTTP status, JSON-decodes the body into it, and
+// copies @httpHeader-bound fields from the response headers. Returns nil
+// when the status does not correspond to a declared error or the body
+// fails to decode (e.g. an upstream gateway returned non-JSON HTML).
+func decodeTranscribeError(status int, body []byte, headers nethttp.Header) error {
+	switch status {
+	case 400:
+		v := &InvalidQueryParameterError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 401:
+		v := &UnauthorizedError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 403:
+		v := &ForbiddenError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 402:
+		v := &PaymentRequiredError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 404:
+		v := &NotFoundError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 408:
+		v := &SlowUploadError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 413:
+		v := &PayloadTooLargeError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 415:
+		v := &UnsupportedMediaTypeError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	case 429:
+		v := &RateLimitedError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		if h := headers.Get("Retry-After"); h != "" {
+			hCopy := h
+			v.RetryAfter = &hCopy
+		}
+		return v
+	case 500:
+		v := &InternalServerError{}
+		if err := json.Unmarshal(body, v); err != nil {
+			return nil
+		}
+		if h := headers.Get("dg-error"); h != "" {
+			hCopy := h
+			v.DgError = &hCopy
+		}
+		return v
+	}
+	return nil
+}
 
 // TranscribeRoute describes the HTTP binding for the Transcribe operation.
 var TranscribeRoute = httptransport.HTTPRoute{
@@ -59,5 +186,6 @@ var TranscribeRoute = httptransport.HTTPRoute{
 		{GoField: "ContentType", WireName: "Content-Type"},
 	},
 	PayloadField: "Body",
+	DecodeError: decodeTranscribeError,
 }
 
