@@ -10,49 +10,61 @@ package interfacesv1
 // Please see the prerecorded audio documentation for more details:
 // https://developers.deepgram.com/reference/pre-recorded
 type PreRecordedTranscriptionOptions struct {
-	Alternatives       int      `json:"alternatives,omitempty" schema:"alternatives,omitempty"`
-	Callback           string   `json:"callback,omitempty" schema:"callback,omitempty"`
-	CallbackMethod     string   `json:"callback_method,omitempty" schema:"callback_method,omitempty"`
-	Channels           int      `json:"channels,omitempty" schema:"channels,omitempty"`
-	CustomIntent       []string `json:"custom_intent,omitempty" schema:"custom_intent,omitempty"`
-	CustomIntentMode   string   `json:"custom_intent_mode,omitempty" schema:"custom_intent_mode,omitempty"`
-	CustomTopic        []string `json:"custom_topic,omitempty" schema:"custom_topic,omitempty"`
-	CustomTopicMode    string   `json:"custom_topic_mode,omitempty" schema:"custom_topic_mode,omitempty"`
-	DetectEntities     bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
-	DetectLanguage     bool     `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
-	DetectTopics       bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
+	AccessToken      string   `json:"access_token,omitempty" schema:"access_token,omitempty"`
+	APIKey           string   `json:"api_key,omitempty" schema:"api_key,omitempty"`
+	Callback         string   `json:"callback,omitempty" schema:"callback,omitempty"`
+	CallbackMethod   string   `json:"callback_method,omitempty" schema:"callback_method,omitempty"`
+	CustomIntent     []string `json:"custom_intent,omitempty" schema:"custom_intent,omitempty"`
+	CustomIntentMode string   `json:"custom_intent_mode,omitempty" schema:"custom_intent_mode,omitempty"`
+	CustomTopic      []string `json:"custom_topic,omitempty" schema:"custom_topic,omitempty"`
+	CustomTopicMode  string   `json:"custom_topic_mode,omitempty" schema:"custom_topic_mode,omitempty"`
+	DetectEntities   bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
+	DetectLanguage   []string `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
+	DetectTopics     bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
 	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
 	// diarize=true continues to work for backward compatibility but is mutually
 	// exclusive with diarize_model .
-	Diarize            bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	Diarize          bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
 	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
 	// Mutually exclusive with diarize_model .
-	DiarizeVersion     string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
-	Dictation          bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
-	Encoding           string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
-	Extra              []string `json:"extra,omitempty" schema:"extra,omitempty"`
-	FillerWords        bool     `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
-	Intents            bool     `json:"intents,omitempty" schema:"intents,omitempty"`
-	Keyterm            []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
-	Keywords           []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
-	Language           string   `json:"language,omitempty" schema:"language,omitempty"`
-	Measurements       bool     `json:"measurements,omitempty" schema:"measurements,omitempty"`
-	Model              string   `json:"model,omitempty" schema:"model,omitempty"`
-	Multichannel       bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`
-	Numerals           bool     `json:"numerals,omitempty" schema:"numerals,omitempty"`
-	Paragraphs         bool     `json:"paragraphs,omitempty" schema:"paragraphs,omitempty"`
-	ProfanityFilter    bool     `json:"profanity_filter,omitempty" schema:"profanity_filter,omitempty"`
-	Punctuate          bool     `json:"punctuate,omitempty" schema:"punctuate,omitempty"`
-	Redact             []string `json:"redact,omitempty" schema:"redact,omitempty"`
-	Replace            []string `json:"replace,omitempty" schema:"replace,omitempty"`
-	SampleRate         int      `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
-	Search             []string `json:"search,omitempty" schema:"search,omitempty"`
-	Sentiment          bool     `json:"sentiment,omitempty" schema:"sentiment,omitempty"`
-	SmartFormat        bool     `json:"smart_format,omitempty" schema:"smart_format,omitempty"`
-	Summarize          string   `json:"summarize,omitempty" schema:"summarize,omitempty"`
-	Tag                []string `json:"tag,omitempty" schema:"tag,omitempty"`
-	Topics             bool     `json:"topics,omitempty" schema:"topics,omitempty"`
-	UttSplit           float64  `json:"utt_split,omitempty" schema:"utt_split,omitempty"`
-	Utterances         bool     `json:"utterances,omitempty" schema:"utterances,omitempty"`
-	Version            string   `json:"version,omitempty" schema:"version,omitempty"`
+	DiarizeVersion   string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
+	Dictation        bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
+	Encoding         string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
+	Extra            []string `json:"extra,omitempty" schema:"extra,omitempty"`
+	Intents          bool     `json:"intents,omitempty" schema:"intents,omitempty"`
+	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
+	Keyterm          []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
+	Language         string   `json:"language,omitempty" schema:"language,omitempty"`
+	// Deprecated: Prefer mip_opt_out . log_data is recognized for backward
+	// compatibility; sending both with conflicting values returns 400.
+	LogData          bool     `json:"log_data,omitempty" schema:"log_data,omitempty"`
+	Measurements     bool     `json:"measurements,omitempty" schema:"measurements,omitempty"`
+	MipOptOut        bool     `json:"mip_opt_out,omitempty" schema:"mip_opt_out,omitempty"`
+	Model            string   `json:"model,omitempty" schema:"model,omitempty"`
+	Multichannel     bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`
+	Numerals         bool     `json:"numerals,omitempty" schema:"numerals,omitempty"`
+	Paragraphs       bool     `json:"paragraphs,omitempty" schema:"paragraphs,omitempty"`
+	ProfanityFilter  bool     `json:"profanity_filter,omitempty" schema:"profanity_filter,omitempty"`
+	Punctuate        bool     `json:"punctuate,omitempty" schema:"punctuate,omitempty"`
+	Redact           []string `json:"redact,omitempty" schema:"redact,omitempty"`
+	Replace          []string `json:"replace,omitempty" schema:"replace,omitempty"`
+	Search           []string `json:"search,omitempty" schema:"search,omitempty"`
+	Sentiment        bool     `json:"sentiment,omitempty" schema:"sentiment,omitempty"`
+	SmartFormat      bool     `json:"smart_format,omitempty" schema:"smart_format,omitempty"`
+	Summarize        string   `json:"summarize,omitempty" schema:"summarize,omitempty"`
+	Tag              []string `json:"tag,omitempty" schema:"tag,omitempty"`
+	Topics           bool     `json:"topics,omitempty" schema:"topics,omitempty"`
+	UttSplit         float64  `json:"utt_split,omitempty" schema:"utt_split,omitempty"`
+	Utterances       bool     `json:"utterances,omitempty" schema:"utterances,omitempty"`
+	// Deprecated: Use endpointing instead. vad_turnoff is rejected when endpointing
+	// is also an integer; if only vad_turnoff is set it is silently mapped onto
+	// endpointing .
+	VadTurnoff       int      `json:"vad_turnoff,omitempty" schema:"vad_turnoff,omitempty"`
+	Version          string   `json:"version,omitempty" schema:"version,omitempty"`
+
+	// Alternatives, Channels, SampleRate: removed from the generated
+	// TranscribeInput as part of the @internal hygiene audit (spec PR #8).
+	// Kept on the facade options struct for source-compat with existing
+	// customer code; intentionally NOT wired through optionsToTranscribeInput
+	// (see TestDropped_* in wire_test.go).
 }

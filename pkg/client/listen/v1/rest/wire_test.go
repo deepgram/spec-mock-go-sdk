@@ -5,52 +5,10 @@
 package restv1
 
 import (
-	"reflect"
 	"testing"
 
-	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces/v1"
 )
-
-func requireWired(t *testing.T, in *spectypes.TranscribeInput, fieldName string) {
-	t.Helper()
-	v := reflect.ValueOf(in).Elem().FieldByName(fieldName)
-	if !v.IsValid() {
-		t.Fatalf("spectypes.TranscribeInput has no field %q yet — spec needs to model it before the converter can wire it through.", fieldName)
-	}
-	if isZeroForWire(v) {
-		t.Fatalf("spectypes.TranscribeInput.%s exists but optionsToTranscribeInput didn't wire it.", fieldName)
-	}
-}
-
-func requireDropped(t *testing.T, in *spectypes.TranscribeInput, fieldName, reason string) {
-	t.Helper()
-	v := reflect.ValueOf(in).Elem().FieldByName(fieldName)
-	if !v.IsValid() {
-		return
-	}
-	if !isZeroForWire(v) {
-		t.Fatalf("spectypes.TranscribeInput.%s is documented as permanently dropped (%s) but the converter wired it anyway.", fieldName, reason)
-	}
-}
-
-func isZeroForWire(v reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Ptr, reflect.Interface:
-		return v.IsNil()
-	case reflect.Slice, reflect.Map:
-		return v.Len() == 0
-	case reflect.String:
-		return v.Len() == 0
-	default:
-		return v.IsZero()
-	}
-}
-
-func TestWires_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireWired(t, in, "Alternatives")
-}
 
 func TestWires_Callback(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Callback: "https://example.invalid/cb"})
@@ -62,18 +20,13 @@ func TestWires_CallbackMethod(t *testing.T) {
 	requireWired(t, in, "CallbackMethod")
 }
 
-func TestWires_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireWired(t, in, "Channels")
-}
-
 func TestWires_DetectEntities(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectEntities: true})
 	requireWired(t, in, "DetectEntities")
 }
 
 func TestWires_DetectLanguage(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectLanguage: true})
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{DetectLanguage: []string{"en"}})
 	requireWired(t, in, "DetectLanguage")
 }
 
@@ -95,11 +48,6 @@ func TestWires_Dictation(t *testing.T) {
 func TestWires_Encoding(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Encoding: "linear16"})
 	requireWired(t, in, "Encoding")
-}
-
-func TestWires_FillerWords(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{FillerWords: true})
-	requireWired(t, in, "FillerWords")
 }
 
 func TestWires_Intents(t *testing.T) {
@@ -165,11 +113,6 @@ func TestWires_Redact(t *testing.T) {
 func TestWires_Replace(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Replace: []string{"foo:bar"}})
 	requireWired(t, in, "Replace")
-}
-
-func TestWires_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireWired(t, in, "SampleRate")
 }
 
 func TestWires_Search(t *testing.T) {

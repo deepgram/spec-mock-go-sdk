@@ -66,67 +66,6 @@ func (CallbackMethod) Values() []CallbackMethod {
 	}
 }
 
-type Chunker string
-
-// Enum values for Chunker
-const (
-	ChunkerBatch Chunker = "batch"
-	ChunkerStreaming Chunker = "streaming"
-)
-
-// Values returns all known values for Chunker. Note that this can be expanded in
-// the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (Chunker) Values() []Chunker {
-	return []Chunker{
-		"batch",
-		"streaming",
-	}
-}
-
-type KeywordBoost string
-
-// Enum values for KeywordBoost
-const (
-	// Boost + post-search for out-of-vocabulary keywords. Default.
-	KeywordBoostStandard KeywordBoost = "standard"
-	// Apply boosting only to in-vocabulary terms (no post-search).
-	KeywordBoostLegacy KeywordBoost = "legacy"
-)
-
-// Values returns all known values for KeywordBoost. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (KeywordBoost) Values() []KeywordBoost {
-	return []KeywordBoost{
-		"standard",
-		"legacy",
-	}
-}
-
-type SummaryLength string
-
-// Enum values for SummaryLength
-const (
-	SummaryLengthShort SummaryLength = "short"
-	SummaryLengthMedium SummaryLength = "medium"
-	SummaryLengthLong SummaryLength = "long"
-)
-
-// Values returns all known values for SummaryLength. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (SummaryLength) Values() []SummaryLength {
-	return []SummaryLength{
-		"short",
-		"medium",
-		"long",
-	}
-}
-
 type WsErrorVariant string
 
 // Enum values for WsErrorVariant
