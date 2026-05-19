@@ -24,11 +24,16 @@ type PreRecordedTranscriptionOptions struct {
 	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
 	// diarize=true continues to work for backward compatibility but is mutually
 	// exclusive with diarize_model .
+	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
+	// diarize=true continues to work for backward compatibility but is mutually
+	// exclusive with diarize_model .
 	Diarize bool `json:"diarize,omitempty" schema:"diarize,omitempty"`
 	// DiarizeModel selects an explicit diarization model on TranscribeInput.
 	// (Note: the streaming StreamInput.DiarizeModel was removed in the @internal
 	// hygiene audit; the prerecorded TranscribeInput equivalent is retained.)
 	DiarizeModel string `json:"diarize_model,omitempty" schema:"diarize_model,omitempty"`
+	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	// Mutually exclusive with diarize_model .
 	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
 	// Mutually exclusive with diarize_model .
 	DiarizeVersion string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
@@ -43,6 +48,8 @@ type PreRecordedTranscriptionOptions struct {
 	Keywords    []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Keyterm     []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
 	Language    string   `json:"language,omitempty" schema:"language,omitempty"`
+	// Deprecated: Prefer mip_opt_out . log_data is recognized for backward
+	// compatibility; sending both with conflicting values returns 400.
 	// Deprecated: Prefer mip_opt_out . log_data is recognized for backward
 	// compatibility; sending both with conflicting values returns 400.
 	LogData         bool     `json:"log_data,omitempty" schema:"log_data,omitempty"`
@@ -64,6 +71,9 @@ type PreRecordedTranscriptionOptions struct {
 	Topics          bool     `json:"topics,omitempty" schema:"topics,omitempty"`
 	UttSplit        float64  `json:"utt_split,omitempty" schema:"utt_split,omitempty"`
 	Utterances      bool     `json:"utterances,omitempty" schema:"utterances,omitempty"`
+	// Deprecated: Use endpointing instead. vad_turnoff is rejected when endpointing
+	// is also an integer; if only vad_turnoff is set it is silently mapped onto
+	// endpointing .
 	// Deprecated: Use endpointing instead. vad_turnoff is rejected when endpointing
 	// is also an integer; if only vad_turnoff is set it is silently mapped onto
 	// endpointing .
