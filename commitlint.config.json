@@ -1,0 +1,37 @@
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "scope-enum": [
+      2,
+      "always",
+      [
+        "pkg",
+        "client",
+        "listen",
+        "rest",
+        "ws",
+        "api",
+        "convert",
+        "options",
+        "events",
+        "examples",
+        "docs",
+        "adr",
+        "ci",
+        "deps",
+        "release",
+        "regen",
+        "tier1",
+        "tier2",
+        "cleanup",
+        "vocabulary"
+      ]
+    ],
+    "scope-empty": [0],
+    "subject-case": [
+      2,
+      "never",
+      ["sentence-case", "start-case", "pascal-case", "upper-case"]
+    ]
+  }
+}
