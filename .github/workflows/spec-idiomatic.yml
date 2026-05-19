@@ -15,7 +15,7 @@ jobs:
     name: regenerate idiomatic facade
     if: github.repository == 'deepgram/spec-mock-go-sdk'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     permissions:
       contents: write
       pull-requests: write
