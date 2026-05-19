@@ -50,11 +50,6 @@ func TestWires_Encoding(t *testing.T) {
 	requireWired(t, in, "Encoding")
 }
 
-func TestWires_FillerWords(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{FillerWords: true})
-	requireWired(t, in, "FillerWords")
-}
-
 func TestWires_Intents(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Intents: true})
 	requireWired(t, in, "Intents")
@@ -163,21 +158,6 @@ func TestWires_Utterances(t *testing.T) {
 func TestWires_Version(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Version: "2025-01-01"})
 	requireWired(t, in, "Version")
-}
-
-func TestDropped_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireDropped(t, in, "Alternatives", "removed from spec in @internal hygiene audit")
-}
-
-func TestDropped_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireDropped(t, in, "Channels", "removed from spec in @internal hygiene audit")
-}
-
-func TestDropped_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireDropped(t, in, "SampleRate", "removed from spec in @internal hygiene audit")
 }
 
 func TestDropped_CustomIntent(t *testing.T) {

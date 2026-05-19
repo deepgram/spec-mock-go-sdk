@@ -22,12 +22,10 @@ type PreRecordedTranscriptionOptions struct {
 	DetectLanguage   []string `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
 	DetectTopics     bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
 	Diarize          bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
-	DiarizeModel     string   `json:"diarize_model,omitempty" schema:"diarize_model,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation        bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
 	Encoding         string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
 	Extra            []string `json:"extra,omitempty" schema:"extra,omitempty"`
-	FillerWords      bool     `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
 	Intents          bool     `json:"intents,omitempty" schema:"intents,omitempty"`
 	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Keyterm          []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
@@ -59,7 +57,4 @@ type PreRecordedTranscriptionOptions struct {
 	// Kept on the facade options struct for source-compat with existing
 	// customer code; intentionally NOT wired through optionsToTranscribeInput
 	// (see TestDropped_* in wire_test.go).
-	Alternatives int `json:"alternatives,omitempty" schema:"alternatives,omitempty"`
-	Channels     int `json:"channels,omitempty" schema:"channels,omitempty"`
-	SampleRate   int `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
 }
