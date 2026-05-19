@@ -53,6 +53,31 @@ type FieldBinding struct {
 	WireName string
 }
 
+// HTTPError is returned by Invoke when the server responds with a
+// status code >= 400. Customer code can use errors.As to extract
+// this type and discriminate on StatusCode for status-specific
+// handling (retry on 429, re-auth on 401, surface the response
+// body for 400-class debugging, etc.).
+//
+// The Error() string format is stable: "http.Invoke: METHOD URL:
+// STATUS BODY". Code that previously string-matched the error
+// message keeps working unchanged.
+type HTTPError struct {
+	Method     string
+	URL        string
+	StatusCode int
+	Body       []byte
+	Headers    nethttp.Header
+}
+
+// Error renders the failure as "http.Invoke: METHOD URL: STATUS
+// BODY". Stable format - new code should prefer errors.As over
+// string-matching.
+func (e *HTTPError) Error() string {
+	return fmt.Sprintf("http.Invoke: %s %s: %d %s",
+		e.Method, e.URL, e.StatusCode, string(e.Body))
+}
+
 // Authenticator applies credentials to an outgoing HTTP request. The
 // transport layer calls Apply after request construction, immediately
 // before sending; consumers supply a concrete implementation - e.g.,
@@ -150,9 +175,13 @@ func Invoke[I any, O any](
 
 	if resp.StatusCode >= 400 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf(
-			"http.Invoke: %s %s: %d %s",
-			route.Method, u.String(), resp.StatusCode, string(respBody))
+		return nil, &HTTPError{
+			Method:     route.Method,
+			URL:        u.String(),
+			StatusCode: resp.StatusCode,
+			Body:       respBody,
+			Headers:    resp.Header.Clone(),
+		}
 	}
 
 	var out O

@@ -6,12 +6,15 @@ package restv1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+
+	httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
 )
 
 func TestFromURL_HappyPath(t *testing.T) {
@@ -133,5 +136,41 @@ func TestFromURL_NoCredentials(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "no credentials") {
 		t.Errorf("error message: got %q, want substring %q", err.Error(), "no credentials")
+	}
+}
+
+func TestFromURL_HTTPErrorIsTypedAndDiscriminable(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Dg-Request-Id", "req-deadbeef")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"err_code":"Bad Request","err_msg":"invalid model"}`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://dpgr.am/spacewalk.wav",
+		&PreRecordedTranscriptionOptions{Model: "bogus"})
+	if err == nil {
+		t.Fatal("FromURL with 400 response should return an error")
+	}
+
+	var httpErr *httptransport.HTTPError
+	if !errors.As(err, &httpErr) {
+		t.Fatalf("err should be assertable to *HTTPError via errors.As; got %T: %v", err, err)
+	}
+
+	if httpErr.StatusCode != http.StatusBadRequest {
+		t.Errorf("StatusCode: got %d, want %d", httpErr.StatusCode, http.StatusBadRequest)
+	}
+	if !strings.Contains(string(httpErr.Body), "invalid model") {
+		t.Errorf("Body: got %q, want substring %q", string(httpErr.Body), "invalid model")
+	}
+	if got := httpErr.Headers.Get("X-Dg-Request-Id"); got != "req-deadbeef" {
+		t.Errorf("Headers[X-Dg-Request-Id]: got %q, want %q", got, "req-deadbeef")
+	}
+	if httpErr.Method != "POST" {
+		t.Errorf("Method: got %q, want %q", httpErr.Method, "POST")
 	}
 }
