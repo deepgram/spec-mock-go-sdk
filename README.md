@@ -161,16 +161,10 @@ changes and an example stops compiling, the test suite fails.
 
 ## What's in this SDK
 
-| Surface | Package | Status |
-|---|---|---|
-| Prerecorded transcription (`POST /v1/listen`) | `pkg/client/listen/v1/rest` | ✅ wired |
-| Live streaming transcription (`WS /v1/listen`) | `pkg/client/listen/v1/websocket` | ✅ wired |
+| Surface | Package |
+|---|---|
+| Prerecorded transcription (`POST /v1/listen`) | `pkg/client/listen/v1/rest` |
+| Live streaming transcription (`WS /v1/listen`) | `pkg/client/listen/v1/websocket` |
 
-Other products (text-to-speech, voice agent, etc.) return per-product
-as each migrates into the spec pipeline.
-
-## Related
-
-- [`deepgram/spec`](https://github.com/deepgram/spec) — Smithy IDL source of truth
-- [`REGEN.md`](REGEN.md) — pipeline + maintainer guide (you probably don't need this)
-- [`deepgram/deepgram-go-sdk`](https://github.com/deepgram/deepgram-go-sdk) — the official Go SDK this prototype is replacing
+Other products (text-to-speech, voice agent, etc.) land per-product
+as the SDK grows.
