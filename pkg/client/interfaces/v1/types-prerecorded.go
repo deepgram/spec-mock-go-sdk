@@ -19,9 +19,10 @@ type PreRecordedTranscriptionOptions struct {
 	CustomTopic      []string `json:"custom_topic,omitempty" schema:"custom_topic,omitempty"`
 	CustomTopicMode  string   `json:"custom_topic_mode,omitempty" schema:"custom_topic_mode,omitempty"`
 	DetectEntities   bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
-	DetectLanguage   bool     `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
+	DetectLanguage   []string `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
 	DetectTopics     bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
 	Diarize          bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	DiarizeModel     string   `json:"diarize_model,omitempty" schema:"diarize_model,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation        bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
 	Encoding         string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
@@ -31,7 +32,9 @@ type PreRecordedTranscriptionOptions struct {
 	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Keyterm          []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
 	Language         string   `json:"language,omitempty" schema:"language,omitempty"`
+	LogData          bool     `json:"log_data,omitempty" schema:"log_data,omitempty"`
 	Measurements     bool     `json:"measurements,omitempty" schema:"measurements,omitempty"`
+	MipOptOut        bool     `json:"mip_opt_out,omitempty" schema:"mip_opt_out,omitempty"`
 	Model            string   `json:"model,omitempty" schema:"model,omitempty"`
 	Multichannel     bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`
 	Numerals         bool     `json:"numerals,omitempty" schema:"numerals,omitempty"`
@@ -48,6 +51,7 @@ type PreRecordedTranscriptionOptions struct {
 	Topics           bool     `json:"topics,omitempty" schema:"topics,omitempty"`
 	UttSplit         float64  `json:"utt_split,omitempty" schema:"utt_split,omitempty"`
 	Utterances       bool     `json:"utterances,omitempty" schema:"utterances,omitempty"`
+	VadTurnoff       int      `json:"vad_turnoff,omitempty" schema:"vad_turnoff,omitempty"`
 	Version          string   `json:"version,omitempty" schema:"version,omitempty"`
 
 	// Alternatives, Channels, SampleRate: removed from the generated
@@ -55,7 +59,7 @@ type PreRecordedTranscriptionOptions struct {
 	// Kept on the facade options struct for source-compat with existing
 	// customer code; intentionally NOT wired through optionsToTranscribeInput
 	// (see TestDropped_* in wire_test.go).
-	Alternatives int    `json:"alternatives,omitempty" schema:"alternatives,omitempty"`
-	Channels     int    `json:"channels,omitempty" schema:"channels,omitempty"`
-	SampleRate   int    `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
+	Alternatives int `json:"alternatives,omitempty" schema:"alternatives,omitempty"`
+	Channels     int `json:"channels,omitempty" schema:"channels,omitempty"`
+	SampleRate   int `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
 }

@@ -9,23 +9,13 @@ import (
 )
 
 // optionsToTranscribeInput translates an idiomatic *PreRecordedTranscriptionOptions
-// into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
-// zero-valued facade fields are left as nil pointers on the generated struct so
-// they don't surface in the wire query string.
+// into a *spectypes.TranscribeInput suitable for httptransport.Invoke.
 //
 // Dropped fields (intentionally NOT wired; see TestDropped_* in wire_test.go):
 //   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
 //   - DetectTopics: deprecated by stem in favour of Topics.
 //   - Extra: stem-side metadata pass-through, request side not modeled.
 //   - Alternatives, Channels, SampleRate: removed from spec (@internal audit).
-//     Facade options-struct field kept for source compat; the wiring block was
-//     dropped because the generated TranscribeInput no longer carries these.
-//
-// Fields removed from the spec as part of the @internal hygiene audit
-// (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
-// SpeakersOfInterest, DetectLanguageVersion — are also removed from the
-// facade options struct. Customer code referencing those fields will fail
-// to compile on this SDK upgrade, which is the intended ceremony.
 func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
@@ -42,12 +32,16 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		v := o.DetectEntities
 		in.DetectEntities = &v
 	}
-	if o.DetectLanguage {
-		in.DetectLanguage = []string{"true"}
+	if len(o.DetectLanguage) > 0 {
+		in.DetectLanguage = o.DetectLanguage
 	}
 	if o.Diarize {
 		v := o.Diarize
 		in.Diarize = &v
+	}
+	if o.DiarizeModel != "" {
+		v := o.DiarizeModel
+		in.DiarizeModel = &v
 	}
 	if o.DiarizeVersion != "" {
 		v := o.DiarizeVersion
@@ -79,9 +73,17 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		v := o.Language
 		in.Language = &v
 	}
+	if o.LogData {
+		v := o.LogData
+		in.LogData = &v
+	}
 	if o.Measurements {
 		v := o.Measurements
 		in.Measurements = &v
+	}
+	if o.MipOptOut {
+		v := o.MipOptOut
+		in.MipOptOut = &v
 	}
 	if o.Model != "" {
 		v := o.Model
@@ -142,6 +144,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.Utterances {
 		v := o.Utterances
 		in.Utterances = &v
+	}
+	if o.VadTurnoff != 0 {
+		v := int32(o.VadTurnoff)
+		in.VadTurnoff = &v
 	}
 	if o.Version != "" {
 		v := o.Version
