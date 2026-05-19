@@ -19,4 +19,5 @@ import (
 	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	_ "github.com/deepgram/spec-mock-go-sdk/api/types"
 	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/rest"
+	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/websocket"
 )
