@@ -17,7 +17,12 @@ type LiveTranscriptionOptions struct {
 	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
 	// diarize=true continues to work for backward compatibility but is mutually
 	// exclusive with diarize_model .
+	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
+	// diarize=true continues to work for backward compatibility but is mutually
+	// exclusive with diarize_model .
 	Diarize         bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	// Mutually exclusive with diarize_model .
 	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
 	// Mutually exclusive with diarize_model .
 	DiarizeVersion  string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
