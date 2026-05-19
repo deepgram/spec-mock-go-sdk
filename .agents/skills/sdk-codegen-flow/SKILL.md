@@ -1,6 +1,6 @@
 ---
 name: sdk-codegen-flow
-description: Use when you need to understand the api/ vs pkg/ split in this repo, how the Deepgram Smithy spec pipeline produces code here, what `spec-idiomatic` does on api/ PRs, or why files change without you having touched them. Route facade-edit questions to sdk-facade-conventions, local-rehearsal questions to sdk-local-regen, and PR-review questions to sdk-pr-review.
+description: Use when you need to understand the api/ vs pkg/ split in this repo, the four-repo agentic regen pipeline that produces code here, or why files change without you having touched them. Universal rules about what spec-idiomatic does live in spec-idiomatic's system.md; this skill is just the repo-local orientation.
 ---
 
 # Codegen flow
@@ -15,11 +15,11 @@ deepgram/spec                ──Smithy IDL, source of truth──┐
                                                             │
                           smithy build invokes              │
                           ↓                                 │
-deepgram/spec-codegen-go   ──Java SmithyBuildPlugin──┐     │
-   (plugin / jar)                                    │     │
-                          rsyncs api/ output         │     │
-                          ↓                          │     │
-deepgram/spec-mock-go-sdk  ──api/ regenerated as a PR ◀────┘
+deepgram/spec-codegen-go   ──Java SmithyBuildPlugin──┐      │
+   (plugin / jar)                                    │      │
+                          rsyncs api/ output         │      │
+                          ↓                          │      │
+deepgram/spec-mock-go-sdk  ──api/ regenerated as a PR ◀─────┘
    (this repo)                            │
                           fires on api/** ↓
                                           │
@@ -28,10 +28,17 @@ deepgram/spec-idiomatic    ──diff api/, regen pkg/, push to PR branch
 ```
 
 The runner does what a human maintainer would have to do by hand if the
-facade and the wire types lived in the same place: take a regen, port any
-broken converters, keep the public Go signatures stable, build, ship.
+facade and the wire types lived in the same place: take a regen, port
+broken converters, keep public Go signatures stable, build, ship.
 
-## What lives where
+The detailed behaviour of `spec-idiomatic` — its 3-tier classification,
+the prompts it sends the LLM, the deterministic cleanup passes
+afterwards — lives in
+[`spec-idiomatic/prompts/system.md`](https://github.com/deepgram/spec-idiomatic/blob/main/prompts/system.md)
+and the surrounding code in
+[`spec-idiomatic`](https://github.com/deepgram/spec-idiomatic).
+
+## What lives where in THIS repo
 
 - **`api/`** — generated wire types (`api/types/types.go`), transports
   (`api/transport/websocket/`, `api/transport/sagemaker/`,
@@ -48,44 +55,21 @@ broken converters, keep the public Go signatures stable, build, ship.
   [`sdk-facade-conventions`](../sdk-facade-conventions/SKILL.md) for
   full layout rules.
 
-- **`examples/`** — one runnable program per transport × use case. These
-  are the canonical surface for agentic retrieval engines; treat them as
-  load-bearing.
+- **`examples/`** — one runnable program per transport × use case.
+  These are the canonical surface for agentic retrieval engines; treat
+  them as load-bearing.
 
 - **`tests/`** — unit and edge-case tests, plus the `Example_*` functions
   required by `sdk-agentic-readiness`.
-
-## What `spec-idiomatic` does on every api/ PR
-
-When a PR touches `api/**`, `.github/workflows/spec-idiomatic.yml` runs:
-
-1. Materialises `before/api/` (PR base SHA) and `after/api/` (PR head).
-2. Diffs them; classifies every change as additive, absorbed-breaking, or
-   unavoidable-breaking (see `sdk-breaking-ceremony`).
-3. Parses `pkg/` into an AST.
-4. Loads `AGENTS.md` and every `.agents/skills/*/SKILL.md` from this repo
-   and injects them into the LLM prompt as SDK-resident conventions.
-5. Prompts an LLM with this repo's facade conventions, agentic-readiness
-   rules, the change plan, the AST, and the relevant facade files.
-6. Applies the returned edits under `pkg/` (plus `BREAKING_CHANGES.md` at
-   repo root if the LLM flagged anything).
-7. Runs `go build ./...` and `go test ./...` (the latter executes every
-   `Example_*` function — that is the in-comment example smoke test).
-8. Retries up to 3 times with the build/test error appended to the prompt
-   if anything fails.
-9. Commits and pushes any edits back to the PR branch.
-10. Posts the non-conditional work-done checklist comment on the PR.
-
-If the build is green and there are no breaking changes, no human action
-is needed before merge.
 
 ## When you'd run codegen manually
 
 You shouldn't, in this repo. The api/ regeneration happens upstream in
 `deepgram/spec` and lands here as a PR. If you want to rehearse the regen
 flow locally — for example, to test a hypothetical spec change before
-pushing it upstream — use `sdk-local-regen`, which mutates `api/` and
-runs `spec-idiomatic` from your laptop without involving CI.
+pushing it upstream — use [`sdk-local-regen`](../sdk-local-regen/SKILL.md),
+which mutates `api/` and runs `spec-idiomatic` from your laptop without
+involving CI.
 
 ## When you'd edit `pkg/` directly
 
@@ -94,7 +78,7 @@ Reasonably often. Editing the facade is fine and expected for:
 - Adding a customer-facing helper that wraps generated types.
 - Adding a new `Example_*` test alongside an existing public surface.
 - Splitting a multi-concept file into single-concept files (per
-  `sdk-agentic-readiness`).
+  [`sdk-agentic-readiness`](../sdk-agentic-readiness/SKILL.md)).
 - Renaming a customer-facing field for idiom (the generator emits
   `RequestId`; the facade reads `RequestID`).
 
@@ -107,23 +91,24 @@ the diff stays untouched.
 - **Edit `api/` directly.** Every file there carries
   `// Code generated by smithy-go-codegen DO NOT EDIT.`. Your edit will
   be wiped.
-- **Change customer-facing signatures in `pkg/` to absorb a wire change.**
-  The whole point of the facade is to keep customer signatures stable.
-  If a spec change forces a customer-visible break, run
-  `sdk-breaking-ceremony` instead.
-- **Skip the `Example_*` test when adding a new public function or type.**
-  Per `sdk-agentic-readiness`, every public surface ships with at least
-  one runnable example.
+- **Change customer-facing signatures in `pkg/` to absorb a wire change
+  silently.** The whole point of the facade is to keep customer
+  signatures stable. Breaking changes go through the ceremony
+  documented in spec-idiomatic's system.md.
+- **Skip the `Example_*` test when adding a new public function or
+  type.** Every public surface ships with at least one runnable
+  example.
+- **Write `BREAKING_CHANGES.md` by hand.** It's authored by
+  `spec-idiomatic`'s deterministic cleanup pass from the change plan.
+  Hand edits get overwritten on the next regen.
 
 ## Related skills
 
-- [`sdk-facade-conventions`](../sdk-facade-conventions/SKILL.md) — how to
-  write the Go code that goes in `pkg/`.
+- [`sdk-facade-conventions`](../sdk-facade-conventions/SKILL.md) —
+  repo-local Go layout for `pkg/`.
 - [`sdk-agentic-readiness`](../sdk-agentic-readiness/SKILL.md) — the
-  Example_*, README, single-concept, llms.txt rules.
+  `Example_*`, README, single-concept, llms.txt rules.
 - [`sdk-local-regen`](../sdk-local-regen/SKILL.md) — testing the regen
   flow locally.
 - [`sdk-pr-review`](../sdk-pr-review/SKILL.md) — what to check in a
   regen PR.
-- [`sdk-breaking-ceremony`](../sdk-breaking-ceremony/SKILL.md) — the
-  3-tier model and reviewer playbook.

@@ -210,7 +210,9 @@ Track week-over-week deltas. Don't grade plumbing; grade outcomes.
 
 ## Related skills
 
-- [`sdk-codegen-flow`](../sdk-codegen-flow/SKILL.md)
-- [`sdk-facade-conventions`](../sdk-facade-conventions/SKILL.md)
+- [`sdk-codegen-flow`](../sdk-codegen-flow/SKILL.md) — repo pipeline
+  orientation.
+- [`sdk-facade-conventions`](../sdk-facade-conventions/SKILL.md) —
+  repo-local Go layout.
 - [`sdk-pr-review`](../sdk-pr-review/SKILL.md) — checks that examples,
   README, and llms.txt moved with the code.

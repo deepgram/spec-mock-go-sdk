@@ -170,5 +170,5 @@ The full prompt prints to stdout. Useful for prompt-engineering work in
   orchestrator actually does step by step.
 - [`sdk-pr-review`](../sdk-pr-review/SKILL.md) — same flow but
   applied to a real PR.
-- [`sdk-breaking-ceremony`](../sdk-breaking-ceremony/SKILL.md) —
-  reading the orchestrator's breaking output.
+- The 3-tier model and tier semantics live in
+  [`spec-idiomatic/prompts/system.md`](https://github.com/deepgram/spec-idiomatic/blob/main/prompts/system.md).
