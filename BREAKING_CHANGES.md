@@ -1,39 +1,99 @@
 # Breaking changes
 
-## TranscribeInput.Alternatives removed
+This file is auto-maintained by the `spec-idiomatic` runner. Each entry
+describes a spec change that could not be silently absorbed by the
+facade.
 
-- **Tier:** 1 (absorbed-breaking)
+## TranscribeInput: large @internal hygiene audit (spec PR #8)
+
+The upstream Smithy spec removed a long list of fields from
+`TranscribeInput` as part of the `@internal` annotation alignment with
+curated docs. These fields were either internal-only stem parameters,
+undocumented on developers.deepgram.com, or deprecated. The runner
+classified each as **tier 2 / unavoidable** and applied the spec-hygiene
+removal policy: the corresponding facade option fields are dropped from
+`PreRecordedTranscriptionOptions` rather than kept as silent no-ops, so
+customer code that referenced these fields will fail to compile on this
+SDK upgrade.
+
+Customers using only documented options on
+https://developers.deepgram.com/reference/pre-recorded should be
+unaffected. Customers reaching into undocumented stem parameters will
+see a compile break — that is the intended ceremony.
+
+### TranscribeInput fields removed (unavoidable, facade field dropped)
+
+- **Tier:** 2 (unavoidable)
 - **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Member:** `Alternatives *int32`
-- **Customer-visible impact:** Customer-facing `PreRecordedTranscriptionOptions.Alternatives int` field is preserved on the facade for source compatibility. Setting it has no effect on the wire request — the value is dropped on the floor.
-- **Facade behaviour:** `optionsToTranscribeInput` no longer emits a wiring block for `Alternatives`. A `TestDropped_Alternatives` test in `wire_test.go` locks in the absorption.
+- **Members removed from spec AND facade:**
+  - `Uttseg *bool`
+  - `Dates *bool`
+  - `Name *string`
+  - `EntityPrompt *string`
+  - `SummarizeLength SummaryLength`
+  - `Threshold *int32`
+  - `EmulateStreaming *bool`
+  - `Tier *string`
+  - `UttSplitInterruptions *float32`
+  - `NumbersSpaces *bool`
+  - `KeywordBoost KeywordBoost`
+  - `Endpointing *string`
+  - `Performance *bool`
+  - `Yelling *bool`
+  - `VadTurnon *int32`
+  - `DatasetId *string`
+  - `Numbers *bool` (superseded by `Numerals`)
+  - `UnifySpeakerId *bool`
+  - `VadEvents *bool`
+  - `VadSuppression *bool`
+  - `Context *bool`
+  - `ShowRedactedText *bool`
+  - `Chunker Chunker`
+  - `Identify *bool`
+  - `DateFormat *string`
+  - `MaxSpeakers *int32`
+  - `Times *bool`
+  - `Ner *bool`
+- **Customer-visible impact:** Any code that set these fields on
+  `interfaces.PreRecordedTranscriptionOptions` (e.g.
+  `&interfaces.PreRecordedTranscriptionOptions{Tier: "enhanced"}`)
+  will fail to compile.
+- **Migration required:** Remove references to these fields. They were
+  never publicly documented and had no observable effect for customers
+  using the documented API surface.
+- **Facade behaviour:** Fields removed from
+  `PreRecordedTranscriptionOptions`; no wiring blocks exist in
+  `optionsToTranscribeInput`.
 
-## TranscribeInput.Channels removed
+### StreamInput fields removed (unavoidable)
 
-- **Tier:** 1 (absorbed-breaking)
-- **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Member:** `Channels *int32`
-- **Customer-visible impact:** Customer-facing `PreRecordedTranscriptionOptions.Channels int` is preserved; values set by callers are now silently dropped at the converter boundary.
-- **Facade behaviour:** `optionsToTranscribeInput` no longer emits a wiring block for `Channels`. A `TestDropped_Channels` test locks in the absorption.
+- **Tier:** 2 (unavoidable)
+- **Shape:** `spectypes.StreamInput` (generated, in `api/types`)
+- **Members removed:**
+  - `FillerWords *bool`
+  - `NoDelay *bool`
+  - `DiarizeModel *string`
+- **Customer-visible impact:** None for the listen WS facade — these
+  fields were never exposed on `LiveTranscriptionOptions` in the
+  facade. The wire input shape no longer carries them; customers
+  calling the live API without setting these are unaffected.
+- **Facade behaviour:** No facade options struct exposed these as
+  wired members. No changes to facade.
 
-## TranscribeInput.SampleRate removed
+### TranscribeInput.Alternatives / Channels / SampleRate (unavoidable, facade field retained)
 
-- **Tier:** 1 (absorbed-breaking)
-- **Shape:** `spectypes.TranscribeInput` (generated, in `api/types`)
-- **Member:** `SampleRate *int32`
-- **Customer-visible impact:** Customer-facing `PreRecordedTranscriptionOptions.SampleRate int` is preserved; values set by callers are now silently dropped at the converter boundary.
-- **Facade behaviour:** `optionsToTranscribeInput` no longer emits a wiring block for `SampleRate`. A `TestDropped_SampleRate` test locks in the absorption.
-
-## Other @internal hygiene removals
-
-The spec PR also removed a large number of additional `TranscribeInput` fields
-(Uttseg, Dates, Name, EntityPrompt, SummarizeLength, Threshold,
-EmulateStreaming, Tier, UttSplitInterruptions, NumbersSpaces, KeywordBoost,
-Endpointing, Performance, Yelling, VadTurnon, DatasetId, Numbers,
-UnifySpeakerId, VadEvents, VadSuppression, Context, ShowRedactedText, Chunker,
-Identify, DateFormat, MaxSpeakers, Times, Ner) and `StreamInput` fields
-(FillerWords, NoDelay, DiarizeModel) as part of an @internal audit. The facade
-never wired any of these into the converter, so removal is a true no-op:
-customer code that referenced them on the facade options struct (if any) will
-still compile and the values will continue to be ignored on the wire — exactly
-as they were before this regen.
+- **Tier:** 2 (unavoidable)
+- **Shape:** `spectypes.TranscribeInput`
+- **Members:** `Alternatives`, `Channels`, `SampleRate` (all removed
+  from the generated wire shape)
+- **Customer-visible impact:** Setting these fields on
+  `PreRecordedTranscriptionOptions` compiles but the values are
+  silently dropped on the wire. Locked in by `TestDropped_Alternatives`,
+  `TestDropped_Channels`, `TestDropped_SampleRate` in `wire_test.go`.
+- **Migration required:** Stop setting these fields; they are not part
+  of the documented public API. The fields are retained on the facade
+  options struct to preserve source-compat for existing callers; the
+  values simply do not reach the wire.
+- **Facade behaviour:** Facade options-struct field kept; the wiring
+  block was dropped because the generated `TranscribeInput` no longer
+  carries these fields. Documented in `convert.go`.
