@@ -17,6 +17,9 @@ import (
 //   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
 //   - DetectTopics: deprecated by stem in favour of Topics.
 //   - Extra: stem-side metadata pass-through, request side not modeled.
+//   - Alternatives, Channels, SampleRate: removed from spec (@internal audit).
+//     Facade options-struct field kept for source compat; the wiring block was
+//     dropped because the generated TranscribeInput no longer carries these.
 //
 // Fields removed from the spec as part of the @internal hygiene audit
 // (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
@@ -28,20 +31,12 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o == nil {
 		return in
 	}
-	if o.Alternatives != 0 {
-		v := int32(o.Alternatives)
-		in.Alternatives = &v
-	}
 	if o.Callback != "" {
 		v := o.Callback
 		in.Callback = &v
 	}
 	if o.CallbackMethod != "" {
 		in.CallbackMethod = spectypes.CallbackMethod(o.CallbackMethod)
-	}
-	if o.Channels != 0 {
-		v := int32(o.Channels)
-		in.Channels = &v
 	}
 	if o.DetectEntities {
 		v := o.DetectEntities
@@ -117,10 +112,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	}
 	if len(o.Replace) > 0 {
 		in.Replace = o.Replace
-	}
-	if o.SampleRate != 0 {
-		v := int32(o.SampleRate)
-		in.SampleRate = &v
 	}
 	if len(o.Search) > 0 {
 		in.Search = o.Search

@@ -47,11 +47,6 @@ func isZeroForWire(v reflect.Value) bool {
 	}
 }
 
-func TestWires_Alternatives(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
-	requireWired(t, in, "Alternatives")
-}
-
 func TestWires_Callback(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Callback: "https://example.invalid/cb"})
 	requireWired(t, in, "Callback")
@@ -60,11 +55,6 @@ func TestWires_Callback(t *testing.T) {
 func TestWires_CallbackMethod(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{CallbackMethod: "POST"})
 	requireWired(t, in, "CallbackMethod")
-}
-
-func TestWires_Channels(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
-	requireWired(t, in, "Channels")
 }
 
 func TestWires_DetectEntities(t *testing.T) {
@@ -167,11 +157,6 @@ func TestWires_Replace(t *testing.T) {
 	requireWired(t, in, "Replace")
 }
 
-func TestWires_SampleRate(t *testing.T) {
-	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
-	requireWired(t, in, "SampleRate")
-}
-
 func TestWires_Search(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Search: []string{"foo"}})
 	requireWired(t, in, "Search")
@@ -215,6 +200,21 @@ func TestWires_Utterances(t *testing.T) {
 func TestWires_Version(t *testing.T) {
 	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Version: "2025-01-01"})
 	requireWired(t, in, "Version")
+}
+
+func TestDropped_Alternatives(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Alternatives: 2})
+	requireDropped(t, in, "Alternatives", "removed from spec in @internal hygiene audit")
+}
+
+func TestDropped_Channels(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{Channels: 2})
+	requireDropped(t, in, "Channels", "removed from spec in @internal hygiene audit")
+}
+
+func TestDropped_SampleRate(t *testing.T) {
+	in := optionsToTranscribeInput(&interfaces.PreRecordedTranscriptionOptions{SampleRate: 16000})
+	requireDropped(t, in, "SampleRate", "removed from spec in @internal hygiene audit")
 }
 
 func TestDropped_CustomIntent(t *testing.T) {
