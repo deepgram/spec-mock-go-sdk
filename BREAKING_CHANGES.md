@@ -13,20 +13,22 @@ shapes.
 For each removed field below: customers reaching into the generated wire-type
 shape (`spectypes.StreamInput.*` or `spectypes.TranscribeInput.*`) will get a
 compile error on next SDK upgrade. The facade `PreRecordedTranscriptionOptions`
-does not expose any of these fields directly, so REST customers using only
-`pkg/client/listen/v1/rest` are unaffected at the source level.
+does not expose any of these stem-only fields directly, so REST customers using
+only `pkg/client/listen/v1/rest` are unaffected at the source level.
 
 Customers using `LiveTranscriptionOptions` for the WebSocket streaming flow
 may need to remove references to `FillerWords`, `NoDelay`, or `DiarizeModel`
-if those fields were being set there — these have been removed from the
-streaming wire shape.
+on the streaming wire shape — these have been removed from `StreamInput`.
+The prerecorded `TranscribeInput` equivalents (`FillerWords`, `DiarizeModel`)
+remain and are still wired through the REST facade.
 
 #### Removed from `spectypes.StreamInput`
 
-- `FillerWords *bool` — never publicly documented for the streaming endpoint;
-  facade `LiveTranscriptionOptions.FillerWords` if present is silently dropped.
+- `FillerWords *bool` — never publicly documented for the streaming endpoint.
+  The prerecorded `TranscribeInput.FillerWords` is unaffected.
 - `NoDelay *bool` — internal-only flag, never publicly documented.
-- `DiarizeModel *string` — internal-only; legacy `Diarize`+`DiarizeVersion` remain.
+- `DiarizeModel *string` — internal-only on streaming; the prerecorded
+  `TranscribeInput.DiarizeModel` is unaffected.
 
 #### Removed from `spectypes.TranscribeInput`
 
@@ -77,3 +79,5 @@ the idiomatic facade structs in `pkg/client/listen/v1/rest` or
 
 The facade-level `PreRecordedTranscriptionOptions` is unchanged at the
 source level; the safety-net wire tests in `wire_test.go` continue to pass.
+The facade-exposed `FillerWords` and `DiarizeModel` fields still wire through
+to the prerecorded `TranscribeInput` shape, which retains those fields.
