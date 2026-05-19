@@ -33,6 +33,13 @@ type Client struct {
 // New constructs a Client with explicit credentials. Either apiKey
 // or accessToken must be non-empty for requests to authenticate;
 // accessToken takes precedence when both are set.
+//
+// Example:
+//
+//	client := rest.New("your-api-key", "")
+//	resp, err := client.FromURL(ctx, audioURL, opts)
+//
+// See [ExampleNew] for the full runnable form.
 func New(apiKey, accessToken string) *Client {
 	return &Client{
 		apiKey:      apiKey,
@@ -44,6 +51,13 @@ func New(apiKey, accessToken string) *Client {
 
 // NewWithDefaults reads DEEPGRAM_ACCESS_TOKEN and DEEPGRAM_API_KEY
 // from the environment.
+//
+// Example:
+//
+//	client := rest.NewWithDefaults()
+//	resp, err := client.FromURL(ctx, "https://dpgr.am/spacewalk.wav", nil)
+//
+// See [ExampleNewWithDefaults] for the full runnable form.
 func NewWithDefaults() *Client {
 	return New(
 		os.Getenv("DEEPGRAM_API_KEY"),
@@ -52,6 +66,12 @@ func NewWithDefaults() *Client {
 }
 
 // WithBaseURL returns a copy of the Client pointed at the given base URL.
+//
+// Example:
+//
+//	client := rest.NewWithDefaults().WithBaseURL("https://staging.api.deepgram.com")
+//
+// See [ExampleClient_WithBaseURL] for the full runnable form.
 func (c *Client) WithBaseURL(url string) *Client {
 	out := *c
 	out.baseURL = url
@@ -59,6 +79,13 @@ func (c *Client) WithBaseURL(url string) *Client {
 }
 
 // WithHTTPClient returns a copy of the Client using the given http.Client.
+//
+// Example:
+//
+//	hc := &http.Client{Timeout: 30 * time.Second}
+//	client := rest.NewWithDefaults().WithHTTPClient(hc)
+//
+// See [ExampleClient_WithHTTPClient] for the full runnable form.
 func (c *Client) WithHTTPClient(hc *http.Client) *Client {
 	out := *c
 	out.httpClient = hc
@@ -67,6 +94,19 @@ func (c *Client) WithHTTPClient(hc *http.Client) *Client {
 
 // FromURL transcribes audio at a remote URL. The URL is delivered to
 // the Deepgram API as a JSON body; the API fetches and transcribes.
+//
+// Example:
+//
+//	resp, err := client.FromURL(ctx, "https://dpgr.am/spacewalk.wav",
+//	    &rest.PreRecordedTranscriptionOptions{
+//	        Model:       "nova-3",
+//	        Punctuate:   true,
+//	        SmartFormat: true,
+//	    })
+//	if err != nil { return err }
+//	fmt.Println(resp.Results.Channels[0].Alternatives[0].Transcript)
+//
+// See [ExampleClient_FromURL] for the full runnable form.
 func (c *Client) FromURL(ctx context.Context, audioURL string, opts *PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
 	body := strings.NewReader(`{"url":` + jsonQuote(audioURL) + `}`)
 	return c.invoke(ctx, opts, "application/json", body)
@@ -75,6 +115,13 @@ func (c *Client) FromURL(ctx context.Context, audioURL string, opts *PreRecorded
 // FromFile transcribes audio at a local file path. The file is
 // streamed as the request body with the supplied contentType (or
 // "audio/*" when empty).
+//
+// Example:
+//
+//	resp, err := client.FromFile(ctx, "./recording.wav", "audio/wav",
+//	    &rest.PreRecordedTranscriptionOptions{Model: "nova-3"})
+//
+// See [ExampleClient_FromFile] for the full runnable form.
 func (c *Client) FromFile(ctx context.Context, path, contentType string, opts *PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -86,6 +133,13 @@ func (c *Client) FromFile(ctx context.Context, path, contentType string, opts *P
 
 // FromStream transcribes audio from an arbitrary io.Reader.
 // contentType defaults to "audio/*" if empty.
+//
+// Example:
+//
+//	resp, err := client.FromStream(ctx, audioReader, "audio/wav",
+//	    &rest.PreRecordedTranscriptionOptions{Model: "nova-3"})
+//
+// See [ExampleClient_FromStream] for the full runnable form.
 func (c *Client) FromStream(ctx context.Context, r io.Reader, contentType string, opts *PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
 	if contentType == "" {
 		contentType = "audio/*"

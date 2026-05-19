@@ -31,6 +31,13 @@ type Client struct {
 // New constructs a Client with explicit credentials. Either apiKey
 // or accessToken must be non-empty for the dial to authenticate;
 // accessToken takes precedence when both are set.
+//
+// Example:
+//
+//	client := ws.New("your-api-key", "")
+//	stream, err := client.Connect(ctx, opts)
+//
+// See [ExampleNew] for the full runnable form.
 func New(apiKey, accessToken string) *Client {
 	return &Client{
 		apiKey:      apiKey,
@@ -41,6 +48,17 @@ func New(apiKey, accessToken string) *Client {
 
 // NewWithDefaults reads DEEPGRAM_ACCESS_TOKEN and DEEPGRAM_API_KEY
 // from the environment.
+//
+// Example:
+//
+//	client := ws.NewWithDefaults()
+//	stream, err := client.Connect(ctx, &ws.LiveTranscriptionOptions{
+//	    Model:      "nova-3",
+//	    Encoding:   "linear16",
+//	    SampleRate: 16000,
+//	})
+//
+// See [ExampleNewWithDefaults] for the full runnable form.
 func NewWithDefaults() *Client {
 	return New(
 		os.Getenv("DEEPGRAM_API_KEY"),
@@ -50,6 +68,12 @@ func NewWithDefaults() *Client {
 
 // WithBaseURL returns a copy of the Client pointed at the given
 // WebSocket base URL (e.g. "wss://api.deepgram.com").
+//
+// Example:
+//
+//	client := ws.NewWithDefaults().WithBaseURL("wss://staging.api.deepgram.com")
+//
+// See [ExampleClient_WithBaseURL] for the full runnable form.
 func (c *Client) WithBaseURL(url string) *Client {
 	out := *c
 	out.baseURL = url
@@ -67,6 +91,19 @@ func (c *Client) WithBaseURL(url string) *Client {
 // reconfiguration) is not exposed on Stream yet because its wire
 // shape uses document.Interface; callers needing it can reach the
 // underlying transport via api/transport/websocket directly.
+//
+// Example:
+//
+//	stream, err := client.Connect(ctx, &ws.LiveTranscriptionOptions{
+//	    Model:          "nova-3",
+//	    Encoding:       "linear16",
+//	    SampleRate:     16000,
+//	    InterimResults: true,
+//	})
+//	if err != nil { return err }
+//	defer stream.Close()
+//
+// See [ExampleClient_Connect] for the full runnable form.
 func (c *Client) Connect(ctx context.Context, opts *LiveTranscriptionOptions) (*Stream, error) {
 	headers, err := c.authHeaders()
 	if err != nil {
@@ -119,6 +156,17 @@ type Stream struct {
 // The chunk's encoding must match the Encoding/SampleRate/Channels
 // options used at Connect time. An empty chunk is treated by the
 // server as equivalent to CloseStream.
+//
+// Example:
+//
+//	buf := make([]byte, 4096)
+//	for {
+//	    n, err := mic.Read(buf)
+//	    if err != nil { break }
+//	    if err := stream.SendAudio(buf[:n]); err != nil { return err }
+//	}
+//
+// See [ExampleStream_SendAudio] for the full runnable form.
 func (s *Stream) SendAudio(data []byte) error {
 	return s.transport.Send(&spectypes.ClientStreamMemberAudio{
 		Value: spectypes.AudioFrame{Data: data},
@@ -128,6 +176,13 @@ func (s *Stream) SendAudio(data []byte) error {
 // CloseStream sends a graceful end-of-audio marker. The server
 // flushes pending results and emits a final MetadataEvent before
 // closing the WebSocket.
+//
+// Example:
+//
+//	if err := stream.CloseStream(); err != nil { return err }
+//	// keep calling stream.Recv until io.EOF for the final MetadataEvent
+//
+// See [ExampleStream_CloseStream] for the full runnable form.
 func (s *Stream) CloseStream() error {
 	return s.transport.Send(&spectypes.ClientStreamMemberCloseStream{
 		Value: spectypes.CloseStream{},
@@ -136,6 +191,12 @@ func (s *Stream) CloseStream() error {
 
 // Finalize forces the server to emit a final transcript for the
 // open utterance. Pass channel = -1 to finalize all channels.
+//
+// Example:
+//
+//	if err := stream.Finalize(-1); err != nil { return err }
+//
+// See [ExampleStream_Finalize] for the full runnable form.
 func (s *Stream) Finalize(channel int) error {
 	v := spectypes.Finalize{}
 	if channel >= 0 {
@@ -148,6 +209,16 @@ func (s *Stream) Finalize(channel int) error {
 // KeepAlive resets client and driver inactivity timers. Send
 // periodically when there's no audio to transmit but the session
 // should stay open.
+//
+// Example:
+//
+//	ticker := time.NewTicker(5 * time.Second)
+//	defer ticker.Stop()
+//	for range ticker.C {
+//	    if err := stream.KeepAlive(); err != nil { return err }
+//	}
+//
+// See [ExampleStream_KeepAlive] for the full runnable form.
 func (s *Stream) KeepAlive() error {
 	return s.transport.Send(&spectypes.ClientStreamMemberKeepAlive{
 		Value: spectypes.KeepAlive{},
@@ -157,6 +228,13 @@ func (s *Stream) KeepAlive() error {
 // Sync sends a client-side sync marker with the supplied id. The
 // server echoes it back as a SyncEvent. Used to align test
 // pipelines.
+//
+// Example:
+//
+//	if err := stream.Sync(42); err != nil { return err }
+//	// next stream.Recv() will eventually yield *ws.SyncEvent{ID: 42}
+//
+// See [ExampleStream_Sync] for the full runnable form.
 func (s *Stream) Sync(id int64) error {
 	return s.transport.Send(&spectypes.ClientStreamMemberSync{
 		Value: spectypes.ClientSync{Id: &id},
@@ -167,6 +245,25 @@ func (s *Stream) Sync(id int64) error {
 // closes. Returns nil for messages the SDK does not recognize so
 // callers can continue the loop on forward-compat variants. Returns
 // io.EOF (or other transport error) when the connection ends.
+//
+// Example:
+//
+//	for {
+//	    event, err := stream.Recv()
+//	    if err != nil { return err }
+//	    switch e := event.(type) {
+//	    case *ws.ResultsEvent:
+//	        if e.IsFinal {
+//	            fmt.Println(e.Channel.Alternatives[0].Transcript)
+//	        }
+//	    case *ws.MetadataEvent:
+//	        return nil // session ended
+//	    case *ws.ErrorEvent:
+//	        return fmt.Errorf("stream error: %s", e.Description)
+//	    }
+//	}
+//
+// See [ExampleStream_Recv] for the full runnable form.
 func (s *Stream) Recv() (Event, error) {
 	msg, err := s.transport.Recv()
 	if err != nil {
@@ -177,6 +274,14 @@ func (s *Stream) Recv() (Event, error) {
 
 // Close terminates the WebSocket connection. Idempotent; safe to
 // call after CloseStream.
+//
+// Example:
+//
+//	stream, err := client.Connect(ctx, opts)
+//	if err != nil { return err }
+//	defer stream.Close()
+//
+// See [ExampleStream_Close] for the full runnable form.
 func (s *Stream) Close() error {
 	return s.transport.Close()
 }
