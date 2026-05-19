@@ -6,8 +6,10 @@ package wsv1
 import (
 	"context"
 	"errors"
+	"fmt"
 	nethttp "net/http"
 	"os"
+	"time"
 
 	wstransport "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
@@ -26,6 +28,7 @@ type Client struct {
 	apiKey      string
 	accessToken string
 	baseURL     string
+	config      *Config
 }
 
 // New constructs a Client with explicit credentials. Either apiKey
@@ -129,7 +132,9 @@ func (c *Client) Connect(ctx context.Context, opts *LiveTranscriptionOptions) (*
 	if err != nil {
 		return nil, err
 	}
-	return &Stream{transport: transport}, nil
+	stream := &Stream{transport: transport}
+	stream.applyConfigSendDefaults(c.config)
+	return stream, nil
 }
 
 func (c *Client) authHeaders() (nethttp.Header, error) {
@@ -148,14 +153,24 @@ func (c *Client) authHeaders() (nethttp.Header, error) {
 // Stream is a single live transcription session. Methods are
 // goroutine-safe for sends (the underlying transport serializes
 // writes); Recv is expected to be driven from a single goroutine.
+//
+// Calling Close cancels any outstanding SendAudioContext call and
+// terminates the underlying WebSocket — there are no internal
+// goroutines left running once Close returns successfully.
 type Stream struct {
-	transport wstransport.Stream[spectypes.ClientStream, spectypes.ServerStream]
+	transport     wstransport.Stream[spectypes.ClientStream, spectypes.ServerStream]
+	maxFrameSize  int
+	sendTimeout   time.Duration
 }
 
 // SendAudio transmits a raw audio chunk as a binary WebSocket frame.
 // The chunk's encoding must match the Encoding/SampleRate/Channels
 // options used at Connect time. An empty chunk is treated by the
 // server as equivalent to CloseStream.
+//
+// Returns ErrFrameTooLarge when the chunk exceeds Config.MaxFrameSizeBytes
+// (if Client.WithConfig was used) and ErrSendTimeout when
+// Config.SendTimeout elapses before the underlying write completes.
 //
 // Example:
 //
@@ -168,9 +183,28 @@ type Stream struct {
 //
 // See [ExampleStream_SendAudio] for the full runnable form.
 func (s *Stream) SendAudio(data []byte) error {
-	return s.transport.Send(&spectypes.ClientStreamMemberAudio{
-		Value: spectypes.AudioFrame{Data: data},
-	})
+	if s.maxFrameSize > 0 && len(data) > s.maxFrameSize {
+		return fmt.Errorf("%w: %d > %d", ErrFrameTooLarge, len(data), s.maxFrameSize)
+	}
+	if s.sendTimeout <= 0 {
+		return s.transport.Send(&spectypes.ClientStreamMemberAudio{
+			Value: spectypes.AudioFrame{Data: data},
+		})
+	}
+	done := make(chan error, 1)
+	go func() {
+		done <- s.transport.Send(&spectypes.ClientStreamMemberAudio{
+			Value: spectypes.AudioFrame{Data: data},
+		})
+	}()
+	timer := time.NewTimer(s.sendTimeout)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return ErrSendTimeout
+	case err := <-done:
+		return err
+	}
 }
 
 // CloseStream sends a graceful end-of-audio marker. The server
