@@ -5,7 +5,7 @@
 //  1. @websocketCloseCode constants for every error structure
 //     annotated with the trait, mapped from spec to wire code.
 //  2. Generic Stream[C, S any] + OpenStream[C, S any] primitives
-//     backed by dvonthenen/websocket. The consumer-side facade
+//     backed by gorilla/websocket. The consumer-side facade
 //     supplies marshal/unmarshal closures (from api/types) so the
 //     wire framing for every union variant stays type-safe.
 //
@@ -22,7 +22,7 @@ import (
 
 	nethttp "net/http"
 
-	ws "github.com/dvonthenen/websocket"
+	ws "github.com/gorilla/websocket"
 )
 
 // Close codes mapped from @websocketCloseCode trait on error shapes.

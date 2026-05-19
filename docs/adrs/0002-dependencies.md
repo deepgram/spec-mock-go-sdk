@@ -1,22 +1,26 @@
 # ADR-0002: Direct dependency choices + SBOM strategy
 
 - Status: accepted
-- Date: 2026-05-19
+- Date: 2026-05-19 (revised)
 - Decider: DX team
 - Supersedes: none
 
 ## Context
 
-A customer-facing SDK should treat its dependency surface as carefully as its public-API surface. Every direct dependency is something a customer's build will pull in and something we're committing to keep current against CVE drift. The spec-driven prototype currently has 3 direct deps; this ADR records why each is there, what the risk is, and how the SBOM gets produced.
+A customer-facing SDK should treat its dependency surface as carefully as its public-API surface. Every direct dependency is something a customer's build will pull in and something we're committing to keep current against CVE drift. This ADR records why each direct dependency is there, what the risk is, and how the SBOM gets produced.
 
-## Direct dependencies (as of 2026-05-19)
+## Direct dependencies (as of 2026-05-19, revised)
 
-### `github.com/dvonthenen/websocket` v1.5.1-dyv.2
+### `github.com/gorilla/websocket` v1.5.3
 
-- **What:** WebSocket client/server library. Fork of `gorilla/websocket`.
-- **Why we use it:** Carries the upstream `gorilla/websocket` API surface but with additional fixes / features the legacy `deepgram-go-sdk` relied on.
-- **Risk level:** High. Single-maintainer fork of an upstream library that itself transitioned through community-maintenance status. Long-term support burden is on us if the maintainer goes inactive.
-- **Mitigation plan:** Track upstream `gorilla/websocket` (or its current community fork) and evaluate migration each minor. Document any divergence we actually depend on so the migration path is well understood. Listed as a Track D1 (WS production-resilience) follow-up.
+- **What:** WebSocket client/server library.
+- **Why we use it:** Needed for the WebSocket transport in `api/transport/websocket/`. The codegen template uses only 5 symbols (`Conn`, `DefaultDialer`, `DialContext`, `ReadMessage`/`WriteMessage`/`Close`, `TextMessage`/`BinaryMessage` constants), all stable across the library's lifetime.
+- **Risk level:** Low. Gorilla project, broad ecosystem usage, currently maintained by the Gorilla Web Toolkit org. The library went through a community-maintenance transition in 2022-2023 and is now actively maintained again.
+- **Mitigation plan:** Track upstream releases via Dependabot once enabled. If gorilla goes inactive again, the API surface is small enough to migrate to [`coder/websocket`](https://github.com/coder/websocket) (context-native API, single-file impl, zero deps) in a focused PR.
+
+#### Migrated from `dvonthenen/websocket` (2026-05-19)
+
+Earlier versions of this SDK depended on `github.com/dvonthenen/websocket v1.5.1-dyv.2` — a single-maintainer fork of gorilla/websocket. That dependency was rated HIGH risk in the previous revision of this ADR and has now been replaced. The dvonthenen fork's API was identical to upstream gorilla for everything we actually used; the migration was a one-line change to the codegen template (`api/transport/websocket/streaming.go`'s import). No customer-visible behaviour change.
 
 ### `github.com/aws/aws-sdk-go-v2/service/sagemakerruntime` v1.39.8
 
