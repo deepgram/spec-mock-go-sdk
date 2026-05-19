@@ -263,10 +263,6 @@ func (e *SlowUploadError) ErrorCode() string {
 func (e *SlowUploadError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
 
 // Auth missing or malformed. err_code: UNAUTHORIZED .
-//
-// Stem also sets WWW-Authenticate: Token realm="..." on the response, but
-// Smithy's HttpHeaderTrait validator forbids modeling hop-by-hop headers directly.
-// SDK codegen for this header is the protocol generator's responsibility.
 type UnauthorizedError struct {
 	Message *string
 	
@@ -358,8 +354,7 @@ func (e *ClientTimeoutError) ErrorCode() string {
 }
 func (e *ClientTimeoutError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
 
-// Audio bytes could not be decoded by the transcoder. WS close code 1008 .
-// err_code: DATA-0000 .
+// Audio bytes could not be decoded. WS close code 1008 . err_code: DATA-0000 .
 type CodecError struct {
 	Message *string
 	

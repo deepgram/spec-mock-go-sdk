@@ -13,7 +13,7 @@ package restv1
 // nil so the parameter does not appear in the request query string.
 //
 // The set of fields here is the public surface of /v1/listen. Any
-// @internal-tagged stem parameter on TranscribeInput is intentionally
+// @internal-tagged parameter on the wire input shape is intentionally
 // absent.
 type PreRecordedTranscriptionOptions struct {
 	Callback        string   `json:"callback,omitempty"         schema:"callback,omitempty"`
@@ -28,7 +28,7 @@ type PreRecordedTranscriptionOptions struct {
 
 	DiarizeModel    string   `json:"diarize_model,omitempty"    schema:"diarize_model,omitempty"`
 
-	// Deprecated: Legacy Impeller-side diarization selector. Prefer DiarizeModel.
+	// Deprecated: Legacy diarization-model selector. Prefer DiarizeModel.
 	// Mutually exclusive with DiarizeModel.
 	DiarizeVersion  string   `json:"diarize_version,omitempty"  schema:"diarize_version,omitempty"`
 

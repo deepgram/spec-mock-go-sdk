@@ -13,10 +13,10 @@ package wsv1
 // parameter unset.
 //
 // The set of fields here is the public surface of /v1/listen
-// streaming. Any @internal-tagged stem parameter on StreamInput is
-// intentionally absent. The SecWebSocketProtocol field on StreamInput
-// is also absent: it carries browser-side credential delivery and is
-// owned by the Client, not by per-call options.
+// streaming. Any @internal-tagged parameter on the wire input shape
+// is intentionally absent. The SecWebSocketProtocol field on
+// StreamInput is also absent: it carries browser-side credential
+// delivery and is owned by the Client, not by per-call options.
 type LiveTranscriptionOptions struct {
 	Channels        int      `json:"channels,omitempty"          schema:"channels,omitempty"`
 
@@ -24,7 +24,7 @@ type LiveTranscriptionOptions struct {
 	// Mutually exclusive with DiarizeModel.
 	Diarize         bool     `json:"diarize,omitempty"           schema:"diarize,omitempty"`
 
-	// Deprecated: Legacy Impeller-side diarization selector. Prefer DiarizeModel.
+	// Deprecated: Legacy diarization-model selector. Prefer DiarizeModel.
 	DiarizeVersion  string   `json:"diarize_version,omitempty"   schema:"diarize_version,omitempty"`
 
 	Encoding        string   `json:"encoding,omitempty"          schema:"encoding,omitempty"`

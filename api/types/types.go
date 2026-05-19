@@ -28,7 +28,7 @@ type Entity struct {
 	Value *string `json:"value"`
 	
 	// Original non-formatted text as spoken. Present when smart-formatting rewrote
-	// value ; absent when no rewrite happened. Stem-side Option<String> .
+	// value ; absent when no rewrite happened.
 	RawValue *string `json:"raw_value,omitempty"`
 	
 	noSmithyDocumentSerde
@@ -80,7 +80,7 @@ type Paragraph struct {
 	Start *float32 `json:"start"`
 	
 	// Channel index when the paragraph aggregates across multiple channels
-	// (multichannel batch responses). Stem-side Option<i64> .
+	// (multichannel batch responses).
 	Channel *int64 `json:"channel,omitempty"`
 	
 	// Per-paragraph sentiment when ?sentiment=true . Flattens to sentiment +
@@ -89,7 +89,7 @@ type Paragraph struct {
 	
 	SentimentScore *float32 `json:"sentiment_score,omitempty"`
 	
-	// Speaker assignment for the paragraph (when diarized). Stem-side Option<i64> .
+	// Speaker assignment for the paragraph (when diarized).
 	Speaker *int64 `json:"speaker,omitempty"`
 	
 	noSmithyDocumentSerde
@@ -237,13 +237,12 @@ type Word struct {
 	// This member is required.
 	Word *string `json:"word"`
 	
-	// Raw bytes attached to this word. Stem-side Option<Vec<u8>> ; used internally and
-	// only sometimes surfaced on the wire. Modeled as Blob because Smithy Blob ↔ Rust
-	// Vec<u8> is the canonical pair.
+	// Raw bytes attached to this word. Used internally and only sometimes surfaced on
+	// the wire.
 	Context []byte `json:"context,omitempty"`
 	
-	// Embedding vector. Stem-side Option<HashMap<String, f32>> (a named dictionary of
-	// per-dimension floats, not a positional list).
+	// Embedding vector — a named dictionary of per-dimension floats, not a positional
+	// list.
 	FullVec map[string]float32 `json:"full_vec,omitempty"`
 	
 	// Detected language for this word. WSS-populated when ?detect_language=true .
@@ -255,17 +254,13 @@ type Word struct {
 	// Replacement text after ?redact=... is applied.
 	RedactedText *string `json:"redacted_text,omitempty"`
 	
-	// Per-word sentiment, present when ?sentiment=true . Stem-side this comes from a
-	// #[serde(flatten)] -ed AverageSentiment whose start_time / end_time fields are
-	// forced to None when flattened into a Word (which already has its own start / end
-	// ). The resulting wire shape is exactly sentiment + sentiment_score on the Word
-	// object. (Inlined per LISTEN-013.)
+	// Per-word sentiment, present when ?sentiment=true . Flattens to sentiment +
+	// sentiment_score on the Word object.
 	Sentiment Sentiment `json:"sentiment,omitempty"`
 	
 	SentimentScore *float32 `json:"sentiment_score,omitempty"`
 	
-	// Speaker label, present when ?diarize=true . Indexed from 0. Stem-side type is
-	// i64 ( Option<i64> ); modeled as Long here.
+	// Speaker label, present when ?diarize=true . Indexed from 0.
 	Speaker *int64 `json:"speaker,omitempty"`
 	
 	// Confidence in the speaker assignment. REST-populated.
@@ -340,7 +335,7 @@ type Hit struct {
 	// This member is required.
 	Start *float32 `json:"start"`
 	
-	// Matched text snippet. Stem-side Option<String> .
+	// Matched text snippet.
 	Snippet *string `json:"snippet,omitempty"`
 	
 	noSmithyDocumentSerde
@@ -374,9 +369,8 @@ type Channel struct {
 	// Phrase-search hits. Empty when no ?search= queries were submitted.
 	Search []SearchResult `json:"search,omitempty"`
 	
-	// Per-channel utterance segment boundaries. Present when ?utterances=true . Stem
-	// models this as a UttSegments newtype wrapping Vec<usize> — a flat JSON array of
-	// word-indices marking the start of each utterance for this channel's first
+	// Per-channel utterance segment boundaries. Present when ?utterances=true . Each
+	// entry is a word-index marking the start of an utterance for this channel's first
 	// alternative. The top-level Result.utterances field (REST batch only) carries
 	// the richer Utterance objects.
 	Utterances []int32 `json:"utterances,omitempty"`
@@ -396,11 +390,8 @@ type ModelInfo struct {
 }
 
 // Token-count metadata for AI features (summarize, sentiment, topics, intents).
-// Populated on REST ResponseMetadata per-feature.
-//
-// Stem source: messages/src/public/v1/asr/metadata.rs — TokenMetadata . All three
-// fields are required on the stem side; model is a Deepgram SDK convenience for
-// the model name, while model_uuid is the canonical UUID identifier.
+// Populated on REST ResponseMetadata per-feature. model_uuid is the canonical
+// UUID identifier; model is an SDK convenience for the model name.
 type TokenMetadata struct {
 	
 	// This member is required.
@@ -439,8 +430,7 @@ type Utterance struct {
 	// This member is required.
 	End *float32 `json:"end"`
 	
-	// Stable utterance UUID. Stem-side this is a required Uuid (NOT optional).
-	// Allocated server-side per utterance.
+	// Stable utterance UUID. Allocated server-side per utterance.
 	//
 	// This member is required.
 	Id *string `json:"id"`
@@ -457,8 +447,8 @@ type Utterance struct {
 	// This member is required.
 	Words []Word `json:"words"`
 	
-	// Languages detected in this utterance, ranked most-to-least frequent. Stem-side
-	// Vec<String> ; populated when words have language set.
+	// Languages detected in this utterance, ranked most-to-least frequent. Populated
+	// when words have language set.
 	Languages []string `json:"languages,omitempty"`
 	
 	// Per-utterance sentiment, flattens to sentiment + sentiment_score on the
@@ -467,7 +457,7 @@ type Utterance struct {
 	
 	SentimentScore *float32 `json:"sentiment_score,omitempty"`
 	
-	// Speaker label. Stem-side Option<i64> .
+	// Speaker label.
 	Speaker *int64 `json:"speaker,omitempty"`
 	
 	noSmithyDocumentSerde
@@ -576,7 +566,7 @@ type TranscribeInput struct {
 	
 	// Detect spoken languages from a constrained candidate set. Each repeated value
 	// adds one allowed language code (BCP-47). When omitted, the request relies on the
-	// language parameter or stem's full-vocabulary detector.
+	// language parameter or the Deepgram API's full-vocabulary language detector.
 	DetectLanguage []string `json:"-"`
 	
 	// Deprecated: Legacy flag. Prefer diarize_model for explicit model selection.
@@ -586,8 +576,8 @@ type TranscribeInput struct {
 	
 	DiarizeModel *string `json:"-"`
 	
-	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
-	// Mutually exclusive with diarize_model .
+	// Deprecated: Legacy diarization-model selector. Prefer diarize_model . Mutually
+	// exclusive with diarize_model .
 	DiarizeVersion *string `json:"-"`
 	
 	// Format dictation commands (e.g. "period" → ".", "new paragraph" → "\n\n") in
@@ -638,9 +628,8 @@ type TranscribeInput struct {
 	
 	// Find-and-replace substitution pairs applied during post-processing. Wire syntax
 	// is repeated ?replace=find:with pairs (colon-separated key/value, NOT a
-	// comma-joined list). Stem parses these into a HashMap<String, String> and
-	// rewrites transcript tokens before emission. Billable as Feature::Replace when
-	// non-empty.
+	// comma-joined list). The Deepgram API rewrites transcript tokens matching each
+	// find before emission. Billable when non-empty.
 	Replace []string `json:"-"`
 	
 	Search []string `json:"-"`
@@ -875,9 +864,8 @@ type ClientStream interface {
 	isClientStream()
 }
 
-// Raw audio bytes. Sent as a binary WebSocket frame, NOT as JSON. Stem forwards
-// these to impeller/transcoder. An empty binary frame is treated equivalent to a
-// closeStream JSON message.
+// Raw audio bytes. Sent as a binary WebSocket frame, NOT as JSON. An empty binary
+// frame is treated equivalent to a closeStream JSON message.
 type ClientStreamMemberAudio struct {
 	Value AudioFrame
 	
@@ -948,7 +936,7 @@ type StreamInput struct {
 	// Mutually exclusive with diarize_model .
 	Diarize *bool `json:"-"`
 	
-	// Deprecated: Legacy Impeller-side diarization selector. Prefer diarize_model .
+	// Deprecated: Legacy diarization-model selector. Prefer diarize_model .
 	DiarizeVersion *string `json:"-"`
 	
 	Encoding *string `json:"-"`
@@ -1063,7 +1051,7 @@ type WsMetadata struct {
 	// Models that produced the transcript.
 	ModelInfo map[string]ModelInfo `json:"model_info,omitempty"`
 	
-	// SHA of the messages crate used to encode this response.
+	// SHA fingerprint of the wire-protocol schema used to encode this response.
 	Sha256 *string `json:"sha256,omitempty"`
 	
 	// Always serialized as the literal string "deprecated" . Retained for legacy

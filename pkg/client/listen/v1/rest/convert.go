@@ -14,7 +14,7 @@ import (
 // query string.
 //
 // Every @httpQuery member of spectypes.TranscribeInput has a wiring
-// block here. The set of @internal-tagged stem parameters that the spec
+// block here. The set of @internal-tagged parameters that the spec
 // excludes from the public surface is intentionally not represented on
 // PreRecordedTranscriptionOptions and therefore has no wiring block.
 func optionsToTranscribeInput(o *PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {

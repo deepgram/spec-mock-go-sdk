@@ -16,8 +16,8 @@ import (
 // pointer as nil so the parameter is omitted from the query string.
 //
 // Every @httpQuery member of spectypes.StreamInput has a wiring block
-// here. @internal-tagged stem parameters that the spec excludes from
-// the public surface are intentionally not represented on
+// here. @internal-tagged parameters that the spec excludes from the
+// public surface are intentionally not represented on
 // LiveTranscriptionOptions and therefore have no wiring block.
 func optionsToStreamInput(o *LiveTranscriptionOptions) *spectypes.StreamInput {
 	in := &spectypes.StreamInput{}
