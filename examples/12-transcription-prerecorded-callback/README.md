@@ -11,7 +11,3 @@ export DEEPGRAM_API_KEY=your-key-here
 # Edit main.go to set Callback to your real webhook URL
 go run ./examples/12-transcription-prerecorded-callback
 ```
-
-## Equivalent Python
-
-[`deepgram-python-sdk/examples/12-transcription-prerecorded-callback.py`](https://github.com/deepgram/deepgram-python-sdk/blob/main/examples/12-transcription-prerecorded-callback.py)

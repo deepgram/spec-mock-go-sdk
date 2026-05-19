@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -149,6 +150,10 @@ func (c *Client) FromStream(ctx context.Context, r io.Reader, contentType string
 
 func (c *Client) invoke(ctx context.Context, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error) {
 	input := optionsToTranscribeInput(opts)
+	var extra url.Values
+	if opts != nil {
+		extra = opts.Extra
+	}
 	out, err := httptransport.Invoke[spectypes.TranscribeInput, spectypes.TranscribeOutput](
 		ctx,
 		c.httpClient,
@@ -161,6 +166,7 @@ func (c *Client) invoke(ctx context.Context, opts *PreRecordedTranscriptionOptio
 		},
 		input,
 		body,
+		extra,
 	)
 	if err != nil {
 		return nil, err

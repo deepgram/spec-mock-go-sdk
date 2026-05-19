@@ -13,17 +13,6 @@ go run ./examples/13-transcription-live-websocket
 
 Uses [`../fixtures/audio.wav`](../fixtures/audio.wav) (16-bit mono 44.1 kHz PCM).
 
-## Equivalent Python
-
-[`deepgram-python-sdk/examples/13-transcription-live-websocket.py`](https://github.com/deepgram/deepgram-python-sdk/blob/main/examples/13-transcription-live-websocket.py)
-
-| Python | Go |
-|---|---|
-| Event handlers via `connection.on(EventType.MESSAGE, ...)` | Type switch on `event := stream.Recv()` |
-| `threading.Thread(target=connection.start_listening, ...)` | `go func() { ... stream.SendAudio(...) }()` |
-| `connection.send_media(chunk)` | `stream.SendAudio(chunk)` |
-
 ## See also
 
-- [`docs/tutorials/build-a-voice-agent.md`](../../docs/tutorials/build-a-voice-agent.md) for the full WebSocket walk-through.
 - [`pkg/client/listen/v1/websocket/resilience.go`](../../pkg/client/listen/v1/websocket/resilience.go) for production-resilience knobs (frame-size cap, send timeout, reconnect policy).

@@ -1,11 +1,11 @@
 // SAFETY-NET WIRE TESTS — DO NOT REMOVE WITHOUT EXPLICIT HUMAN DIRECTIVE.
 //
-// One test per public facade-options field that flows through
+// One test per public option field that flows through
 // optionsToTranscribeInput. These are the human-authored counterpart
 // to wire_test_generated.go (which spec-codegen-go regenerates from
 // the spec on every codegen run). A field that flows in both files
 // gets a manual check here too; either file failing is a signal that
-// the facade has drifted from api/.
+// the client has drifted from api/.
 //
 // requireWired / requireDropped / isZeroForWire live in wire_helpers.go
 // so they're visible to both this file and the generated file.

@@ -112,6 +112,11 @@ type Authenticator interface {
 // Invoke does not introspect input.<PayloadField>. The PayloadField
 // in the route metadata is documentary - it tells the caller which
 // input field should be marshalled into body.
+//
+// extra carries arbitrary additional query parameters not represented
+// by a typed field on input. When a key in extra collides with a
+// typed field, the extra value wins. Use this to test new server-
+// side parameters before the typed surface is updated to expose them.
 func Invoke[I any, O any](
 	ctx context.Context,
 	client *nethttp.Client,
@@ -120,6 +125,7 @@ func Invoke[I any, O any](
 	auth Authenticator,
 	input *I,
 	body io.Reader,
+	extra url.Values,
 ) (*O, error) {
 	if client == nil {
 		client = nethttp.DefaultClient
@@ -156,6 +162,21 @@ func Invoke[I any, O any](
 			}
 			for _, v := range stringifyMultiField(f) {
 				q.Add(b.WireName, v)
+			}
+		}
+		for k, vs := range extra {
+			q.Del(k)
+			for _, v := range vs {
+				q.Add(k, v)
+			}
+		}
+		u.RawQuery = q.Encode()
+	} else if len(extra) > 0 {
+		q := u.Query()
+		for k, vs := range extra {
+			q.Del(k)
+			for _, v := range vs {
+				q.Add(k, v)
 			}
 		}
 		u.RawQuery = q.Encode()

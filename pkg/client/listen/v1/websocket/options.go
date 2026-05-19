@@ -3,10 +3,12 @@
 
 package wsv1
 
+import "net/url"
+
 // LiveTranscriptionOptions are the customer-facing options for the
 // /v1/listen WebSocket stream. Each exported field corresponds to a
 // single @httpQuery member on the generated spectypes.StreamInput
-// wire shape; the facade exposes idiomatic Go value types so callers
+// wire shape; the client exposes idiomatic Go value types so callers
 // do not nil-check primitives.
 //
 // Zero values mean "not set" and leave the corresponding wire query
@@ -56,4 +58,15 @@ type LiveTranscriptionOptions struct {
 	VadTurnoff      int      `json:"vad_turnoff,omitempty"       schema:"vad_turnoff,omitempty"`
 
 	Version         string   `json:"version,omitempty"           schema:"version,omitempty"`
+
+	// Extra carries arbitrary additional query parameters to send on the
+	// WebSocket upgrade URL. Keys are query-parameter names, values are
+	// raw string values. Multiple values per key produce repeated
+	// ?key=v1&key=v2 entries. When a key collides with one of the typed
+	// fields above, the Extra value wins.
+	//
+	// Use Extra when Deepgram ships a new streaming parameter on the API
+	// that this SDK has not yet been updated to expose with a typed
+	// field.
+	Extra url.Values `json:"-" schema:"-"`
 }

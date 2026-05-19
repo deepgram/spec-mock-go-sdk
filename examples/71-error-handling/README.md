@@ -25,7 +25,7 @@ if errors.As(err, &httpErr) {
     }
 
     if httpErr.Typed == nil {
-        // Status not in operation's declared errors, or body not JSON.
+        // Status not in the operation's declared errors, or body not JSON.
         // httpErr.Body / httpErr.StatusCode / httpErr.Headers still populated.
     }
 }
@@ -46,7 +46,7 @@ Declared error types for `Transcribe` (`POST /v1/listen`):
 | `*spectypes.RateLimitedError` | 429 |
 | `*spectypes.InternalServerError` | 500 |
 
-Fine-grained discrimination within a status: read `*typed.ErrCode`. Known values are documented in [`deepgram/spec/model/common/primitives.smithy`](https://github.com/deepgram/spec/blob/main/model/common/primitives.smithy).
+Fine-grained discrimination within a status: read `*typed.ErrCode`.
 
 ## Context cancellation
 
@@ -76,13 +76,9 @@ for {
 }
 ```
 
-Facade-level send-side sentinels:
+Client-level send-side sentinels:
 
 | Sentinel | When |
 |---|---|
 | `wsv1.ErrFrameTooLarge` | `SendAudio` chunk exceeds `Config.MaxFrameSizeBytes` |
 | `wsv1.ErrSendTimeout` | `SendAudio` blocked longer than `Config.SendTimeout` |
-
-## Equivalent Python
-
-[`deepgram-python-sdk/examples/71-error-handling.py`](https://github.com/deepgram/deepgram-python-sdk/blob/main/examples/71-error-handling.py)

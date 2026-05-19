@@ -3,7 +3,7 @@
 
 // Idiomatic value-typed response shapes for the listen REST surface.
 // Customers receive these from FromURL / FromFile / FromStream. The
-// facade absorbs the structural differences between successive smithy-go
+// client absorbs the structural differences between successive smithy-go
 // regenerations of api/types - field renames, nullability changes, and
 // pointer vs value typing - so call sites stay stable across spec
 // evolution. Conversions from the generated spectypes.TranscribeOutput

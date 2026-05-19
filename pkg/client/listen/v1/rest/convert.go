@@ -9,7 +9,7 @@ import (
 
 // optionsToTranscribeInput translates an idiomatic
 // *PreRecordedTranscriptionOptions into a *spectypes.TranscribeInput
-// suitable for httptransport.Invoke. Zero-valued facade fields leave the
+// suitable for httptransport.Invoke. Zero-valued option fields leave the
 // generated pointer as nil so the parameter is omitted from the wire
 // query string.
 //

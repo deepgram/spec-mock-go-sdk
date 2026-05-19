@@ -1,6 +1,6 @@
 # Examples
 
-Runnable examples for the spec-driven Go SDK. Organised by feature area mirroring the [`deepgram-python-sdk` examples convention](https://github.com/deepgram/deepgram-python-sdk/tree/main/examples) — each section starts at a multiple of 10.
+Runnable Go programs for common scenarios with the Deepgram Go SDK.
 
 ## Run
 
@@ -13,14 +13,14 @@ Substitute any example directory name. All examples build via `go build ./exampl
 
 ## Index
 
-### 01-09 Authentication
+### Authentication
 
 | Example | Topic |
 |---|---|
 | [`01-authentication-api-key`](./01-authentication-api-key) | API-key auth via `DEEPGRAM_API_KEY` or explicit `New(...)`. |
-| [`02-authentication-access-token`](./02-authentication-access-token) | Access-token auth via `DEEPGRAM_ACCESS_TOKEN`. (Token issuance is out of scope for this SDK — typically dx-id provisioned.) |
+| [`02-authentication-access-token`](./02-authentication-access-token) | Access-token auth via `DEEPGRAM_ACCESS_TOKEN`. |
 
-### 10-19 Transcription (Listen)
+### Transcription
 
 | Example | Topic |
 |---|---|
@@ -30,27 +30,13 @@ Substitute any example directory name. All examples build via `go build ./exampl
 | [`13-transcription-live-websocket`](./13-transcription-live-websocket) | WebSocket streaming — chunked audio + typed event loop. |
 | [`15-transcription-advanced-options`](./15-transcription-advanced-options) | Combined REST options — smart format + punctuate + diarize + language. |
 
-### 70-79 Configuration & Advanced
+### Configuration
 
 | Example | Topic |
 |---|---|
-| [`70-request-options`](./70-request-options) | Idiomatic typed options vs Python's `additional_query_parameters` escape hatch. |
-| [`71-error-handling`](./71-error-handling) | Errors from REST + WS, `errors.Is`, context cancellation, `ErrFrameTooLarge` / `ErrSendTimeout`. |
-
-## Not yet covered
-
-| Python example | Why it's absent |
-|---|---|
-| `14-transcription-live-websocket-v2.py` | Listen V2 is not in the Smithy spec yet. |
-| `20-29` Speak (TTS) | Speak product not in this prototype. |
-| `27-transcription-live-sagemaker.py` | SageMaker transport scaffolded in `api/transport/sagemaker` but no facade. |
-| `30 Voice Agent` | Agent product not in this prototype. |
-| `40 Text Intelligence` | Read product not in this prototype. |
-| `50-56 Management` | Management product not in this prototype. |
-| `60 On-Premises` | Self-hosted credentials story not in this prototype. |
-
-These return as the spec coverage expands.
+| [`70-request-options`](./70-request-options) | Passing arbitrary query parameters via `Extra`. |
+| [`71-error-handling`](./71-error-handling) | Typed errors via `errors.As`, context cancellation, WebSocket error events. |
 
 ## Fixtures
 
-`fixtures/audio.wav` — short PCM clip (16-bit mono 44.1 kHz, mirrors the Python SDK fixture). Used by `11` and `13`.
+`fixtures/audio.wav` — short PCM clip (16-bit mono 44.1 kHz). Used by `11` and `13`.

@@ -1,8 +1,10 @@
-// Example: Request Options
+// Example: Request Options — arbitrary query parameters via Extra.
 //
-// Every option on PreRecordedTranscriptionOptions corresponds to one
-// @httpQuery on the Smithy spec. There is no arbitrary-param escape
-// hatch — adding a new field requires a spec change.
+// PreRecordedTranscriptionOptions.Extra is the escape hatch for
+// sending query parameters the SDK does not yet expose as typed
+// fields. Use it when Deepgram ships a new parameter on the API
+// before the SDK has been updated to recognise it. When a key in
+// Extra collides with a typed field, the Extra value wins.
 
 package main
 
@@ -10,6 +12,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 
 	restv1 "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/rest"
 )
@@ -21,8 +24,12 @@ func main() {
 		context.Background(),
 		"https://dpgr.am/spacewalk.wav",
 		&restv1.PreRecordedTranscriptionOptions{
-			Model:          "nova-3",
-			DetectLanguage: []string{"en", "es"},
+			Model:       "nova-3",
+			SmartFormat: true,
+			Extra: url.Values{
+				"experimental_feature": []string{"true"},
+				"custom_tag":           []string{"a", "b"},
+			},
 		},
 	)
 	if err != nil {

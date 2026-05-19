@@ -12,7 +12,7 @@ import (
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 )
 
-// Config carries facade-level resilience knobs that are NOT part of the
+// Config carries client-level resilience knobs that are NOT part of the
 // Smithy wire surface. They tune how this SDK talks to the live
 // transcription endpoint without changing what's sent on the wire.
 //
@@ -82,7 +82,7 @@ type ReconnectPolicy struct {
 // short prefix of audio so the new session's transcript dovetails with
 // the previous session's tail.
 //
-// This is a facade-only event type; it is NOT part of the Smithy wire
+// This is a client-only event type; it is NOT part of the wire
 // surface. Server-emitted events continue to come through the standard
 // Event variants in events.go.
 type ReconnectEvent struct {

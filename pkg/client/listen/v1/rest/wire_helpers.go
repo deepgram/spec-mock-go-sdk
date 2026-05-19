@@ -1,7 +1,7 @@
 // Copyright Deepgram, Inc. All Rights Reserved.
 // SPDX-License-Identifier: MIT
 //
-// Wire-test helpers for the prerecorded facade. Used by wire_test.go.
+// Wire-test helpers for the prerecorded client. Used by wire_test.go.
 // Mirror of pkg/client/listen/v1/websocket/wire_helpers.go but against
 // TranscribeInput.
 

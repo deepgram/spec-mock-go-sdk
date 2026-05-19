@@ -12,7 +12,7 @@ import (
 
 // optionsToStreamInput translates an idiomatic *LiveTranscriptionOptions
 // into a *spectypes.StreamInput suitable for URL-encoding into the
-// WebSocket dial URL. Zero-valued facade fields leave the generated
+// WebSocket dial URL. Zero-valued option fields leave the generated
 // pointer as nil so the parameter is omitted from the query string.
 //
 // Every @httpQuery member of spectypes.StreamInput has a wiring block

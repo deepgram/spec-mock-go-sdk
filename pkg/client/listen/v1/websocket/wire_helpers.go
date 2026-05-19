@@ -1,7 +1,7 @@
 // Copyright Deepgram, Inc. All Rights Reserved.
 // SPDX-License-Identifier: MIT
 //
-// Wire-test helpers for the live transcription facade. Mirror of
+// Wire-test helpers for the live transcription client. Mirror of
 // pkg/client/listen/v1/rest/wire_helpers.go but against StreamInput.
 
 package wsv1

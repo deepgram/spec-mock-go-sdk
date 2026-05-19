@@ -251,6 +251,67 @@ func TestFromURL_HTTPErrorTypedPopulatedFor429WithRetryAfter(t *testing.T) {
 	}
 }
 
+func TestFromURL_ExtraQueryParamsAdded(t *testing.T) {
+	var capturedQuery url.Values
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedQuery = r.URL.Query()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"request_id":"x","results":{"channels":[{"alternatives":[{"transcript":""}]}]}}`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://example.invalid/audio.wav",
+		&PreRecordedTranscriptionOptions{
+			Model: "nova-3",
+			Extra: url.Values{
+				"experimental_feature":   []string{"true"},
+				"custom_tag":             []string{"a", "b"},
+			},
+		})
+	if err != nil {
+		t.Fatalf("FromURL returned error: %v", err)
+	}
+
+	if got := capturedQuery.Get("model"); got != "nova-3" {
+		t.Errorf("typed field ?model: got %q, want %q", got, "nova-3")
+	}
+	if got := capturedQuery.Get("experimental_feature"); got != "true" {
+		t.Errorf("?experimental_feature: got %q, want %q", got, "true")
+	}
+	vs := capturedQuery["custom_tag"]
+	if len(vs) != 2 || vs[0] != "a" || vs[1] != "b" {
+		t.Errorf("?custom_tag: got %v, want [a b]", vs)
+	}
+}
+
+func TestFromURL_ExtraOverridesTypedField(t *testing.T) {
+	var capturedQuery url.Values
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedQuery = r.URL.Query()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"request_id":"x","results":{"channels":[{"alternatives":[{"transcript":""}]}]}}`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://example.invalid/audio.wav",
+		&PreRecordedTranscriptionOptions{
+			Model: "nova-3",
+			Extra: url.Values{"model": []string{"nova-2-meeting"}},
+		})
+	if err != nil {
+		t.Fatalf("FromURL returned error: %v", err)
+	}
+
+	vs := capturedQuery["model"]
+	if len(vs) != 1 || vs[0] != "nova-2-meeting" {
+		t.Errorf("?model: got %v, want [nova-2-meeting] (Extra should win)", vs)
+	}
+}
+
 func TestFromURL_HTTPErrorTypedNilForUndecodableBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")

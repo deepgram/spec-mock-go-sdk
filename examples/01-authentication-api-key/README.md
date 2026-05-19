@@ -11,7 +11,3 @@ Demonstrates the two ways to wire an API key into a `rest.Client`:
 export DEEPGRAM_API_KEY=your-key-here
 go run ./examples/01-authentication-api-key
 ```
-
-## Equivalent Python
-
-[`deepgram-python-sdk/examples/01-authentication-api-key.py`](https://github.com/deepgram/deepgram-python-sdk/blob/main/examples/01-authentication-api-key.py)

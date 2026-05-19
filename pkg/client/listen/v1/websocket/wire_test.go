@@ -1,9 +1,7 @@
 // SAFETY-NET WIRE TESTS — DO NOT REMOVE WITHOUT EXPLICIT HUMAN DIRECTIVE.
 //
-// One test per public facade-options field that flows through
-// optionsToStreamInput. spec-codegen-go does not currently generate
-// streaming wire-test stubs (no @facadeOptionsType on the streaming
-// operation), so this is the entire wire-test surface for live
+// One test per public option field that flows through
+// optionsToStreamInput. This is the entire wire-test surface for live
 // transcription. requireWired / requireDropped / isZeroForWire live
 // in wire_helpers.go.
 
