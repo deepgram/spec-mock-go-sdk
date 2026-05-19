@@ -5,32 +5,22 @@ package restv1
 
 import (
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
-	interfaces "github.com/deepgram/spec-mock-go-sdk/pkg/client/interfaces/v1"
 )
 
-// optionsToTranscribeInput translates an idiomatic *PreRecordedTranscriptionOptions
-// into a *spectypes.TranscribeInput suitable for httptransport.Invoke. Empty /
-// zero-valued facade fields are left as nil pointers on the generated struct so
-// they don't surface in the wire query string.
+// optionsToTranscribeInput translates an idiomatic
+// *PreRecordedTranscriptionOptions into a *spectypes.TranscribeInput
+// suitable for httptransport.Invoke. Zero-valued facade fields leave the
+// generated pointer as nil so the parameter is omitted from the wire
+// query string.
 //
-// Dropped fields (intentionally NOT wired; see TestDropped_* in wire_test.go):
-//   - CustomIntent, CustomIntentMode, CustomTopic, CustomTopicMode: stem-only.
-//   - DetectTopics: deprecated by stem in favour of Topics.
-//   - Extra: stem-side metadata pass-through, request side not modeled.
-//
-// Fields removed from the spec as part of the @internal hygiene audit
-// (spec PR #8) — MinDuration, MaxDuration, PhonemeLattice,
-// SpeakersOfInterest, DetectLanguageVersion — are also removed from the
-// facade options struct. Customer code referencing those fields will fail
-// to compile on this SDK upgrade, which is the intended ceremony.
-func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
+// Every @httpQuery member of spectypes.TranscribeInput has a wiring
+// block here. The set of @internal-tagged stem parameters that the spec
+// excludes from the public surface is intentionally not represented on
+// PreRecordedTranscriptionOptions and therefore has no wiring block.
+func optionsToTranscribeInput(o *PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
 	if o == nil {
 		return in
-	}
-	if o.Alternatives != 0 {
-		v := int32(o.Alternatives)
-		in.Alternatives = &v
 	}
 	if o.Callback != "" {
 		v := o.Callback
@@ -39,20 +29,20 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.CallbackMethod != "" {
 		in.CallbackMethod = spectypes.CallbackMethod(o.CallbackMethod)
 	}
-	if o.Channels != 0 {
-		v := int32(o.Channels)
-		in.Channels = &v
-	}
 	if o.DetectEntities {
 		v := o.DetectEntities
 		in.DetectEntities = &v
 	}
-	if o.DetectLanguage {
-		in.DetectLanguage = []string{"true"}
+	if len(o.DetectLanguage) > 0 {
+		in.DetectLanguage = o.DetectLanguage
 	}
 	if o.Diarize {
 		v := o.Diarize
 		in.Diarize = &v
+	}
+	if o.DiarizeModel != "" {
+		v := o.DiarizeModel
+		in.DiarizeModel = &v
 	}
 	if o.DiarizeVersion != "" {
 		v := o.DiarizeVersion
@@ -74,19 +64,27 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 		v := o.Intents
 		in.Intents = &v
 	}
-	if len(o.Keywords) > 0 {
-		in.Keywords = o.Keywords
-	}
 	if len(o.Keyterm) > 0 {
 		in.Keyterm = o.Keyterm
+	}
+	if len(o.Keywords) > 0 {
+		in.Keywords = o.Keywords
 	}
 	if o.Language != "" {
 		v := o.Language
 		in.Language = &v
 	}
+	if o.LogData {
+		v := o.LogData
+		in.LogData = &v
+	}
 	if o.Measurements {
 		v := o.Measurements
 		in.Measurements = &v
+	}
+	if o.MipOptOut {
+		v := o.MipOptOut
+		in.MipOptOut = &v
 	}
 	if o.Model != "" {
 		v := o.Model
@@ -118,10 +116,6 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if len(o.Replace) > 0 {
 		in.Replace = o.Replace
 	}
-	if o.SampleRate != 0 {
-		v := int32(o.SampleRate)
-		in.SampleRate = &v
-	}
 	if len(o.Search) > 0 {
 		in.Search = o.Search
 	}
@@ -151,6 +145,10 @@ func optionsToTranscribeInput(o *interfaces.PreRecordedTranscriptionOptions) *sp
 	if o.Utterances {
 		v := o.Utterances
 		in.Utterances = &v
+	}
+	if o.VadTurnoff != 0 {
+		v := int32(o.VadTurnoff)
+		in.VadTurnoff = &v
 	}
 	if o.Version != "" {
 		v := o.Version

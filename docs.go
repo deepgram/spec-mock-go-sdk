@@ -4,27 +4,19 @@
 // Package sdk is the top-level marker for spec-mock-go-sdk, the Go
 // consumer of the Deepgram Smithy spec pipeline. The package itself
 // holds no exported symbols; its only job is the blank-import block
-// below, which forces every client and api/-side package to compile
-// as part of `go build ./...`. Add a new package here when its
-// compilation should gate the build.
+// below, which forces every package the build is supposed to gate
+// on to compile as part of `go build ./...`.
 //
-// Repo layout:
-//   - api/   machine-generated wire types and transports
-//   - pkg/   idiomatic Go facade (the part customers consume)
-//
-// See AGENTS.md and .agents/skills/ for the maintainer-facing
-// conventions. Not for customer use; see deepgram/deepgram-go-sdk
-// for the official Go SDK.
+// As products migrate into the spec pipeline they each get their own
+// pkg/client/{product}/{ver}/{transport}/ package; add them here.
 package sdk
 
 import (
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/analyze"
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen"
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/manage"
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/speak"
-
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/api/analyze/v1"
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/api/manage/v1"
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/api/speak/v1/rest"
-	_ "github.com/deepgram/spec-mock-go-sdk/pkg/api/speak/v1/websocket"
+	_ "github.com/deepgram/spec-mock-go-sdk/api/document"
+	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
+	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/sagemaker"
+	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/webrtc"
+	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
+	_ "github.com/deepgram/spec-mock-go-sdk/api/types"
+	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/rest"
 )
