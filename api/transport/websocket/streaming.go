@@ -13,6 +13,7 @@
 // api/types/<service>_streaming.go alongside the union types they
 // operate on; consumers should import them from there directly.
 
+
 package websocket
 
 import (
@@ -28,7 +29,7 @@ import (
 // Close codes mapped from @websocketCloseCode trait on error shapes.
 const (
 	CloseCodeClientTimeout = 1011
-	CloseCodeCodec         = 1008
+	CloseCodeCodec = 1008
 	CloseCodeDriverTimeout = 1011
 )
 
