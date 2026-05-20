@@ -42,6 +42,28 @@ For any auto-regeneration PR:
 
 If anything in this checklist looks off, leave a review comment on the PR rather than merging. The automated pass is a starting point, not a finished product.
 
+## Workflow YAML vs Java app — division of labor
+
+Regeneration has two cooperating automation layers with deliberately separate jobs.
+
+The `spec-idiomatic` Java app owns only the local file-change loop:
+
+- reads the generated `api/` diff and classifies it into tier 0 / 1 / 2 changes;
+- prompts the LLM with the relevant `pkg/` files and the change plan;
+- applies the returned file edits safely, including generated-file and `BREAKING_CHANGES.md` blocks;
+- creates the regeneration commit after local verification passes.
+
+The workflow YAML in `.github/workflows/spec-idiomatic.yml` owns all GitHub-side orchestration:
+
+- labels and sentinel comments on the PR;
+- status checks and retry/update behavior;
+- PR-body checklist state, including human acknowledgement for breaking ceremony;
+- title re-summary after the automated pass has finished.
+
+This split is intentional. The Java app stays testable as a unit with filesystem inputs and outputs. The workflow calls GitHub APIs through `gh`, where labels, comments, checks, and PR body mutations naturally live.
+
+Debug accordingly. If labels, sentinel comments, checks, checkboxes, or title summaries are wrong, inspect the workflow YAML and its `gh` calls. If `pkg/` files, tier absorption, or `BREAKING_CHANGES.md` output are wrong, inspect the Java app and the reproducibility checklist §15 tier flow.
+
 ## Triggering a regeneration manually
 
 Most of the time you don't need to. Wait for the upstream watcher to open the PR. If you do need to run it from your laptop (testing an unmerged upstream change, debugging a regen issue), the prerequisites and step-by-step are documented internally in the regeneration tooling itself — start there.
