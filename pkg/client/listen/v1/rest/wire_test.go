@@ -190,3 +190,8 @@ func TestWires_Version(t *testing.T) {
 	in := optionsToTranscribeInput(&PreRecordedTranscriptionOptions{Version: "latest"})
 	requireWired(t, in, "Version")
 }
+
+func TestFacadeOnly_AdditionalQueryParams(t *testing.T) {
+	opts := &PreRecordedTranscriptionOptions{}
+	requireFacadeOnly(t, opts, "AdditionalQueryParams")
+}
