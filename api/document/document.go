@@ -10,6 +10,7 @@
 // package to compile; real Document values are constructed and
 // consumed by the idiomatic transport layer's JSON marshalling.
 
+
 package document
 
 import smithydocument "github.com/aws/smithy-go/document"

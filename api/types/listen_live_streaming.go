@@ -16,6 +16,7 @@
 // for one regen cycle (see transport/websocket/streaming.go);
 // direct callers should migrate to api/types.
 
+
 package types
 
 import (
@@ -203,3 +204,4 @@ func UnmarshalServerStream(data []byte) (ServerStream, error) {
 		return nil, fmt.Errorf("UnmarshalServerStream: unknown type %q", header.Type)
 	}
 }
+
