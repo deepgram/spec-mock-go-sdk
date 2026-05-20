@@ -28,7 +28,7 @@ import (
 // Close codes mapped from @websocketCloseCode trait on error shapes.
 const (
 	CloseCodeClientTimeout = 1011
-	CloseCodeCodec = 1008
+	CloseCodeCodec         = 1008
 	CloseCodeDriverTimeout = 1011
 )
 

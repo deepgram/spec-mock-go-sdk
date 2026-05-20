@@ -23,7 +23,7 @@ type Config struct {
 	// Audio chunks larger than this are rejected with ErrFrameTooLarge
 	// before they reach the network. Zero (default) disables the
 	// per-chunk limit; the underlying WebSocket library still enforces
-	// its own per-frame maximum (1 MiB by default for dvonthenen/websocket).
+	// its own per-frame maximum (1 MiB by default for gorilla/websocket).
 	//
 	// Recommended: 64 KiB for typical mic capture at 16-bit / 16 kHz
 	// (~2 seconds of audio per frame). Larger frames increase end-to-end

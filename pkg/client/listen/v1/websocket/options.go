@@ -20,25 +20,25 @@ import "net/url"
 // StreamInput is also absent: it carries browser-side credential
 // delivery and is owned by the Client, not by per-call options.
 type LiveTranscriptionOptions struct {
-	Channels        int      `json:"channels,omitempty"          schema:"channels,omitempty"`
+	Channels int `json:"channels,omitempty"          schema:"channels,omitempty"`
 
 	// Deprecated: Legacy flag. Prefer DiarizeModel for explicit model selection.
 	// Mutually exclusive with DiarizeModel.
-	Diarize         bool     `json:"diarize,omitempty"           schema:"diarize,omitempty"`
+	Diarize bool `json:"diarize,omitempty"           schema:"diarize,omitempty"`
 
 	// Deprecated: Legacy diarization-model selector. Prefer DiarizeModel.
-	DiarizeVersion  string   `json:"diarize_version,omitempty"   schema:"diarize_version,omitempty"`
+	DiarizeVersion string `json:"diarize_version,omitempty"   schema:"diarize_version,omitempty"`
 
-	Encoding        string   `json:"encoding,omitempty"          schema:"encoding,omitempty"`
-	Endpointing     int      `json:"endpointing,omitempty"       schema:"endpointing,omitempty"`
-	InterimResults  bool     `json:"interim_results,omitempty"   schema:"interim_results,omitempty"`
-	Keyterm         []string `json:"keyterm,omitempty"           schema:"keyterm,omitempty"`
-	Keywords        []string `json:"keywords,omitempty"          schema:"keywords,omitempty"`
-	Language        string   `json:"language,omitempty"          schema:"language,omitempty"`
+	Encoding       string   `json:"encoding,omitempty"          schema:"encoding,omitempty"`
+	Endpointing    int      `json:"endpointing,omitempty"       schema:"endpointing,omitempty"`
+	InterimResults bool     `json:"interim_results,omitempty"   schema:"interim_results,omitempty"`
+	Keyterm        []string `json:"keyterm,omitempty"           schema:"keyterm,omitempty"`
+	Keywords       []string `json:"keywords,omitempty"          schema:"keywords,omitempty"`
+	Language       string   `json:"language,omitempty"          schema:"language,omitempty"`
 
 	// Deprecated: Prefer MipOptOut. LogData is recognized for backward
 	// compatibility.
-	LogData         bool     `json:"log_data,omitempty"          schema:"log_data,omitempty"`
+	LogData bool `json:"log_data,omitempty"          schema:"log_data,omitempty"`
 
 	MipOptOut       bool     `json:"mip_opt_out,omitempty"       schema:"mip_opt_out,omitempty"`
 	Model           string   `json:"model,omitempty"             schema:"model,omitempty"`
@@ -55,9 +55,9 @@ type LiveTranscriptionOptions struct {
 
 	// Deprecated: Use Endpointing instead. Rejected when Endpointing is
 	// also set as an integer.
-	VadTurnoff      int      `json:"vad_turnoff,omitempty"       schema:"vad_turnoff,omitempty"`
+	VadTurnoff int `json:"vad_turnoff,omitempty"       schema:"vad_turnoff,omitempty"`
 
-	Version         string   `json:"version,omitempty"           schema:"version,omitempty"`
+	Version string `json:"version,omitempty"           schema:"version,omitempty"`
 
 	// AdditionalQueryParams carries arbitrary query parameters to send
 	// on the WebSocket upgrade URL. Keys are query-parameter names,
