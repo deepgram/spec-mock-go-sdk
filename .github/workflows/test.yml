@@ -26,6 +26,15 @@ jobs:
           go mod tidy
           git diff --exit-code go.mod go.sum
 
+      - name: Check gofmt
+        run: |
+          diff=$(gofmt -d $(git ls-files 'api/**/*.go' 'pkg/**/*.go'))
+          if [ -n "$diff" ]; then
+            echo "$diff"
+            echo "gofmt drift detected — run 'gofmt -w ./api/... ./pkg/...' locally"
+            exit 1
+          fi
+
       - name: go vet
         run: go vet ./...
 
