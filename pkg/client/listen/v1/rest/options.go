@@ -24,14 +24,14 @@ type PreRecordedTranscriptionOptions struct {
 	DiarizeModel string `json:"diarize_model,omitempty" schema:"diarize_model,omitempty"`
 	// Deprecated: Legacy diarization-model selector. Prefer DiarizeModel.
 	// Mutually exclusive with DiarizeModel.
-	DiarizeVersion string `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
-	Dictation      bool   `json:"dictation,omitempty" schema:"dictation,omitempty"`
-	Encoding       string `json:"encoding,omitempty" schema:"encoding,omitempty"`
-	FillerWords    bool   `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
-	Intents        bool   `json:"intents,omitempty" schema:"intents,omitempty"`
+	DiarizeVersion string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
+	Dictation      bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
+	Encoding       string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
+	FillerWords    bool     `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
+	Intents        bool     `json:"intents,omitempty" schema:"intents,omitempty"`
 	Keyterm        []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
 	Keywords       []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
-	Language       string `json:"language,omitempty" schema:"language,omitempty"`
+	Language       string   `json:"language,omitempty" schema:"language,omitempty"`
 	// Deprecated: Prefer MipOptOut. LogData is recognized for backward
 	// compatibility; sending both with conflicting values returns 400.
 	LogData         bool     `json:"log_data,omitempty" schema:"log_data,omitempty"`
