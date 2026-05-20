@@ -174,9 +174,9 @@ func (c *Client) authHeaders() (nethttp.Header, error) {
 // terminates the underlying WebSocket — there are no internal
 // goroutines left running once Close returns successfully.
 type Stream struct {
-	transport     wstransport.Stream[spectypes.ClientStream, spectypes.ServerStream]
-	maxFrameSize  int
-	sendTimeout   time.Duration
+	transport    wstransport.Stream[spectypes.ClientStream, spectypes.ServerStream]
+	maxFrameSize int
+	sendTimeout  time.Duration
 }
 
 // SendAudio transmits a raw audio chunk as a binary WebSocket frame.

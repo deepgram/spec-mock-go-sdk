@@ -109,10 +109,10 @@ type Channel struct {
 }
 
 type Alternative struct {
-	Transcript     string
-	Confidence     float64
-	Words          []Word
-	Languages      []string
+	Transcript string
+	Confidence float64
+	Words      []Word
+	Languages  []string
 }
 
 type Word struct {
