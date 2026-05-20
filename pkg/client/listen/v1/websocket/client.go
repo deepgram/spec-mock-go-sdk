@@ -120,13 +120,13 @@ func (c *Client) Connect(ctx context.Context, opts *LiveTranscriptionOptions) (*
 	if query != "" {
 		dialURL += "?" + query
 	}
-	if opts != nil && len(opts.Extra) > 0 {
+	if opts != nil && len(opts.AdditionalQueryParams) > 0 {
 		parsed, parseErr := url.Parse(dialURL)
 		if parseErr != nil {
 			return nil, fmt.Errorf("listen websocket: parse dial URL: %w", parseErr)
 		}
 		q := parsed.Query()
-		for k, vs := range opts.Extra {
+		for k, vs := range opts.AdditionalQueryParams {
 			q.Del(k)
 			for _, v := range vs {
 				q.Add(k, v)

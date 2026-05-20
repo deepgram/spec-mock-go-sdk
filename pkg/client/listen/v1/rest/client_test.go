@@ -251,7 +251,7 @@ func TestFromURL_HTTPErrorTypedPopulatedFor429WithRetryAfter(t *testing.T) {
 	}
 }
 
-func TestFromURL_ExtraQueryParamsAdded(t *testing.T) {
+func TestFromURL_AdditionalQueryParamsAdded(t *testing.T) {
 	var capturedQuery url.Values
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedQuery = r.URL.Query()
@@ -265,9 +265,9 @@ func TestFromURL_ExtraQueryParamsAdded(t *testing.T) {
 		"https://example.invalid/audio.wav",
 		&PreRecordedTranscriptionOptions{
 			Model: "nova-3",
-			Extra: url.Values{
-				"experimental_feature":   []string{"true"},
-				"custom_tag":             []string{"a", "b"},
+			AdditionalQueryParams: url.Values{
+				"experimental_feature": []string{"true"},
+				"custom_tag":           []string{"a", "b"},
 			},
 		})
 	if err != nil {
@@ -286,7 +286,7 @@ func TestFromURL_ExtraQueryParamsAdded(t *testing.T) {
 	}
 }
 
-func TestFromURL_ExtraOverridesTypedField(t *testing.T) {
+func TestFromURL_AdditionalQueryParamsOverrideTypedField(t *testing.T) {
 	var capturedQuery url.Values
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedQuery = r.URL.Query()
@@ -299,8 +299,8 @@ func TestFromURL_ExtraOverridesTypedField(t *testing.T) {
 	_, err := client.FromURL(context.Background(),
 		"https://example.invalid/audio.wav",
 		&PreRecordedTranscriptionOptions{
-			Model: "nova-3",
-			Extra: url.Values{"model": []string{"nova-2-meeting"}},
+			Model:                 "nova-3",
+			AdditionalQueryParams: url.Values{"model": []string{"nova-2-meeting"}},
 		})
 	if err != nil {
 		t.Fatalf("FromURL returned error: %v", err)
@@ -308,7 +308,32 @@ func TestFromURL_ExtraOverridesTypedField(t *testing.T) {
 
 	vs := capturedQuery["model"]
 	if len(vs) != 1 || vs[0] != "nova-2-meeting" {
-		t.Errorf("?model: got %v, want [nova-2-meeting] (Extra should win)", vs)
+		t.Errorf("?model: got %v, want [nova-2-meeting] (AdditionalQueryParams should win)", vs)
+	}
+}
+
+func TestFromURL_AdditionalQueryParamsCanOverrideRealExtraField(t *testing.T) {
+	var capturedQuery url.Values
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedQuery = r.URL.Query()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"request_id":"x","results":{"channels":[{"alternatives":[{"transcript":""}]}]}}`))
+	}))
+	defer server.Close()
+
+	client := New("test-api-key", "").WithBaseURL(server.URL)
+	_, err := client.FromURL(context.Background(),
+		"https://example.invalid/audio.wav",
+		&PreRecordedTranscriptionOptions{
+			Model:                 "nova-3",
+			AdditionalQueryParams: url.Values{"extra": []string{"customer-tag"}},
+		})
+	if err != nil {
+		t.Fatalf("FromURL returned error: %v", err)
+	}
+
+	if got := capturedQuery.Get("extra"); got != "customer-tag" {
+		t.Errorf("?extra: got %q, want %q (AdditionalQueryParams must be able to set the real ?extra= param)", got, "customer-tag")
 	}
 }
 

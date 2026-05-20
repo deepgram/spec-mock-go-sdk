@@ -1,10 +1,10 @@
-// Example: Request Options — arbitrary query parameters via Extra.
+// Example: Request Options — arbitrary query parameters.
 //
-// PreRecordedTranscriptionOptions.Extra is the escape hatch for
-// sending query parameters the SDK does not yet expose as typed
-// fields. Use it when Deepgram ships a new parameter on the API
-// before the SDK has been updated to recognise it. When a key in
-// Extra collides with a typed field, the Extra value wins.
+// PreRecordedTranscriptionOptions.AdditionalQueryParams is the escape
+// hatch for sending query parameters the SDK does not yet expose as
+// typed fields. Use it when Deepgram ships a new parameter on the
+// API before the SDK has been updated to recognise it. On collision
+// with a typed field, AdditionalQueryParams wins.
 
 package main
 
@@ -26,7 +26,7 @@ func main() {
 		&restv1.PreRecordedTranscriptionOptions{
 			Model:       "nova-3",
 			SmartFormat: true,
-			Extra: url.Values{
+			AdditionalQueryParams: url.Values{
 				"experimental_feature": []string{"true"},
 				"custom_tag":           []string{"a", "b"},
 			},

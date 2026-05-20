@@ -72,13 +72,13 @@ type PreRecordedTranscriptionOptions struct {
 
 	Version         string   `json:"version,omitempty"          schema:"version,omitempty"`
 
-	// Extra carries arbitrary additional query parameters to send with
-	// the request. Keys are query-parameter names, values are raw string
-	// values. Multiple values per key produce repeated ?key=v1&key=v2
-	// entries. When a key collides with one of the typed fields above,
-	// the Extra value wins.
+	// AdditionalQueryParams carries arbitrary query parameters to send
+	// with the request. Keys are query-parameter names, values are raw
+	// string values. Multiple values per key produce repeated
+	// ?key=v1&key=v2 entries. When a key collides with one of the typed
+	// fields above, AdditionalQueryParams wins.
 	//
-	// Use Extra when Deepgram ships a new parameter on the API that this
+	// Use this when Deepgram ships a new parameter on the API that the
 	// SDK has not yet been updated to expose with a typed field.
-	Extra url.Values `json:"-" schema:"-"`
+	AdditionalQueryParams url.Values `json:"-" schema:"-"`
 }

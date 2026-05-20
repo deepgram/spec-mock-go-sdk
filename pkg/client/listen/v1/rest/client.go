@@ -150,9 +150,9 @@ func (c *Client) FromStream(ctx context.Context, r io.Reader, contentType string
 
 func (c *Client) invoke(ctx context.Context, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error) {
 	input := optionsToTranscribeInput(opts)
-	var extra url.Values
+	var additional url.Values
 	if opts != nil {
-		extra = opts.Extra
+		additional = opts.AdditionalQueryParams
 	}
 	out, err := httptransport.Invoke[spectypes.TranscribeInput, spectypes.TranscribeOutput](
 		ctx,
@@ -166,7 +166,7 @@ func (c *Client) invoke(ctx context.Context, opts *PreRecordedTranscriptionOptio
 		},
 		input,
 		body,
-		extra,
+		additional,
 	)
 	if err != nil {
 		return nil, err
