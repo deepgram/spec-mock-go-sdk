@@ -5,6 +5,7 @@
 // it's normally written by ProtocolDocumentGenerator during full
 // client codegen; without it the types package fails to compile.
 
+
 package types
 
 import smithydocument "github.com/aws/smithy-go/document"

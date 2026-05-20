@@ -16,6 +16,7 @@
 // These values feed transport/http.Invoke[I, O any] which uses
 // reflection on the named fields to assemble *http.Request objects.
 
+
 package types
 
 import (
@@ -186,5 +187,6 @@ var TranscribeRoute = httptransport.HTTPRoute{
 		{GoField: "ContentType", WireName: "Content-Type"},
 	},
 	PayloadField: "Body",
-	DecodeError:  decodeTranscribeError,
+	DecodeError: decodeTranscribeError,
 }
+
