@@ -130,3 +130,8 @@ func TestWires_Version(t *testing.T) {
 	in := optionsToStreamInput(&LiveTranscriptionOptions{Version: "latest"})
 	requireWired(t, in, "Version")
 }
+
+func TestFacadeOnly_AdditionalQueryParams(t *testing.T) {
+	opts := &LiveTranscriptionOptions{}
+	requireFacadeOnly(t, opts, "AdditionalQueryParams")
+}
