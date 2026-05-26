@@ -5,7 +5,13 @@
 
 package prerecordedv1
 
-import spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
+import (
+	"net/url"
+	"reflect"
+	"strconv"
+
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
+)
 
 func optionsToTranscribeInput(o *PreRecordedTranscriptionOptions) *spectypes.TranscribeInput {
 	in := &spectypes.TranscribeInput{}
@@ -147,6 +153,97 @@ func optionsToTranscribeInput(o *PreRecordedTranscriptionOptions) *spectypes.Tra
 	return in
 }
 
+func prerecordedOptionsToQuery(o *PreRecordedTranscriptionOptions) url.Values {
+	q := optionsStructToQuery(o)
+	if o != nil {
+		for k, vs := range o.AdditionalQueryParams {
+			q.Del(k)
+			for _, v := range vs {
+				q.Add(k, v)
+			}
+		}
+	}
+	return q
+}
+
+func optionsStructToQuery(opts any) url.Values {
+	q := url.Values{}
+	if opts == nil {
+		return q
+	}
+	v := reflect.ValueOf(opts)
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return q
+		}
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return q
+	}
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i)
+		name := field.Tag.Get("schema")
+		if name == "" || name == "-" {
+			continue
+		}
+		if comma := stringsIndexByte(name, ','); comma >= 0 {
+			name = name[:comma]
+		}
+		fv := v.Field(i)
+		if isZeroQueryField(fv) {
+			continue
+		}
+		addQueryField(q, name, fv)
+	}
+	return q
+}
+func stringsIndexByte(s string, c byte) int {
+	for i := 0; i < len(s); i++ {
+		if s[i] == c {
+			return i
+		}
+	}
+	return -1
+}
+func isZeroQueryField(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	case reflect.Slice, reflect.Map, reflect.String:
+		return v.Len() == 0
+	default:
+		return v.IsZero()
+	}
+}
+func addQueryField(q url.Values, name string, v reflect.Value) {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return
+		}
+		v = v.Elem()
+	}
+	if v.Kind() == reflect.Slice {
+		for i := 0; i < v.Len(); i++ {
+			addQueryField(q, name, v.Index(i))
+		}
+		return
+	}
+	switch v.Kind() {
+	case reflect.String:
+		q.Add(name, v.String())
+	case reflect.Bool:
+		q.Add(name, strconv.FormatBool(v.Bool()))
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		q.Add(name, strconv.FormatInt(v.Int(), 10))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		q.Add(name, strconv.FormatUint(v.Uint(), 10))
+	case reflect.Float32, reflect.Float64:
+		q.Add(name, strconv.FormatFloat(v.Float(), 'g', -1, 64))
+	}
+}
+
 func convertTranscribeOutput(in *spectypes.TranscribeOutput) *PreRecordedResponse {
 	if in == nil {
 		return nil
@@ -154,6 +251,33 @@ func convertTranscribeOutput(in *spectypes.TranscribeOutput) *PreRecordedRespons
 	out := &PreRecordedResponse{}
 	if in.RequestId != nil {
 		out.RequestID = *in.RequestId
+	}
+	if in.Metadata != nil {
+		out.Metadata = &Metadata{}
+		if in.Metadata.RequestId != nil {
+			out.Metadata.RequestID = *in.Metadata.RequestId
+		}
+	}
+	if in.Results != nil {
+		out.Results = &Result{}
+		for _, ch := range in.Results.Channels {
+			outCh := Channel{}
+			for _, alt := range ch.Alternatives {
+				outAlt := Alternative{}
+				if alt.Transcript != nil {
+					outAlt.Transcript = *alt.Transcript
+				}
+				outCh.Alternatives = append(outCh.Alternatives, outAlt)
+			}
+			out.Results.Channels = append(out.Results.Channels, outCh)
+		}
+		for _, utt := range in.Results.Utterances {
+			outUtt := Utterance{}
+			if utt.Transcript != nil {
+				outUtt.Transcript = *utt.Transcript
+			}
+			out.Results.Utterances = append(out.Results.Utterances, outUtt)
+		}
 	}
 	return out
 }

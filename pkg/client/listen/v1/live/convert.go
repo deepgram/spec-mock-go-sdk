@@ -8,6 +8,7 @@ package livev1
 import (
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	"net/url"
+	"reflect"
 	"strconv"
 )
 
@@ -109,45 +110,115 @@ func optionsToStreamInput(o *LiveTranscriptionOptions) *spectypes.StreamInput {
 	}
 	return in
 }
-func streamInputQueryString(in *spectypes.StreamInput) string {
+func liveOptionsToQuery(o *LiveTranscriptionOptions) url.Values {
+	q := optionsStructToQuery(o)
+	if o != nil {
+		for k, vs := range o.AdditionalQueryParams {
+			q.Del(k)
+			for _, v := range vs {
+				q.Add(k, v)
+			}
+		}
+	}
+	return q
+}
+func optionsStructToQuery(opts any) url.Values {
 	q := url.Values{}
-	if in.Channels != nil {
-		q.Set("channels", strconv.FormatInt(int64(*in.Channels), 10))
+	if opts == nil {
+		return q
 	}
-	if in.Model != nil {
-		q.Set("model", *in.Model)
+	v := reflect.ValueOf(opts)
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return q
+		}
+		v = v.Elem()
 	}
-	if in.Encoding != nil {
-		q.Set("encoding", *in.Encoding)
+	if v.Kind() != reflect.Struct {
+		return q
 	}
-	if in.SampleRate != nil {
-		q.Set("sample_rate", strconv.FormatInt(int64(*in.SampleRate), 10))
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i)
+		name := field.Tag.Get("schema")
+		if name == "" || name == "-" {
+			continue
+		}
+		if comma := stringsIndexByte(name, ','); comma >= 0 {
+			name = name[:comma]
+		}
+		fv := v.Field(i)
+		if isZeroQueryField(fv) {
+			continue
+		}
+		addQueryField(q, name, fv)
 	}
-	if in.InterimResults != nil {
-		q.Set("interim_results", strconv.FormatBool(*in.InterimResults))
+	return q
+}
+func stringsIndexByte(s string, c byte) int {
+	for i := 0; i < len(s); i++ {
+		if s[i] == c {
+			return i
+		}
 	}
-	for _, v := range in.Keyterm {
-		q.Add("keyterm", v)
+	return -1
+}
+func isZeroQueryField(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	case reflect.Slice, reflect.Map, reflect.String:
+		return v.Len() == 0
+	default:
+		return v.IsZero()
 	}
-	for _, v := range in.Keywords {
-		q.Add("keywords", v)
+}
+func addQueryField(q url.Values, name string, v reflect.Value) {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return
+		}
+		v = v.Elem()
 	}
-	return q.Encode()
+	if v.Kind() == reflect.Slice {
+		for i := 0; i < v.Len(); i++ {
+			addQueryField(q, name, v.Index(i))
+		}
+		return
+	}
+	switch v.Kind() {
+	case reflect.String:
+		q.Add(name, v.String())
+	case reflect.Bool:
+		q.Add(name, strconv.FormatBool(v.Bool()))
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		q.Add(name, strconv.FormatInt(v.Int(), 10))
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		q.Add(name, strconv.FormatUint(v.Uint(), 10))
+	case reflect.Float32, reflect.Float64:
+		q.Add(name, strconv.FormatFloat(v.Float(), 'g', -1, 64))
+	}
 }
 func fromServerStream(msg spectypes.ServerStream) Event {
 	switch m := msg.(type) {
 	case *spectypes.ServerStreamMemberResults:
-		return &ResultsEvent{}
+		v := ResultsEvent(m.Value)
+		return &v
 	case *spectypes.ServerStreamMemberMetadata:
-		return &MetadataEvent{}
+		v := MetadataEvent(m.Value)
+		return &v
 	case *spectypes.ServerStreamMemberSpeechStarted:
-		return &SpeechStartedEvent{}
+		v := SpeechStartedEvent(m.Value)
+		return &v
 	case *spectypes.ServerStreamMemberUtteranceEnd:
-		return &UtteranceEndEvent{}
+		v := UtteranceEndEvent(m.Value)
+		return &v
 	case *spectypes.ServerStreamMemberError:
-		return &ErrorEvent{}
+		v := ErrorEvent(m.Value)
+		return &v
 	case *spectypes.ServerStreamMemberSync:
-		return &SyncEvent{}
+		v := SyncEvent(m.Value)
+		return &v
 	default:
 		_ = m
 		return nil

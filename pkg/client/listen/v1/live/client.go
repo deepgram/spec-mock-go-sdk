@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	nethttp "net/http"
-	"net/url"
 	"os"
 	"time"
 
@@ -83,25 +82,10 @@ func (webSocketBinding) connect(ctx context.Context, c *Client, opts *LiveTransc
 	if err != nil {
 		return nil, err
 	}
-	query := streamInputQueryString(optionsToStreamInput(opts))
+	query := liveOptionsToQuery(opts).Encode()
 	dialURL := c.baseURL + streamPath
 	if query != "" {
 		dialURL += "?" + query
-	}
-	if opts != nil && len(opts.AdditionalQueryParams) > 0 {
-		parsed, parseErr := url.Parse(dialURL)
-		if parseErr != nil {
-			return nil, fmt.Errorf("listen live: parse dial URL: %w", parseErr)
-		}
-		q := parsed.Query()
-		for k, vs := range opts.AdditionalQueryParams {
-			q.Del(k)
-			for _, v := range vs {
-				q.Add(k, v)
-			}
-		}
-		parsed.RawQuery = q.Encode()
-		dialURL = parsed.String()
 	}
 	return wstransport.OpenStream[spectypes.ClientStream, spectypes.ServerStream](ctx, dialURL, headers, spectypes.MarshalClientStream, spectypes.UnmarshalServerStream)
 }

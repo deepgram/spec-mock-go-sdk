@@ -32,7 +32,7 @@ type Client struct {
 type Option func(*Client)
 
 type prerecordedTransport interface {
-	invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error)
+	invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, audioURL string, body io.Reader) (*PreRecordedResponse, error)
 }
 
 func New(opts ...Option) *Client {
@@ -82,8 +82,7 @@ func (c *Client) WithHTTPClient(client *nethttp.Client) *Client {
 }
 
 func (c *Client) FromURL(ctx context.Context, audioURL string, opts *PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
-	body := strings.NewReader(`{"url":` + jsonQuote(audioURL) + `}`)
-	return c.invoke(ctx, opts, "application/json", body)
+	return c.invoke(ctx, opts, "application/json", audioURL, nil)
 }
 
 func (c *Client) FromFile(ctx context.Context, path, contentType string, opts *PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
@@ -99,14 +98,14 @@ func (c *Client) FromStream(ctx context.Context, r io.Reader, contentType string
 	if contentType == "" {
 		contentType = "audio/*"
 	}
-	return c.invoke(ctx, opts, contentType, r)
+	return c.invoke(ctx, opts, contentType, "", r)
 }
 
-func (c *Client) invoke(ctx context.Context, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error) {
+func (c *Client) invoke(ctx context.Context, opts *PreRecordedTranscriptionOptions, contentType string, audioURL string, body io.Reader) (*PreRecordedResponse, error) {
 	if c.transport == nil {
 		WithHTTPTransport()(c)
 	}
-	return c.transport.invoke(ctx, c, opts, contentType, body)
+	return c.transport.invoke(ctx, c, opts, contentType, audioURL, body)
 }
 
 type listenAuthenticator struct{ apiKey, accessToken, contentType string }
@@ -130,8 +129,11 @@ type httpBinding struct{}
 
 func WithHTTPTransport() Option { return func(c *Client) { c.transport = httpBinding{} } }
 
-func (httpBinding) invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error) {
+func (httpBinding) invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, audioURL string, body io.Reader) (*PreRecordedResponse, error) {
 	input := optionsToTranscribeInput(opts)
+	if body == nil && audioURL != "" {
+		body = strings.NewReader(`{"url":` + jsonQuote(audioURL) + `}`)
+	}
 	var additional urlValues
 	if opts != nil {
 		additional = opts.AdditionalQueryParams

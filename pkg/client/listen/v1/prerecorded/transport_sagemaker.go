@@ -50,25 +50,25 @@ func WithEnableExplanations(v string) SageMakerOption {
 	return func(b *sageMakerBinding) { b.enableExplanations = v }
 }
 
-func (t sageMakerBinding) invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error) {
+func (t sageMakerBinding) invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, audioURL string, body io.Reader) (*PreRecordedResponse, error) {
 	_ = c
-	_ = contentType
 	if t.client == nil {
 		return nil, fmt.Errorf("listen prerecorded sagemaker: nil client")
 	}
-	input := optionsToTranscribeInput(opts)
+	var payload []byte
 	if body != nil {
 		data, err := io.ReadAll(body)
 		if err != nil {
 			return nil, err
 		}
-		input.Body = &spectypes.TranscribeRequestBodyMemberAudio{Value: data}
+		payload = data
+	} else if audioURL != "" {
+		payload = []byte(`{"url":` + jsonQuote(audioURL) + `}`)
 	}
-	payload, err := json.Marshal(input)
-	if err != nil {
-		return nil, fmt.Errorf("listen prerecorded sagemaker: marshal input: %w", err)
+	ct := contentType
+	if ct == "" {
+		ct = "application/json"
 	}
-	ct := "application/json"
 	req := &sagemakerruntime.InvokeEndpointInput{EndpointName: &t.endpointName, ContentType: &ct, Body: payload}
 	if t.targetVariant != "" {
 		req.TargetVariant = &t.targetVariant
@@ -82,10 +82,9 @@ func (t sageMakerBinding) invoke(ctx context.Context, c *Client, opts *PreRecord
 	if t.enableExplanations != "" {
 		req.EnableExplanations = &t.enableExplanations
 	}
-	if opts != nil && len(opts.AdditionalQueryParams) > 0 {
-		attrs := opts.AdditionalQueryParams.Encode()
-		req.CustomAttributes = &attrs
-	}
+	query := prerecordedOptionsToQuery(opts).Encode()
+	attrs := "v1/listen?" + query
+	req.CustomAttributes = &attrs
 	resp, err := t.client.InvokeEndpoint(ctx, req)
 	if err != nil {
 		return nil, err
