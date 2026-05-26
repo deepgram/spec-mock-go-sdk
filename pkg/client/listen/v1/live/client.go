@@ -113,7 +113,20 @@ func (s *Stream) SendAudio(data []byte) error {
 	if s.maxFrameSize > 0 && len(data) > s.maxFrameSize {
 		return fmt.Errorf("%w: %d > %d", ErrFrameTooLarge, len(data), s.maxFrameSize)
 	}
-	return s.transport.Send(&spectypes.ClientStreamMemberAudio{Value: spectypes.AudioFrame{Data: data}})
+	msg := &spectypes.ClientStreamMemberAudio{Value: spectypes.AudioFrame{Data: data}}
+	if s.sendTimeout <= 0 {
+		return s.transport.Send(msg)
+	}
+	done := make(chan error, 1)
+	go func() { done <- s.transport.Send(msg) }()
+	timer := time.NewTimer(s.sendTimeout)
+	defer timer.Stop()
+	select {
+	case err := <-done:
+		return err
+	case <-timer.C:
+		return ErrSendTimeout
+	}
 }
 func (s *Stream) CloseStream() error {
 	return s.transport.Send(&spectypes.ClientStreamMemberCloseStream{Value: spectypes.CloseStream{}})

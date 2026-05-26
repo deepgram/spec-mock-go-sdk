@@ -5,3 +5,64 @@
 // generated, while *_test.go files remain human-maintained.
 
 package livev1
+
+import (
+	"reflect"
+	"testing"
+)
+
+func requireWired(t *testing.T, input any, field string) {
+	t.Helper()
+	v := reflect.ValueOf(input)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		t.Fatalf("input must be a non-nil pointer, got %T", input)
+	}
+	f := v.Elem().FieldByName(field)
+	if !f.IsValid() {
+		t.Fatalf("spectypes.StreamInput has no field %q yet — spec needs to model it before the converter can wire it through.", field)
+	}
+	if isZeroForWire(f) {
+		t.Fatalf("spectypes.StreamInput.%s exists but optionsToStreamInput didn't wire it.", field)
+	}
+}
+
+func requireDropped(t *testing.T, input any, field string) {
+	t.Helper()
+	v := reflect.ValueOf(input)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		t.Fatalf("input must be a non-nil pointer, got %T", input)
+	}
+	f := v.Elem().FieldByName(field)
+	if !f.IsValid() {
+		return
+	}
+	if !isZeroForWire(f) {
+		t.Fatalf("spectypes.StreamInput.%s should not be wired.", field)
+	}
+}
+
+func requireFacadeOnly(t *testing.T, opts any, field string) {
+	t.Helper()
+	opt := reflect.ValueOf(opts)
+	if opt.Kind() != reflect.Ptr || opt.IsNil() {
+		t.Fatalf("opts must be a non-nil pointer, got %T", opts)
+	}
+	if !opt.Elem().FieldByName(field).IsValid() {
+		t.Fatalf("options %T has no field %q", opts, field)
+	}
+	in := optionsToStreamInput(opts.(*LiveTranscriptionOptions))
+	if reflect.ValueOf(in).Elem().FieldByName(field).IsValid() {
+		t.Fatalf("wire input unexpectedly has field %q", field)
+	}
+}
+
+func isZeroForWire(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	case reflect.Slice, reflect.Map, reflect.String:
+		return v.Len() == 0
+	default:
+		return v.IsZero()
+	}
+}

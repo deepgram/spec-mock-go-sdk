@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2"
 	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2/types"
@@ -38,6 +39,10 @@ func OpenStream[C any, S any](
 	endpointName string,
 	modelInvocationPath string,
 	modelQueryString string,
+	targetVariant string,
+	targetModel string,
+	inferenceID string,
+	enableExplanations string,
 	marshal func(C) ([]byte, bool, error),
 	unmarshal func([]byte) (S, error),
 ) (Stream[C, S], error) {
@@ -57,6 +62,12 @@ func OpenStream[C any, S any](
 	if modelQueryString != "" {
 		req.ModelQueryString = &modelQueryString
 	}
+	if targetVariant != "" {
+		req.TargetVariant = &targetVariant
+	}
+	setStringField(req, "TargetModel", targetModel)
+	setStringField(req, "InferenceId", inferenceID)
+	setStringField(req, "EnableExplanations", enableExplanations)
 	out, err := client.InvokeEndpointWithBidirectionalStream(ctx, req)
 	if err != nil {
 		return nil, err
@@ -66,6 +77,21 @@ func OpenStream[C any, S any](
 		return nil, fmt.Errorf("sagemaker.OpenStream: nil event stream")
 	}
 	return &bidiStream[C, S]{ctx: ctx, events: eventStream, marshal: marshal, unmarshal: unmarshal}, nil
+}
+
+func setStringField(target any, name string, value string) {
+	if value == "" {
+		return
+	}
+	v := reflect.ValueOf(target)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return
+	}
+	f := v.Elem().FieldByName(name)
+	if !f.IsValid() || !f.CanSet() || f.Kind() != reflect.Ptr || f.Type().Elem().Kind() != reflect.String {
+		return
+	}
+	f.Set(reflect.ValueOf(&value))
 }
 
 type bidiStream[C any, S any] struct {
