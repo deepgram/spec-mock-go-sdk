@@ -6,6 +6,20 @@
 
 package prerecordedv1
 
+// PreRecordedResponse carries the prerecorded transcription
+// result. The populated fields depend on whether the request
+// set the Callback option:
+//
+//   - Synchronous (no Callback): Metadata and Results are
+//     populated; the transcript is at
+//     Results.Channels[i].Alternatives[j].Transcript. The
+//     top-level RequestID is empty -- read Metadata.RequestID
+//     for the request identifier.
+//
+//   - Callback (Callback option set): only RequestID is
+//     populated. Metadata and Results are nil because the
+//     transcript is delivered asynchronously to the customer's
+//     callback URL.
 type PreRecordedResponse struct {
 	RequestID string    `json:"request_id,omitempty"`
 	Metadata  *Metadata `json:"metadata,omitempty"`
