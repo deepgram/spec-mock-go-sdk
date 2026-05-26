@@ -35,5 +35,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(resp.RequestID)
+	if resp.Results != nil && len(resp.Results.Channels) > 0 && len(resp.Results.Channels[0].Alternatives) > 0 {
+		fmt.Println(resp.Results.Channels[0].Alternatives[0].Transcript)
+	}
+	if resp.Metadata != nil {
+		fmt.Println("request_id:", resp.Metadata.RequestID)
+	}
 }
