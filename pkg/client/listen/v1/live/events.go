@@ -5,27 +5,29 @@
 
 package livev1
 
+import spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
+
 type Event interface{ isEvent() }
-type ResultsEvent struct{}
+type ResultsEvent spectypes.StreamingResponse
 
 func (*ResultsEvent) isEvent() {}
 
-type MetadataEvent struct{}
+type MetadataEvent spectypes.WsMetadata
 
 func (*MetadataEvent) isEvent() {}
 
-type SpeechStartedEvent struct{}
+type SpeechStartedEvent spectypes.SpeechStarted
 
 func (*SpeechStartedEvent) isEvent() {}
 
-type UtteranceEndEvent struct{}
+type UtteranceEndEvent spectypes.UtteranceEnd
 
 func (*UtteranceEndEvent) isEvent() {}
 
-type ErrorEvent struct{}
+type ErrorEvent spectypes.WsError
 
 func (*ErrorEvent) isEvent() {}
 
-type SyncEvent struct{}
+type SyncEvent spectypes.ServerSync
 
 func (*SyncEvent) isEvent() {}

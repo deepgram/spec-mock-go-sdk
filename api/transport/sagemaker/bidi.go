@@ -36,6 +36,8 @@ func OpenStream[C any, S any](
 	ctx context.Context,
 	client *sagemakerruntimehttp2.Client,
 	endpointName string,
+	modelInvocationPath string,
+	modelQueryString string,
 	marshal func(C) ([]byte, bool, error),
 	unmarshal func([]byte) (S, error),
 ) (Stream[C, S], error) {
@@ -48,9 +50,14 @@ func OpenStream[C any, S any](
 	if unmarshal == nil {
 		return nil, fmt.Errorf("sagemaker.OpenStream: nil unmarshal")
 	}
-	out, err := client.InvokeEndpointWithBidirectionalStream(ctx, &sagemakerruntimehttp2.InvokeEndpointWithBidirectionalStreamInput{
-		EndpointName: &endpointName,
-	})
+	req := &sagemakerruntimehttp2.InvokeEndpointWithBidirectionalStreamInput{EndpointName: &endpointName}
+	if modelInvocationPath != "" {
+		req.ModelInvocationPath = &modelInvocationPath
+	}
+	if modelQueryString != "" {
+		req.ModelQueryString = &modelQueryString
+	}
+	out, err := client.InvokeEndpointWithBidirectionalStream(ctx, req)
 	if err != nil {
 		return nil, err
 	}
