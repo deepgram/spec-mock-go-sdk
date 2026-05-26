@@ -8,6 +8,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23 h1:bpd8vxhlQi2r1hiueO
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.23/go.mod h1:15DfR2nw+CRHIk0tqNyifu3G1YdAOy68RftkhMDDwYk=
 github.com/aws/aws-sdk-go-v2/service/sagemakerruntime v1.39.8 h1:LTjPUNvtRSXiyeaLjvZHmThBFMO8GiKBtbxkjTWx1Cs=
 github.com/aws/aws-sdk-go-v2/service/sagemakerruntime v1.39.8/go.mod h1:3/x9jU309sUv3NMzQD2GJ9hcVIhMMu97CiVaxu4wxJA=
+github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2 v1.0.12 h1:vjZs/ul12OYYNodYnEogcljgow06N4X4/J0c9ft99So=
+github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2 v1.0.12/go.mod h1:f78H3aP/KROKcwSv3E268MVbBKho9ZwYfqSoCHmxt8w=
 github.com/aws/smithy-go v1.25.1 h1:J8ERsGSU7d+aCmdQur5Txg6bVoYelvQJgtZehD12GkI=
 github.com/aws/smithy-go v1.25.1/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=

@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/aws/aws-sdk-go-v2/service/sagemakerruntime v1.39.8
+	github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2 v1.0.12
 	github.com/aws/smithy-go v1.25.1
 	github.com/gorilla/websocket v1.5.3
 )
