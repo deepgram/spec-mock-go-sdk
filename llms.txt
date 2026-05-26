@@ -1,6 +1,6 @@
 # Deepgram Go SDK
 
-> Go SDK for the Deepgram speech-to-text API: prerecorded transcription and live streaming transcription over REST and WebSocket. Smart formatting, diarization, language detection, entity detection, intents, sentiment, summarization, topic detection. Runs on Go 1.22+.
+> Go SDK for the Deepgram speech-to-text API: prerecorded transcription and live streaming transcription over HTTP, WebSocket, and SageMaker transports. Smart formatting, diarization, language detection, entity detection, intents, sentiment, summarization, topic detection. Runs on Go 1.24+.
 
 ## Install
 
@@ -10,43 +10,41 @@ go get github.com/deepgram/spec-mock-go-sdk
 
 ## Quick start
 
-- [README.md](README.md) — install, runnable examples for both transports, auth.
-- [pkg/client/listen/v1/rest/example_test.go](pkg/client/listen/v1/rest/example_test.go) — runnable REST examples per method.
-- [pkg/client/listen/v1/websocket/example_test.go](pkg/client/listen/v1/websocket/example_test.go) — runnable WebSocket examples per method.
+- [README.md](README.md) — install, runnable examples for both transcription packages, auth.
+- [pkg/client/listen/v1/prerecorded/example_test.go](pkg/client/listen/v1/prerecorded/example_test.go) — runnable prerecorded examples per method.
+- [pkg/client/listen/v1/live/example_test.go](pkg/client/listen/v1/live/example_test.go) — runnable live examples per method.
 
-## Runnable examples (REST)
+## Runnable examples (prerecorded)
 
-Every exported symbol has a matching `Example_*` function in [`example_test.go`](pkg/client/listen/v1/rest/example_test.go):
+Every exported method has a matching `Example_*` function in [`example_test.go`](pkg/client/listen/v1/prerecorded/example_test.go):
 
-- `ExampleNew` — explicit credentials
-- `ExampleNewWithDefaults` — env-backed credentials
-- `ExampleClient_WithBaseURL` — point at a staging endpoint
-- `ExampleClient_WithHTTPClient` — supply a custom `*http.Client`
-- `ExampleClient_FromURL` — transcribe a remote URL
-- `ExampleClient_FromFile` — transcribe a local file
-- `ExampleClient_FromStream` — transcribe an `io.Reader`
-- `ExamplePreRecordedTranscriptionOptions` — every public query parameter
+- `ExampleClient_FromURL` — transcribe a remote URL.
+- `ExampleClient_FromFile` — transcribe a local file.
+- `ExampleClient_FromStream` — transcribe an `io.Reader`.
+- `ExamplePreRecordedTranscriptionOptions` — typed options plus additional query parameters.
+- `ExampleWithSageMakerTransport` — use SageMaker for prerecorded transcription.
 
-## Runnable examples (WebSocket)
+## Runnable examples (live)
 
-Every exported symbol has a matching `Example_*` function in [`example_test.go`](pkg/client/listen/v1/websocket/example_test.go):
+Every exported method has a matching `Example_*` function in [`example_test.go`](pkg/client/listen/v1/live/example_test.go):
 
-- `ExampleNew`, `ExampleNewWithDefaults`, `ExampleClient_WithBaseURL`
-- `ExampleClient_Connect` — open a live session
-- `ExampleStream_SendAudio` — push audio bytes
-- `ExampleStream_Recv` — receive typed events (`ResultsEvent`, `MetadataEvent`, etc)
-- `ExampleStream_Finalize`, `ExampleStream_KeepAlive`, `ExampleStream_Sync`
-- `ExampleStream_CloseStream` — graceful end-of-audio
-- `ExampleStream_Close` — terminate the connection
-- `ExampleLiveTranscriptionOptions` — every public query parameter
+- `ExampleClient_Connect` — open a live session.
+- `ExampleStream_SendAudio` — push audio bytes.
+- `ExampleStream_Recv` — receive typed events.
+- `ExampleStream_Finalize` — request final results.
+- `ExampleStream_KeepAlive` — keep the session active.
+- `ExampleStream_CloseStream` — graceful end-of-audio.
+- `ExampleLiveTranscriptionOptions` — typed live options plus additional query parameters.
+- `ExampleWithSageMakerBidiTransport` — use SageMaker HTTP/2 bidirectional streaming.
 
 ## Tutorials
 
-The [`examples/`](examples) directory has standalone runnable programs for common scenarios: authentication, prerecorded URL/file/callback transcription, live WebSocket streaming, advanced options, request options, and error handling.
+The [`examples/`](examples) directory has standalone runnable programs for common scenarios: authentication, prerecorded URL/file/callback transcription, live WebSocket streaming, SageMaker transports, advanced options, request options, and error handling.
 
 ## Integration tests
 
-- [pkg/client/listen/v1/rest/client_test.go](pkg/client/listen/v1/rest/client_test.go) — `httptest`-driven REST tests: auth header precedence, query-param wiring, body shape, response parsing, typed errors via `errors.As`.
+- [pkg/client/listen/v1/prerecorded/client_test.go](pkg/client/listen/v1/prerecorded/client_test.go) — `httptest`-driven prerecorded tests for constructor options and query-parameter precedence.
+- [pkg/client/listen/v1/live/resilience_test.go](pkg/client/listen/v1/live/resilience_test.go) — live stream send and configuration tests.
 
 ## Optional
 
