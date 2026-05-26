@@ -46,10 +46,6 @@ func WithEnableExplanations(v string) SageMakerOption {
 }
 func (t sageMakerBidiBinding) connect(ctx context.Context, c *Client, opts *LiveTranscriptionOptions) (wireStream, error) {
 	_ = c
-	_ = t.targetVariant
-	_ = t.targetModel
-	_ = t.inferenceID
-	_ = t.enableExplanations
 	query := liveOptionsToQuery(opts).Encode()
-	return sm.OpenStream(ctx, t.client, t.endpointName, "v1/listen", query, spectypes.MarshalClientStream, spectypes.UnmarshalServerStream)
+	return sm.OpenStream(ctx, t.client, t.endpointName, "v1/listen", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalClientStream, spectypes.UnmarshalServerStream)
 }

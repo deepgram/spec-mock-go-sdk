@@ -8,6 +8,7 @@ package livev1
 import (
 	"context"
 	"errors"
+	"fmt"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	"time"
 )
@@ -34,8 +35,11 @@ var ErrFrameTooLarge = errors.New("listen live: audio frame exceeds Config.MaxFr
 var ErrSendTimeout = errors.New("listen live: SendAudio exceeded Config.SendTimeout")
 
 func (s *Stream) SendAudioContext(ctx context.Context, data []byte) error {
+	if s.maxFrameSize > 0 && len(data) > s.maxFrameSize {
+		return fmt.Errorf("%w: %d > %d", ErrFrameTooLarge, len(data), s.maxFrameSize)
+	}
 	if ctx == nil {
-		return s.transport.Send(&spectypes.ClientStreamMemberAudio{Value: spectypes.AudioFrame{Data: data}})
+		return s.SendAudio(data)
 	}
 	done := make(chan error, 1)
 	go func() {

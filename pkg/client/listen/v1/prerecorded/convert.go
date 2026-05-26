@@ -249,35 +249,315 @@ func convertTranscribeOutput(in *spectypes.TranscribeOutput) *PreRecordedRespons
 		return nil
 	}
 	out := &PreRecordedResponse{}
-	if in.RequestId != nil {
+	if in.Metadata == nil && in.Results == nil && in.RequestId != nil {
 		out.RequestID = *in.RequestId
 	}
-	if in.Metadata != nil {
-		out.Metadata = &Metadata{}
-		if in.Metadata.RequestId != nil {
-			out.Metadata.RequestID = *in.Metadata.RequestId
-		}
+	out.Metadata = convertResponseMetadata(in.Metadata)
+	out.Results = convertResponseResults(in.Results)
+	return out
+}
+
+func convertResponseMetadata(in *spectypes.ResponseMetadata) *Metadata {
+	if in == nil {
+		return nil
 	}
-	if in.Results != nil {
-		out.Results = &Result{}
-		for _, ch := range in.Results.Channels {
-			outCh := Channel{}
-			for _, alt := range ch.Alternatives {
-				outAlt := Alternative{}
-				if alt.Transcript != nil {
-					outAlt.Transcript = *alt.Transcript
-				}
-				outCh.Alternatives = append(outCh.Alternatives, outAlt)
-			}
-			out.Results.Channels = append(out.Results.Channels, outCh)
-		}
-		for _, utt := range in.Results.Utterances {
-			outUtt := Utterance{}
-			if utt.Transcript != nil {
-				outUtt.Transcript = *utt.Transcript
-			}
-			out.Results.Utterances = append(out.Results.Utterances, outUtt)
-		}
+	return &Metadata{Channels: derefInt32(in.Channels), Created: derefStr(in.Created), Duration: derefF32(in.Duration), ModelInfo: convertModelInfoMap(in.ModelInfo), RequestID: derefStr(in.RequestId), Sha256: derefStr(in.Sha256), TransactionKey: derefStr(in.TransactionKey), Extra: in.Extra, IntentsInfo: convertTokenMetadata(in.IntentsInfo), Models: in.Models, ProcessingTime: derefF32(in.ProcessingTime), SentimentInfo: convertTokenMetadata(in.SentimentInfo), SummaryInfo: convertTokenMetadata(in.SummaryInfo), Tags: in.Tags, TopicsInfo: convertTokenMetadata(in.TopicsInfo), Warnings: convertWarnings(in.Warnings)}
+}
+
+func convertResponseResults(in *spectypes.ResponseResults) *Result {
+	if in == nil {
+		return nil
+	}
+	return &Result{Channels: convertChannels(in.Channels), Intents: convertIntents(in.Intents), Sentiments: convertAverageSentiment(in.Sentiments), Summary: convertSummaries(in.Summary), Topics: convertTopics(in.Topics), Utterances: convertUtterances(in.Utterances)}
+}
+
+func convertModelInfoMap(in map[string]spectypes.ModelInfo) map[string]ModelInfo {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make(map[string]ModelInfo, len(in))
+	for k, v := range in {
+		out[k] = convertModelInfo(v)
+	}
+	return out
+}
+func convertModelInfo(in spectypes.ModelInfo) ModelInfo {
+	return ModelInfo{Arch: derefStr(in.Arch), Name: derefStr(in.Name), Version: derefStr(in.Version)}
+}
+func convertTokenMetadata(in *spectypes.TokenMetadata) *TokenMetadata {
+	if in == nil {
+		return nil
+	}
+	return &TokenMetadata{InputTokens: derefInt64(in.InputTokens), ModelUuid: derefStr(in.ModelUuid), OutputTokens: derefInt64(in.OutputTokens), Model: derefStr(in.Model)}
+}
+func convertWarnings(in []spectypes.Warning) []Warning {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Warning, 0, len(in))
+	for _, v := range in {
+		out = append(out, Warning{Message: derefStr(v.Message), Parameter: derefStr(v.Parameter), Type: string(v.Type)})
+	}
+	return out
+}
+func convertChannels(in []spectypes.Channel) []Channel {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Channel, 0, len(in))
+	for _, v := range in {
+		out = append(out, convertChannel(v))
+	}
+	return out
+}
+func convertChannel(in spectypes.Channel) Channel {
+	return Channel{Alternatives: convertAlternatives(in.Alternatives), DetectedLanguage: derefStr(in.DetectedLanguage), LanguageConfidence: derefF32(in.LanguageConfidence), Search: convertSearchResults(in.Search), Utterances: int32SliceToInt(in.Utterances)}
+}
+func convertAlternatives(in []spectypes.Alternative) []Alternative {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Alternative, 0, len(in))
+	for _, v := range in {
+		out = append(out, convertAlternative(v))
+	}
+	return out
+}
+func convertAlternative(in spectypes.Alternative) Alternative {
+	return Alternative{Confidence: derefF32(in.Confidence), Transcript: derefStr(in.Transcript), Words: convertWords(in.Words), Entities: convertEntities(in.Entities), Languages: in.Languages, Paragraphs: convertParagraphs(in.Paragraphs), Phonemes: convertPhonemeWords(in.Phonemes), SentimentSegments: convertSentimentSegments(in.SentimentSegments), Summaries: convertSummaries(in.Summaries), Topics: convertTopicSegments(in.Topics), Translations: convertTranslations(in.Translations)}
+}
+func convertWords(in []spectypes.Word) []Word {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Word, 0, len(in))
+	for _, v := range in {
+		out = append(out, convertWord(v))
+	}
+	return out
+}
+func convertWord(in spectypes.Word) Word {
+	return Word{Confidence: derefF32(in.Confidence), End: derefF32(in.End), Start: derefF32(in.Start), Word: derefStr(in.Word), Context: in.Context, FullVec: f32MapToF64(in.FullVec), Language: derefStr(in.Language), PunctuatedWord: derefStr(in.PunctuatedWord), RedactedText: derefStr(in.RedactedText), Sentiment: sentimentToPtrStr(in.Sentiment), SentimentScore: f32ToPtrF64(in.SentimentScore), Speaker: int64ToPtrInt(in.Speaker), SpeakerConfidence: f32ToPtrF64(in.SpeakerConfidence), SpeakerID: derefStr(in.SpeakerId)}
+}
+func convertEntities(in []spectypes.Entity) []Entity {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Entity, 0, len(in))
+	for _, v := range in {
+		out = append(out, Entity{Confidence: derefF32(v.Confidence), EndWord: derefInt32(v.EndWord), Label: derefStr(v.Label), StartWord: derefInt32(v.StartWord), Value: derefStr(v.Value), RawValue: derefStr(v.RawValue)})
+	}
+	return out
+}
+func convertParagraphs(in *spectypes.Paragraphs) *Paragraphs {
+	if in == nil {
+		return nil
+	}
+	return &Paragraphs{Paragraphs: convertParagraphList(in.Paragraphs), Transcript: derefStr(in.Transcript)}
+}
+func convertParagraphList(in []spectypes.Paragraph) []Paragraph {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Paragraph, 0, len(in))
+	for _, v := range in {
+		out = append(out, Paragraph{End: derefF32(v.End), NumWords: derefInt32(v.NumWords), Sentences: convertSentences(v.Sentences), Start: derefF32(v.Start), Channel: int64ToPtrInt(v.Channel), Sentiment: sentimentToPtrStr(v.Sentiment), SentimentScore: f32ToPtrF64(v.SentimentScore), Speaker: int64ToPtrInt(v.Speaker)})
+	}
+	return out
+}
+func convertSentences(in []spectypes.Sentence) []Sentence {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Sentence, 0, len(in))
+	for _, v := range in {
+		out = append(out, Sentence{End: derefF32(v.End), Start: derefF32(v.Start), Text: derefStr(v.Text), Sentiment: sentimentToPtrStr(v.Sentiment), SentimentScore: f32ToPtrF64(v.SentimentScore)})
+	}
+	return out
+}
+func convertPhonemeWords(in []spectypes.PhonemeWord) []PhonemeWord {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]PhonemeWord, 0, len(in))
+	for _, v := range in {
+		out = append(out, PhonemeWord{Confidence: derefF32(v.Confidence), End: derefF32(v.End), Phoneme: derefStr(v.Phoneme), Start: derefF32(v.Start)})
+	}
+	return out
+}
+func convertSentimentSegments(in []spectypes.SitSentimentSegment) []SentimentSegment {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]SentimentSegment, 0, len(in))
+	for _, v := range in {
+		out = append(out, SentimentSegment{EndWord: derefInt32(v.EndWord), Sentiment: string(v.Sentiment), SentimentScore: derefF32(v.SentimentScore), StartWord: derefInt32(v.StartWord), Text: derefStr(v.Text)})
+	}
+	return out
+}
+func convertSummaries(in []spectypes.Summary) []Summary {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Summary, 0, len(in))
+	for _, v := range in {
+		out = append(out, Summary{EndWord: derefInt32(v.EndWord), StartWord: derefInt32(v.StartWord), Summary: derefStr(v.Summary)})
+	}
+	return out
+}
+func convertTopics(in []spectypes.Topic) []Topic {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Topic, 0, len(in))
+	for _, v := range in {
+		out = append(out, convertTopic(v))
+	}
+	return out
+}
+func convertTopic(in spectypes.Topic) Topic {
+	return Topic{ConfidenceScore: derefF32(in.ConfidenceScore), Topic: derefStr(in.Topic)}
+}
+func convertTopicSegments(in []spectypes.TopicSegment) []TopicSegment {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]TopicSegment, 0, len(in))
+	for _, v := range in {
+		out = append(out, TopicSegment{EndWord: derefInt32(v.EndWord), StartWord: derefInt32(v.StartWord), Text: derefStr(v.Text), Topics: convertTopics(v.Topics)})
+	}
+	return out
+}
+func convertTranslations(in []spectypes.Translation) []Translation {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Translation, 0, len(in))
+	for _, v := range in {
+		out = append(out, Translation{Language: derefStr(v.Language), Translation: derefStr(v.Translation)})
+	}
+	return out
+}
+func convertSearchResults(in []spectypes.SearchResult) []SearchResult {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]SearchResult, 0, len(in))
+	for _, v := range in {
+		out = append(out, SearchResult{Hits: convertHits(v.Hits), Query: derefStr(v.Query)})
+	}
+	return out
+}
+func convertHits(in []spectypes.Hit) []Hit {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Hit, 0, len(in))
+	for _, v := range in {
+		out = append(out, Hit{Confidence: derefF32(v.Confidence), End: derefF32(v.End), Start: derefF32(v.Start), Snippet: derefStr(v.Snippet)})
+	}
+	return out
+}
+func convertUtterances(in []spectypes.Utterance) []Utterance {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Utterance, 0, len(in))
+	for _, v := range in {
+		out = append(out, Utterance{Channel: derefInt32(v.Channel), Confidence: derefF32(v.Confidence), End: derefF32(v.End), ID: derefStr(v.Id), Start: derefF32(v.Start), Transcript: derefStr(v.Transcript), Words: convertWords(v.Words), Languages: v.Languages, Sentiment: sentimentToPtrStr(v.Sentiment), SentimentScore: f32ToPtrF64(v.SentimentScore), Speaker: int64ToPtrInt(v.Speaker)})
+	}
+	return out
+}
+func convertIntents(in []spectypes.Intent) []Intent {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]Intent, 0, len(in))
+	for _, v := range in {
+		out = append(out, Intent{ConfidenceScore: derefF32(v.ConfidenceScore), Intent: derefStr(v.Intent)})
+	}
+	return out
+}
+func convertAverageSentiment(in *spectypes.AverageSentiment) *AverageSentiment {
+	if in == nil {
+		return nil
+	}
+	return &AverageSentiment{Average: convertSentimentAggregate(in.Average)}
+}
+func convertSentimentAggregate(in *spectypes.SentimentAggregate) *SentimentAggregate {
+	if in == nil {
+		return nil
+	}
+	return &SentimentAggregate{Sentiment: string(in.Sentiment), SentimentScore: derefF32(in.SentimentScore)}
+}
+func derefStr(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
+}
+func derefF32(v *float32) float64 {
+	if v == nil {
+		return 0
+	}
+	return float64(*v)
+}
+func derefBool(v *bool) bool {
+	if v == nil {
+		return false
+	}
+	return *v
+}
+func derefInt32(v *int32) int {
+	if v == nil {
+		return 0
+	}
+	return int(*v)
+}
+func derefInt64(v *int64) int {
+	if v == nil {
+		return 0
+	}
+	return int(*v)
+}
+func int64ToPtrInt(v *int64) *int {
+	if v == nil {
+		return nil
+	}
+	out := int(*v)
+	return &out
+}
+func f32ToPtrF64(v *float32) *float64 {
+	if v == nil {
+		return nil
+	}
+	out := float64(*v)
+	return &out
+}
+func sentimentToPtrStr(v spectypes.Sentiment) *string {
+	if v == "" {
+		return nil
+	}
+	out := string(v)
+	return &out
+}
+func int32SliceToInt(in []int32) []int {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]int, 0, len(in))
+	for _, v := range in {
+		out = append(out, int(v))
+	}
+	return out
+}
+func f32MapToF64(in map[string]float32) map[string]float64 {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make(map[string]float64, len(in))
+	for k, v := range in {
+		out[k] = float64(v)
 	}
 	return out
 }
