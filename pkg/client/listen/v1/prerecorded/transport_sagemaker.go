@@ -17,12 +17,37 @@ import (
 )
 
 type sageMakerBinding struct {
-	client       *sagemakerruntime.Client
-	endpointName string
+	client             *sagemakerruntime.Client
+	endpointName       string
+	targetVariant      string
+	targetModel        string
+	inferenceID        string
+	enableExplanations string
 }
 
-func WithSageMakerTransport(client *sagemakerruntime.Client, endpointName string) Option {
-	return func(c *Client) { c.transport = sageMakerBinding{client: client, endpointName: endpointName} }
+type SageMakerOption func(*sageMakerBinding)
+
+func WithSageMakerTransport(client *sagemakerruntime.Client, endpointName string, opts ...SageMakerOption) Option {
+	return func(c *Client) {
+		b := sageMakerBinding{client: client, endpointName: endpointName}
+		for _, o := range opts {
+			o(&b)
+		}
+		c.transport = b
+	}
+}
+
+func WithTargetVariant(v string) SageMakerOption {
+	return func(b *sageMakerBinding) { b.targetVariant = v }
+}
+func WithTargetModel(v string) SageMakerOption {
+	return func(b *sageMakerBinding) { b.targetModel = v }
+}
+func WithInferenceID(v string) SageMakerOption {
+	return func(b *sageMakerBinding) { b.inferenceID = v }
+}
+func WithEnableExplanations(v string) SageMakerOption {
+	return func(b *sageMakerBinding) { b.enableExplanations = v }
 }
 
 func (t sageMakerBinding) invoke(ctx context.Context, c *Client, opts *PreRecordedTranscriptionOptions, contentType string, body io.Reader) (*PreRecordedResponse, error) {
@@ -45,6 +70,18 @@ func (t sageMakerBinding) invoke(ctx context.Context, c *Client, opts *PreRecord
 	}
 	ct := "application/json"
 	req := &sagemakerruntime.InvokeEndpointInput{EndpointName: &t.endpointName, ContentType: &ct, Body: payload}
+	if t.targetVariant != "" {
+		req.TargetVariant = &t.targetVariant
+	}
+	if t.targetModel != "" {
+		req.TargetModel = &t.targetModel
+	}
+	if t.inferenceID != "" {
+		req.InferenceId = &t.inferenceID
+	}
+	if t.enableExplanations != "" {
+		req.EnableExplanations = &t.enableExplanations
+	}
 	if opts != nil && len(opts.AdditionalQueryParams) > 0 {
 		attrs := opts.AdditionalQueryParams.Encode()
 		req.CustomAttributes = &attrs

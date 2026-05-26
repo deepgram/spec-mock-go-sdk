@@ -15,16 +15,43 @@ import (
 )
 
 type sageMakerBidiBinding struct {
-	client       *sagemakerruntime.Client
-	endpointName string
+	client             *sagemakerruntime.Client
+	endpointName       string
+	targetVariant      string
+	targetModel        string
+	inferenceID        string
+	enableExplanations string
 }
+type SageMakerOption func(*sageMakerBidiBinding)
 
-func WithSageMakerBidiTransport(client *sagemakerruntime.Client, endpointName string) Option {
-	return func(c *Client) { c.transport = sageMakerBidiBinding{client: client, endpointName: endpointName} }
+func WithSageMakerBidiTransport(client *sagemakerruntime.Client, endpointName string, opts ...SageMakerOption) Option {
+	return func(c *Client) {
+		b := sageMakerBidiBinding{client: client, endpointName: endpointName}
+		for _, o := range opts {
+			o(&b)
+		}
+		c.transport = b
+	}
+}
+func WithTargetVariant(v string) SageMakerOption {
+	return func(b *sageMakerBidiBinding) { b.targetVariant = v }
+}
+func WithTargetModel(v string) SageMakerOption {
+	return func(b *sageMakerBidiBinding) { b.targetModel = v }
+}
+func WithInferenceID(v string) SageMakerOption {
+	return func(b *sageMakerBidiBinding) { b.inferenceID = v }
+}
+func WithEnableExplanations(v string) SageMakerOption {
+	return func(b *sageMakerBidiBinding) { b.enableExplanations = v }
 }
 func (t sageMakerBidiBinding) connect(ctx context.Context, c *Client, opts *LiveTranscriptionOptions) (wireStream, error) {
 	_ = c
 	_ = opts
 	_ = t.client
-	return sm.OpenStream[spectypes.ClientStream, spectypes.ServerStream](ctx, t.endpointName, spectypes.MarshalClientStream, spectypes.UnmarshalServerStream)
+	_ = t.targetVariant
+	_ = t.targetModel
+	_ = t.inferenceID
+	_ = t.enableExplanations
+	return sm.OpenStream(ctx, t.endpointName, spectypes.MarshalClientStream, spectypes.UnmarshalServerStream)
 }
