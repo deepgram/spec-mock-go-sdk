@@ -278,3 +278,51 @@ func (SpeakTimestampEvent) Values() []SpeakTimestampEvent {
 		"ReceivedFirstAudioChunk",
 	}
 }
+
+type FluxErrorCode string
+
+// Enum values for FluxErrorCode
+const (
+	FluxErrorCodeInternalServerError     FluxErrorCode = "INTERNAL_SERVER_ERROR"
+	FluxErrorCodeUnparsableClientMessage FluxErrorCode = "UNPARSABLE_CLIENT_MESSAGE"
+	FluxErrorCodeInactiveClient          FluxErrorCode = "INACTIVE_CLIENT"
+	FluxErrorCodeServerGoingAway         FluxErrorCode = "SERVER_GOING_AWAY"
+)
+
+// Values returns all known values for FluxErrorCode. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (FluxErrorCode) Values() []FluxErrorCode {
+	return []FluxErrorCode{
+		"INTERNAL_SERVER_ERROR",
+		"UNPARSABLE_CLIENT_MESSAGE",
+		"INACTIVE_CLIENT",
+		"SERVER_GOING_AWAY",
+	}
+}
+
+type FluxEvent string
+
+// Enum values for FluxEvent
+const (
+	FluxEventUpdate         FluxEvent = "Update"
+	FluxEventStartOfTurn    FluxEvent = "StartOfTurn"
+	FluxEventEagerEndOfTurn FluxEvent = "EagerEndOfTurn"
+	FluxEventTurnResumed    FluxEvent = "TurnResumed"
+	FluxEventEndOfTurn      FluxEvent = "EndOfTurn"
+)
+
+// Values returns all known values for FluxEvent. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (FluxEvent) Values() []FluxEvent {
+	return []FluxEvent{
+		"Update",
+		"StartOfTurn",
+		"EagerEndOfTurn",
+		"TurnResumed",
+		"EndOfTurn",
+	}
+}

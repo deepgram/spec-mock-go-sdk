@@ -2710,3 +2710,324 @@ type SpeakStreamOutput struct {
 
 	noSmithyDocumentSerde
 }
+
+type FluxAudioFrame struct {
+
+	// This member is required.
+	Data []byte `json:"data"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"CloseStream"} .
+type FluxCloseStream struct {
+	noSmithyDocumentSerde
+}
+
+type FluxConfigureThreshold struct {
+	EagerEotThreshold *float32 `json:"eager_eot_threshold,omitempty"`
+
+	EotThreshold *float32 `json:"eot_threshold,omitempty"`
+
+	EotTimeoutMs *int32 `json:"eot_timeout_ms,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Configure", ...} .
+type FluxConfigure struct {
+
+	// This member is required.
+	Thresholds *FluxConfigureThreshold `json:"thresholds"`
+
+	Keyterms []string `json:"keyterms,omitempty"`
+
+	LanguageHints []string `json:"language_hints,omitempty"`
+
+	ProfanityFilter *bool `json:"profanity_filter,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	FluxClientStreamMemberAudio
+//	FluxClientStreamMemberCloseStream
+//	FluxClientStreamMemberConfigure
+type FluxClientStream interface {
+	isFluxClientStream()
+}
+
+// Raw mic audio bytes. Binary WebSocket frame, NOT JSON.
+type FluxClientStreamMemberAudio struct {
+	Value FluxAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxClientStreamMemberAudio) isFluxClientStream() {}
+
+// Graceful end-of-audio. Server emits final turn data then closes.
+type FluxClientStreamMemberCloseStream struct {
+	Value FluxCloseStream
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxClientStreamMemberCloseStream) isFluxClientStream() {}
+
+// Update turn-detection thresholds / keyterms / hints mid-session.
+type FluxClientStreamMemberConfigure struct {
+	Value FluxConfigure
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxClientStreamMemberConfigure) isFluxClientStream() {}
+
+type FluxStreamInput struct {
+
+	// Flux model, formatted flux-{use_case}-{language} (e.g. flux-general-en ,
+	// flux-general-multi ).
+	//
+	// This member is required.
+	Model *string `json:"-"`
+
+	// Eager end-of-turn confidence threshold (0.3–0.9; must be <= eot_threshold ).
+	// Disabled when omitted.
+	EagerEotThreshold *float32 `json:"-"`
+
+	// Input audio codec. Pair with sample_rate , or omit both for auto-detect.
+	Encoding *string `json:"-"`
+
+	// End-of-turn confidence threshold (0.5–0.9). Default 0.7.
+	EotThreshold *float32 `json:"-"`
+
+	// End-of-turn timeout in ms (500–60000). Default 5000.
+	EotTimeoutMs *int32 `json:"-"`
+
+	// Key terms to boost. Repeated ?keyterm= .
+	Keyterm []string `json:"-"`
+
+	// Language hints (only on flux-general-multi ). Repeated.
+	LanguageHint []string `json:"-"`
+
+	MipOptOut *bool `json:"-"`
+
+	Numerals *bool `json:"-"`
+
+	ProfanityFilter *bool `json:"-"`
+
+	// Redaction modes: numbers , aggressive_numbers .
+	Redact []string `json:"-"`
+
+	SampleRate *int32 `json:"-"`
+
+	SecWebSocketProtocol *string `json:"-"`
+
+	Tag []string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"ConfigureFailure", ...} .
+type FluxConfigureFailure struct {
+
+	// This member is required.
+	Code FluxErrorCode `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"ConfigureSuccess", ...} .
+type FluxConfigureSuccess struct {
+
+	// This member is required.
+	Keyterms []string `json:"keyterms"`
+
+	// This member is required.
+	ProfanityFilter *bool `json:"profanity_filter"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	// This member is required.
+	Thresholds *FluxConfigureThreshold `json:"thresholds"`
+
+	LanguageHints []string `json:"language_hints,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Connected","request_id":"...","sequence_id":0} . First message.
+type FluxConnected struct {
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Error", ...} . Session-ending; followed by a WS close. See FLUX-001.
+type FluxError struct {
+
+	// This member is required.
+	Code FluxErrorCode `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+type FluxWord struct {
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	Confidence *float32 `json:"confidence"`
+
+	// Punctuated, properly-cased word.
+	//
+	// This member is required.
+	Word *string `json:"word"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"TurnInfo", ...} . A turn-detection event.
+type FluxTurnInfo struct {
+
+	// This member is required.
+	AudioWindowEnd *float32 `json:"audio_window_end"`
+
+	// This member is required.
+	AudioWindowStart *float32 `json:"audio_window_start"`
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	EndOfTurnConfidence *float32 `json:"end_of_turn_confidence"`
+
+	// This member is required.
+	Event FluxEvent `json:"event"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	// This member is required.
+	Transcript *string `json:"transcript"`
+
+	// This member is required.
+	TurnIndex *int64 `json:"turn_index"`
+
+	// This member is required.
+	Words []FluxWord `json:"words"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	LanguagesHinted []string `json:"languages_hinted,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	FluxServerStreamMemberConfigureFailure
+//	FluxServerStreamMemberConfigureSuccess
+//	FluxServerStreamMemberConnected
+//	FluxServerStreamMemberError
+//	FluxServerStreamMemberTurnInfo
+type FluxServerStream interface {
+	isFluxServerStream()
+}
+
+// {"type":"ConfigureFailure", ...} .
+type FluxServerStreamMemberConfigureFailure struct {
+	Value FluxConfigureFailure
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberConfigureFailure) isFluxServerStream() {}
+
+// {"type":"ConfigureSuccess", ...} .
+type FluxServerStreamMemberConfigureSuccess struct {
+	Value FluxConfigureSuccess
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberConfigureSuccess) isFluxServerStream() {}
+
+// {"type":"Connected","request_id":"...","sequence_id":0} . First message.
+type FluxServerStreamMemberConnected struct {
+	Value FluxConnected
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberConnected) isFluxServerStream() {}
+
+// {"type":"Error", ...} . Session-ending; followed by a WS close. See FLUX-001.
+type FluxServerStreamMemberError struct {
+	Value FluxError
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberError) isFluxServerStream() {}
+
+// {"type":"TurnInfo", ...} . A turn-detection event.
+type FluxServerStreamMemberTurnInfo struct {
+	Value FluxTurnInfo
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberTurnInfo) isFluxServerStream() {}
+
+type FluxStreamOutput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
