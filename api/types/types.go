@@ -640,6 +640,139 @@ type ConverseOutput struct {
 	noSmithyDocumentSerde
 }
 
+type GetThinkProviderInput struct {
+
+	// Provider id (e.g. open_ai , anthropic , deepgram ). Case-sensitive.
+	//
+	// This member is required.
+	Provider *string `json:"provider"`
+
+	noSmithyDocumentSerde
+}
+
+type GetThinkProviderOutput struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProviderModelsInput struct {
+
+	// This member is required.
+	Provider *string `json:"provider"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentThinkModel struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProviderModelsOutput struct {
+
+	// This member is required.
+	Models []AgentThinkModel `json:"models"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkModelsInput struct {
+	noSmithyDocumentSerde
+}
+
+type AgentThinkModelInfo struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	// This member is required.
+	Provider *string `json:"provider"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkModelsOutput struct {
+
+	// This member is required.
+	Models []AgentThinkModelInfo `json:"models"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkProvidersInput struct {
+
+	// models to include each provider's model list.
+	Include *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentThinkProvider struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	// Present only when ?include=models .
+	Models []AgentThinkModel `json:"models,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkProvidersOutput struct {
+
+	// This member is required.
+	Providers []AgentThinkProvider `json:"providers"`
+
+	noSmithyDocumentSerde
+}
+
+type ValidateAgentInput struct {
+
+	// { "agent": {...} } (open; see AGENT-001).
+	//
+	// This member is required.
+	Agent document.Interface `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ValidateAgentOutput struct {
+	noSmithyDocumentSerde
+}
+
+type ValidateSettingsInput struct {
+
+	// The full Settings config (open; same shape as the converse Settings message).
+	// See AGENT-001.
+	//
+	// This member is required.
+	Settings document.Interface `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ValidateSettingsOutput struct {
+	noSmithyDocumentSerde
+}
+
 type Entity struct {
 
 	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
