@@ -1259,3 +1259,277 @@ type StreamOutput struct {
 
 	noSmithyDocumentSerde
 }
+
+// JSON request body for /v1/read . Exactly one of text or url must be set —
+// Smithy cannot express "exactly one of", so it is enforced server-side (sending
+// neither or both returns a 400). See READ-004.
+type ReadTextSource struct {
+
+	// Inline text to analyze.
+	Text *string `json:"text,omitempty"`
+
+	// HTTPS URL Deepgram fetches the text document from.
+	Url *string `json:"url,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// POST /v1/read accepts the input text in one of two body shapes selected by
+// Content-Type . See READ-004.
+//
+// The following types satisfy this interface:
+//
+//	ReadRequestBodyMemberSource
+//	ReadRequestBodyMemberText
+type ReadRequestBody interface {
+	isReadRequestBody()
+}
+
+// JSON envelope carrying inline text or a URL to fetch text from. Content-Type:
+// application/json selects this variant.
+type ReadRequestBodyMemberSource struct {
+	Value ReadTextSource
+
+	noSmithyDocumentSerde
+}
+
+func (*ReadRequestBodyMemberSource) isReadRequestBody() {}
+
+// Raw text. Sent with Content-Type: text/plain (or no Content-Type ).
+type ReadRequestBodyMemberText struct {
+	Value string
+
+	noSmithyDocumentSerde
+}
+
+func (*ReadRequestBodyMemberText) isReadRequestBody() {}
+
+type AnalyzeInput struct {
+
+	// Language of the input text. Must begin with en (English-only today); other
+	// values are rejected with a 400.
+	//
+	// This member is required.
+	Language *string `json:"-"`
+
+	// POST /v1/read accepts the input text in one of two body shapes selected by
+	// Content-Type . See READ-004.
+	Body ReadRequestBody `json:"-"`
+
+	// Where to deliver the completed analysis. When set, the operation returns
+	// immediately with only requestId populated; results are delivered to this URL.
+	Callback *string `json:"-"`
+
+	// HTTP method to use for callback delivery. Default POST .
+	CallbackMethod ReadCallbackMethod `json:"-"`
+
+	ContentType *string `json:"-"`
+
+	// Custom intents to bias detection toward. Wire syntax is repeated
+	// ?custom_intent=... . Max 100 entries, each <= 120 chars.
+	CustomIntent []string `json:"-"`
+
+	// Detection strictness for custom intents. See READ-003.
+	CustomIntentMode *string `json:"-"`
+
+	// Custom topics to bias detection toward. Wire syntax is repeated
+	// ?custom_topic=... . Max 100 entries, each <= 120 chars.
+	CustomTopic []string `json:"-"`
+
+	// Detection strictness for custom topics.
+	CustomTopicMode *string `json:"-"`
+
+	// Enable intent detection.
+	Intents *bool `json:"-"`
+
+	// Deprecated: Prefer mip_opt_out . log_data is recognized for backward
+	// compatibility; sending both with conflicting values returns 400.
+	LogData *bool `json:"-"`
+
+	// Opt out of the Model Improvement Program (request not persisted for training).
+	MipOptOut *bool `json:"-"`
+
+	// Enable sentiment analysis.
+	Sentiment *bool `json:"-"`
+
+	// Enable summarization. Accepts true or a version string (e.g. v2 ); modeled as
+	// String to carry both forms, matching Listen's summarize .
+	Summarize *string `json:"-"`
+
+	// Tags echoed back in the response metadata. Repeated ?tag= .
+	Tag []string `json:"-"`
+
+	// Enable topic detection.
+	Topics *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ReadMetadata struct {
+
+	// This member is required.
+	Created *string `json:"created"`
+
+	// Always en today.
+	//
+	// This member is required.
+	Language *string `json:"language"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// Token-count metadata for intent detection. Present when intents ran.
+	IntentsInfo *TokenMetadata `json:"intents_info,omitempty"`
+
+	// Token-count metadata for sentiment analysis. Present when sentiment ran.
+	SentimentInfo *TokenMetadata `json:"sentiment_info,omitempty"`
+
+	// Token-count metadata for summarization. Present when summarization ran.
+	SummaryInfo *TokenMetadata `json:"summary_info,omitempty"`
+
+	// Tags echoed back from the request's ?tag= parameters.
+	Tags []string `json:"tags,omitempty"`
+
+	// Token-count metadata for topic detection. Present when topics ran.
+	TopicsInfo *TokenMetadata `json:"topics_info,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ReadIntent struct {
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	ConfidenceScore *float32 `json:"confidence_score"`
+
+	// This member is required.
+	Intent *string `json:"intent"`
+
+	noSmithyDocumentSerde
+}
+
+type IntentSegment struct {
+
+	// This member is required.
+	EndWord *int32 `json:"end_word"`
+
+	// This member is required.
+	Intents []ReadIntent `json:"intents"`
+
+	// This member is required.
+	StartWord *int32 `json:"start_word"`
+
+	// This member is required.
+	Text *string `json:"text"`
+
+	noSmithyDocumentSerde
+}
+
+type IntentsResult struct {
+
+	// This member is required.
+	Segments []IntentSegment `json:"segments"`
+
+	noSmithyDocumentSerde
+}
+
+// Aggregate sentiment across the whole document. Read-prefixed to avoid a name
+// collision with com.deepgram.api.v1.listen#AverageSentiment (a different shape)
+// in the shared generated api/types . See READ-006.
+type ReadAverageSentiment struct {
+
+	// This member is required.
+	Sentiment Sentiment `json:"sentiment"`
+
+	// Range [-1, 1].
+	//
+	// This member is required.
+	SentimentScore *float32 `json:"sentiment_score"`
+
+	// See startTime .
+	EndTime *float32 `json:"end_time,omitempty"`
+
+	// Always null on Read responses; carried for shape-compatibility with the
+	// streaming sentiment aggregate.
+	StartTime *float32 `json:"start_time,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type SentimentsResult struct {
+
+	// Aggregate sentiment across the whole document. Read-prefixed to avoid a name
+	// collision with com.deepgram.api.v1.listen#AverageSentiment (a different shape)
+	// in the shared generated api/types . See READ-006.
+	//
+	// This member is required.
+	Average *ReadAverageSentiment `json:"average"`
+
+	// This member is required.
+	Segments []SitSentimentSegment `json:"segments"`
+
+	noSmithyDocumentSerde
+}
+
+type SummaryResult struct {
+
+	// This member is required.
+	Text *string `json:"text"`
+
+	noSmithyDocumentSerde
+}
+
+type TopicsResult struct {
+
+	// Topic detections per text segment. Reuses the cross-product TopicSegment shape
+	// (identical wire form to Listen's batch topics).
+	//
+	// This member is required.
+	Segments []TopicSegment `json:"segments"`
+
+	noSmithyDocumentSerde
+}
+
+type ReadResults struct {
+
+	// Present when ?intents=true .
+	Intents *IntentsResult `json:"intents,omitempty"`
+
+	// Present when ?sentiment=true .
+	Sentiments *SentimentsResult `json:"sentiments,omitempty"`
+
+	// Present when ?summarize=... was enabled.
+	Summary *SummaryResult `json:"summary,omitempty"`
+
+	// Present when ?topics=true .
+	Topics *TopicsResult `json:"topics,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// Read response.
+//
+// Synchronous responses carry metadata + results . When ?callback= is set, the
+// immediate response carries only requestId , and the full result is delivered
+// later to the callback URL with the same shape. See READ-001.
+type AnalyzeOutput struct {
+
+	// Populated on synchronous responses. Absent on the async ack.
+	Metadata *ReadMetadata
+
+	// Populated only on the asynchronous (callback) immediate ack: {"request_id":
+	// "..."} . On synchronous responses the request id is inside metadata.requestId
+	// instead.
+	RequestId *string
+
+	// Populated on synchronous responses. Absent on the async ack.
+	Results *ReadResults
+
+	noSmithyDocumentSerde
+}

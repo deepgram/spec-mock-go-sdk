@@ -86,3 +86,22 @@ func (WsErrorVariant) Values() []WsErrorVariant {
 		"SchemaError",
 	}
 }
+
+type ReadCallbackMethod string
+
+// Enum values for ReadCallbackMethod
+const (
+	ReadCallbackMethodPost ReadCallbackMethod = "POST"
+	ReadCallbackMethodPut  ReadCallbackMethod = "PUT"
+)
+
+// Values returns all known values for ReadCallbackMethod. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ReadCallbackMethod) Values() []ReadCallbackMethod {
+	return []ReadCallbackMethod{
+		"POST",
+		"PUT",
+	}
+}
