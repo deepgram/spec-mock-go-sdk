@@ -32,7 +32,7 @@ func TestSpeakLiveBinaryRecv(t *testing.T) {
 		if _, _, err := c.ReadMessage(); err != nil { // the client's Speak message
 			return
 		}
-		_ = c.WriteMessage(ws.BinaryMessage, audio)                                  // audio out
+		_ = c.WriteMessage(ws.BinaryMessage, audio)                                      // audio out
 		_ = c.WriteMessage(ws.TextMessage, []byte(`{"type":"Flushed","sequence_id":1}`)) // status
 	}))
 	defer srv.Close()

@@ -105,6 +105,37 @@ func (e *InvalidQueryParameterError) ErrorCode() string {
 }
 func (e *InvalidQueryParameterError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
 
+// Auth missing or malformed. err_code: UNAUTHORIZED .
+type UnauthorizedError struct {
+	Message *string
+
+	ErrorCodeOverride *string
+
+	ErrCode   *string `json:"err_code"`
+	ErrMsg    *string `json:"err_msg"`
+	RequestId *string `json:"request_id,omitempty"`
+	DgError   *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+func (e *UnauthorizedError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *UnauthorizedError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *UnauthorizedError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "UnauthorizedError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *UnauthorizedError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
+
 // Resource not found. err_code: NOT_FOUND .
 type NotFoundError struct {
 	Message *string
@@ -260,37 +291,6 @@ func (e *SlowUploadError) ErrorCode() string {
 	return *e.ErrorCodeOverride
 }
 func (e *SlowUploadError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
-
-// Auth missing or malformed. err_code: UNAUTHORIZED .
-type UnauthorizedError struct {
-	Message *string
-
-	ErrorCodeOverride *string
-
-	ErrCode   *string `json:"err_code"`
-	ErrMsg    *string `json:"err_msg"`
-	RequestId *string `json:"request_id,omitempty"`
-	DgError   *string `json:"-"`
-
-	noSmithyDocumentSerde
-}
-
-func (e *UnauthorizedError) Error() string {
-	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
-}
-func (e *UnauthorizedError) ErrorMessage() string {
-	if e.Message == nil {
-		return ""
-	}
-	return *e.Message
-}
-func (e *UnauthorizedError) ErrorCode() string {
-	if e == nil || e.ErrorCodeOverride == nil {
-		return "UnauthorizedError"
-	}
-	return *e.ErrorCodeOverride
-}
-func (e *UnauthorizedError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
 
 // Content-Type rejected by the server. err_code: UNSUPPORTED_MEDIA_TYPE .
 type UnsupportedMediaTypeError struct {

@@ -6,6 +6,640 @@ import (
 	"github.com/deepgram/spec-mock-go-sdk/api/document"
 )
 
+// Audio frame variant. Wire form is a binary WS frame whose body is data .
+type AgentAudioFrame struct {
+
+	// This member is required.
+	Data []byte `json:"data"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"FunctionCallResponse","id":"...","name":"...","content":"..."} . Used
+// in BOTH directions (client reply + server-side result).
+type AgentFunctionCallResponse struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"InjectAgentMessage","content":"...","behavior":"..."} .
+type AgentInjectAgentMessage struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	// Interaction with ongoing speech: Default | Queue | Interrupt .
+	Behavior AgentInjectBehavior `json:"behavior,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"InjectUserMessage","content":"..."} .
+type AgentInjectUserMessage struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"KeepAlive"} .
+type AgentKeepAlive struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"ReplacePrompt","prompt":"..."} . Requires experimental: true .
+type AgentReplacePrompt struct {
+
+	// This member is required.
+	Prompt *string `json:"prompt"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentAudioInput struct {
+	Encoding AgentInputEncoding `json:"encoding,omitempty"`
+
+	SampleRate *int32 `json:"sample_rate,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentAudioOutput struct {
+	Bitrate *int32 `json:"bitrate,omitempty"`
+
+	Container AgentOutputContainer `json:"container,omitempty"`
+
+	Encoding AgentOutputEncoding `json:"encoding,omitempty"`
+
+	SampleRate *int32 `json:"sample_rate,omitempty"`
+
+	// Stream audio in fixed-size chunks. Default true.
+	Stream *bool `json:"stream,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentAudio struct {
+	Input *AgentAudioInput `json:"input,omitempty"`
+
+	Output *AgentAudioOutput `json:"output,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Settings", ...} . Session configuration. The agent provider config
+// (listen/think/speak) is deeply nested and open — modeled as Document . See
+// AGENT-001.
+type AgentSettings struct {
+
+	// Agent provider config (listen/think/speak/functions/greeting/...), OR a bare
+	// agent-id string. Deeply nested + provider-specific; open Document .
+	Agent document.Interface `json:"agent,omitempty"`
+
+	Audio *AgentAudio `json:"audio,omitempty"`
+
+	Experimental *bool `json:"experimental,omitempty"`
+
+	// Session flags (e.g. { "history": true } ). Open map.
+	Flags document.Interface `json:"flags,omitempty"`
+
+	MipOptOut *bool `json:"mip_opt_out,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"UpdatePrompt","prompt":"..."} .
+type AgentUpdatePrompt struct {
+
+	// This member is required.
+	Prompt *string `json:"prompt"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"UpdateSpeak","speak":...} . speak is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentUpdateSpeak struct {
+
+	// This member is required.
+	Speak document.Interface `json:"speak"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"UpdateThink","think":...} . think is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentUpdateThink struct {
+
+	// This member is required.
+	Think document.Interface `json:"think"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	AgentClientStreamMemberAudio
+//	AgentClientStreamMemberFunctionCallResponse
+//	AgentClientStreamMemberInjectAgentMessage
+//	AgentClientStreamMemberInjectUserMessage
+//	AgentClientStreamMemberKeepAlive
+//	AgentClientStreamMemberReplacePrompt
+//	AgentClientStreamMemberSettings
+//	AgentClientStreamMemberUpdatePrompt
+//	AgentClientStreamMemberUpdateSpeak
+//	AgentClientStreamMemberUpdateThink
+type AgentClientStream interface {
+	isAgentClientStream()
+}
+
+// Raw mic audio bytes. Binary WebSocket frame, NOT JSON. Allowed only after
+// Settings .
+type AgentClientStreamMemberAudio struct {
+	Value AgentAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberAudio) isAgentClientStream() {}
+
+// {"type":"FunctionCallResponse","id":"...","name":"...","content":"..."} . Used
+// in BOTH directions (client reply + server-side result).
+type AgentClientStreamMemberFunctionCallResponse struct {
+	Value AgentFunctionCallResponse
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberFunctionCallResponse) isAgentClientStream() {}
+
+// {"type":"InjectAgentMessage","content":"...","behavior":"..."} .
+type AgentClientStreamMemberInjectAgentMessage struct {
+	Value AgentInjectAgentMessage
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberInjectAgentMessage) isAgentClientStream() {}
+
+// {"type":"InjectUserMessage","content":"..."} .
+type AgentClientStreamMemberInjectUserMessage struct {
+	Value AgentInjectUserMessage
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberInjectUserMessage) isAgentClientStream() {}
+
+// {"type":"KeepAlive"} .
+type AgentClientStreamMemberKeepAlive struct {
+	Value AgentKeepAlive
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberKeepAlive) isAgentClientStream() {}
+
+// {"type":"ReplacePrompt","prompt":"..."} . Requires experimental: true .
+type AgentClientStreamMemberReplacePrompt struct {
+	Value AgentReplacePrompt
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberReplacePrompt) isAgentClientStream() {}
+
+// Session configuration. Must be the first message.
+type AgentClientStreamMemberSettings struct {
+	Value AgentSettings
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberSettings) isAgentClientStream() {}
+
+// {"type":"UpdatePrompt","prompt":"..."} .
+type AgentClientStreamMemberUpdatePrompt struct {
+	Value AgentUpdatePrompt
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberUpdatePrompt) isAgentClientStream() {}
+
+// {"type":"UpdateSpeak","speak":...} . speak is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentClientStreamMemberUpdateSpeak struct {
+	Value AgentUpdateSpeak
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberUpdateSpeak) isAgentClientStream() {}
+
+// {"type":"UpdateThink","think":...} . think is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentClientStreamMemberUpdateThink struct {
+	Value AgentUpdateThink
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberUpdateThink) isAgentClientStream() {}
+
+type ConverseInput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"AgentAudioDone"} . No more audio frames for the current utterance.
+type AgentAudioDone struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"AgentStartedSpeaking", ...} .
+type AgentStartedSpeaking struct {
+
+	// This member is required.
+	TtsLatency *float64 `json:"tts_latency"`
+
+	// This member is required.
+	TttLatency *float64 `json:"ttt_latency"`
+
+	TotalLatency *float64 `json:"total_latency,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"AgentThinking","content":"..."} . Non-verbalized reasoning.
+type AgentThinking struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"ConversationText","role":"...","content":"..."} . User or agent
+// utterance; interim when is_final is false.
+type AgentConversationText struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	// This member is required.
+	Role AgentRole `json:"role"`
+
+	IsFinal *bool `json:"is_final,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	// Word-level detail (open; provider-dependent).
+	Words document.Interface `json:"words,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"EndOfThought"} .
+type AgentEndOfThought struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Error","description":"...","code":"..."} . Fatal; sent before the
+// server closes the connection.
+type AgentError struct {
+
+	// Error code (e.g. INVALID_SETTINGS ). Open set; see developer docs.
+	//
+	// This member is required.
+	Code *string `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"FunctionCallRequest","functions":[...]} . functions is an open list of
+// {id,name,arguments,client_side,...} . See AGENT-001.
+type AgentFunctionCallRequest struct {
+
+	// This member is required.
+	Functions document.Interface `json:"functions"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"History", ...} . Conversation-history entry at session start when
+// flags.history is set. Payload is untagged (a conversation message OR a
+// function-call record); modeled as open Document . See AGENT-001.
+type AgentHistory struct {
+	Entry document.Interface `json:"entry,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"LatencyReport", ...} . One latency metric per message (the wire
+// flattens a single field); modeled flat with all metrics optional. See AGENT-003.
+type AgentLatencyReport struct {
+	SttLatency *float64 `json:"stt_latency,omitempty"`
+
+	TotalLatency *float64 `json:"total_latency,omitempty"`
+
+	TtsLatency *float64 `json:"tts_latency,omitempty"`
+
+	TttTextLatency *float64 `json:"ttt_text_latency,omitempty"`
+
+	TttThinkingLatency *float64 `json:"ttt_thinking_latency,omitempty"`
+
+	TttTokenLatency *float64 `json:"ttt_token_latency,omitempty"`
+
+	TttToolLatency *float64 `json:"ttt_tool_latency,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"PromptReplaced"} .
+type AgentPromptReplaced struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"PromptUpdated"} .
+type AgentPromptUpdated struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"SettingsApplied"} .
+type AgentSettingsApplied struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"SpeakUpdated"} .
+type AgentSpeakUpdated struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"ThinkUpdated"} .
+type AgentThinkUpdated struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"UserStartedSpeaking"} .
+type AgentUserStartedSpeaking struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Warning","description":"...","code":"..."} . Non-fatal.
+type AgentWarning struct {
+
+	// Warning code (e.g. PROMPT_TOO_LONG ). Open set; see developer docs.
+	//
+	// This member is required.
+	Code *string `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Welcome","request_id":"..."} . First message on every connection.
+type AgentWelcome struct {
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	AgentServerStreamMemberAgentAudioDone
+//	AgentServerStreamMemberAgentStartedSpeaking
+//	AgentServerStreamMemberAgentThinking
+//	AgentServerStreamMemberAudio
+//	AgentServerStreamMemberConversationText
+//	AgentServerStreamMemberEndOfThought
+//	AgentServerStreamMemberError
+//	AgentServerStreamMemberFunctionCallRequest
+//	AgentServerStreamMemberFunctionCallResponse
+//	AgentServerStreamMemberHistory
+//	AgentServerStreamMemberLatencyReport
+//	AgentServerStreamMemberPromptReplaced
+//	AgentServerStreamMemberPromptUpdated
+//	AgentServerStreamMemberSettingsApplied
+//	AgentServerStreamMemberSpeakUpdated
+//	AgentServerStreamMemberThinkUpdated
+//	AgentServerStreamMemberUserStartedSpeaking
+//	AgentServerStreamMemberWarning
+//	AgentServerStreamMemberWelcome
+type AgentServerStream interface {
+	isAgentServerStream()
+}
+
+// {"type":"AgentAudioDone"} . No more audio frames for the current utterance.
+type AgentServerStreamMemberAgentAudioDone struct {
+	Value AgentAudioDone
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAgentAudioDone) isAgentServerStream() {}
+
+// {"type":"AgentStartedSpeaking", ...} .
+//
+// Deprecated: Use latencyReport instead.
+type AgentServerStreamMemberAgentStartedSpeaking struct {
+	Value AgentStartedSpeaking
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAgentStartedSpeaking) isAgentServerStream() {}
+
+// {"type":"AgentThinking","content":"..."} . Non-verbalized reasoning.
+type AgentServerStreamMemberAgentThinking struct {
+	Value AgentThinking
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAgentThinking) isAgentServerStream() {}
+
+// Agent speech bytes. Binary WebSocket frame, NOT JSON.
+type AgentServerStreamMemberAudio struct {
+	Value AgentAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAudio) isAgentServerStream() {}
+
+// {"type":"ConversationText","role":"...","content":"..."} . User or agent
+// utterance; interim when is_final is false.
+type AgentServerStreamMemberConversationText struct {
+	Value AgentConversationText
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberConversationText) isAgentServerStream() {}
+
+// {"type":"EndOfThought"} .
+type AgentServerStreamMemberEndOfThought struct {
+	Value AgentEndOfThought
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberEndOfThought) isAgentServerStream() {}
+
+// {"type":"Error","description":"...","code":"..."} . Fatal; sent before the
+// server closes the connection.
+type AgentServerStreamMemberError struct {
+	Value AgentError
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberError) isAgentServerStream() {}
+
+// {"type":"FunctionCallRequest","functions":[...]} . functions is an open list of
+// {id,name,arguments,client_side,...} . See AGENT-001.
+type AgentServerStreamMemberFunctionCallRequest struct {
+	Value AgentFunctionCallRequest
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberFunctionCallRequest) isAgentServerStream() {}
+
+// {"type":"FunctionCallResponse","id":"...","name":"...","content":"..."} . Used
+// in BOTH directions (client reply + server-side result).
+type AgentServerStreamMemberFunctionCallResponse struct {
+	Value AgentFunctionCallResponse
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberFunctionCallResponse) isAgentServerStream() {}
+
+// {"type":"History", ...} . Conversation-history entry at session start when
+// flags.history is set. Payload is untagged (a conversation message OR a
+// function-call record); modeled as open Document . See AGENT-001.
+type AgentServerStreamMemberHistory struct {
+	Value AgentHistory
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberHistory) isAgentServerStream() {}
+
+// {"type":"LatencyReport", ...} . One latency metric per message (the wire
+// flattens a single field); modeled flat with all metrics optional. See AGENT-003.
+type AgentServerStreamMemberLatencyReport struct {
+	Value AgentLatencyReport
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberLatencyReport) isAgentServerStream() {}
+
+// {"type":"PromptReplaced"} .
+type AgentServerStreamMemberPromptReplaced struct {
+	Value AgentPromptReplaced
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberPromptReplaced) isAgentServerStream() {}
+
+// {"type":"PromptUpdated"} .
+type AgentServerStreamMemberPromptUpdated struct {
+	Value AgentPromptUpdated
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberPromptUpdated) isAgentServerStream() {}
+
+// {"type":"SettingsApplied"} .
+type AgentServerStreamMemberSettingsApplied struct {
+	Value AgentSettingsApplied
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberSettingsApplied) isAgentServerStream() {}
+
+// {"type":"SpeakUpdated"} .
+type AgentServerStreamMemberSpeakUpdated struct {
+	Value AgentSpeakUpdated
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberSpeakUpdated) isAgentServerStream() {}
+
+// {"type":"ThinkUpdated"} .
+type AgentServerStreamMemberThinkUpdated struct {
+	Value AgentThinkUpdated
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberThinkUpdated) isAgentServerStream() {}
+
+// {"type":"UserStartedSpeaking"} .
+type AgentServerStreamMemberUserStartedSpeaking struct {
+	Value AgentUserStartedSpeaking
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberUserStartedSpeaking) isAgentServerStream() {}
+
+// {"type":"Warning","description":"...","code":"..."} . Non-fatal.
+type AgentServerStreamMemberWarning struct {
+	Value AgentWarning
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberWarning) isAgentServerStream() {}
+
+// {"type":"Welcome","request_id":"..."} . First message on every connection.
+type AgentServerStreamMemberWelcome struct {
+	Value AgentWelcome
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberWelcome) isAgentServerStream() {}
+
+type ConverseOutput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
 type Entity struct {
 
 	// A confidence value in [0.0, 1.0]. Models output this for transcripts,

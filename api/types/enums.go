@@ -2,6 +2,123 @@
 
 package types
 
+type AgentInjectBehavior string
+
+// Enum values for AgentInjectBehavior
+const (
+	AgentInjectBehaviorDefault   AgentInjectBehavior = "Default"
+	AgentInjectBehaviorQueue     AgentInjectBehavior = "Queue"
+	AgentInjectBehaviorInterrupt AgentInjectBehavior = "Interrupt"
+)
+
+// Values returns all known values for AgentInjectBehavior. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentInjectBehavior) Values() []AgentInjectBehavior {
+	return []AgentInjectBehavior{
+		"Default",
+		"Queue",
+		"Interrupt",
+	}
+}
+
+type AgentInputEncoding string
+
+// Enum values for AgentInputEncoding
+const (
+	AgentInputEncodingLinear16 AgentInputEncoding = "linear-16"
+	AgentInputEncodingLinear32 AgentInputEncoding = "linear-32"
+	AgentInputEncodingAlaw     AgentInputEncoding = "alaw"
+	AgentInputEncodingMulaw    AgentInputEncoding = "mulaw"
+)
+
+// Values returns all known values for AgentInputEncoding. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentInputEncoding) Values() []AgentInputEncoding {
+	return []AgentInputEncoding{
+		"linear-16",
+		"linear-32",
+		"alaw",
+		"mulaw",
+	}
+}
+
+type AgentOutputContainer string
+
+// Enum values for AgentOutputContainer
+const (
+	AgentOutputContainerWav  AgentOutputContainer = "wav"
+	AgentOutputContainerNone AgentOutputContainer = "none"
+	AgentOutputContainerOgg  AgentOutputContainer = "ogg"
+)
+
+// Values returns all known values for AgentOutputContainer. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentOutputContainer) Values() []AgentOutputContainer {
+	return []AgentOutputContainer{
+		"wav",
+		"none",
+		"ogg",
+	}
+}
+
+type AgentOutputEncoding string
+
+// Enum values for AgentOutputEncoding
+const (
+	AgentOutputEncodingLinear16 AgentOutputEncoding = "linear16"
+	AgentOutputEncodingMulaw    AgentOutputEncoding = "mulaw"
+	AgentOutputEncodingAlaw     AgentOutputEncoding = "alaw"
+	AgentOutputEncodingMp3      AgentOutputEncoding = "mp3"
+	AgentOutputEncodingOpus     AgentOutputEncoding = "opus"
+	AgentOutputEncodingFlac     AgentOutputEncoding = "flac"
+	AgentOutputEncodingAac      AgentOutputEncoding = "aac"
+)
+
+// Values returns all known values for AgentOutputEncoding. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentOutputEncoding) Values() []AgentOutputEncoding {
+	return []AgentOutputEncoding{
+		"linear16",
+		"mulaw",
+		"alaw",
+		"mp3",
+		"opus",
+		"flac",
+		"aac",
+	}
+}
+
+type AgentRole string
+
+// Enum values for AgentRole
+const (
+	AgentRoleUser              AgentRole = "user"
+	AgentRoleAssistant         AgentRole = "assistant"
+	AgentRoleSystem            AgentRole = "system"
+	AgentRoleAssistantThinking AgentRole = "assistant_thinking"
+)
+
+// Values returns all known values for AgentRole. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentRole) Values() []AgentRole {
+	return []AgentRole{
+		"user",
+		"assistant",
+		"system",
+		"assistant_thinking",
+	}
+}
+
 type Sentiment string
 
 // Enum values for Sentiment
