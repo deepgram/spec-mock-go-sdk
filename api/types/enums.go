@@ -23,6 +23,25 @@ func (Sentiment) Values() []Sentiment {
 	}
 }
 
+type CallbackMethod string
+
+// Enum values for CallbackMethod
+const (
+	CallbackMethodPost CallbackMethod = "POST"
+	CallbackMethodPut  CallbackMethod = "PUT"
+)
+
+// Values returns all known values for CallbackMethod. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (CallbackMethod) Values() []CallbackMethod {
+	return []CallbackMethod{
+		"POST",
+		"PUT",
+	}
+}
+
 type WarningType string
 
 // Enum values for WarningType
@@ -46,25 +65,6 @@ func (WarningType) Values() []WarningType {
 	}
 }
 
-type CallbackMethod string
-
-// Enum values for CallbackMethod
-const (
-	CallbackMethodPost CallbackMethod = "POST"
-	CallbackMethodPut  CallbackMethod = "PUT"
-)
-
-// Values returns all known values for CallbackMethod. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (CallbackMethod) Values() []CallbackMethod {
-	return []CallbackMethod{
-		"POST",
-		"PUT",
-	}
-}
-
 type WsErrorVariant string
 
 // Enum values for WsErrorVariant
@@ -84,24 +84,5 @@ func (WsErrorVariant) Values() []WsErrorVariant {
 	return []WsErrorVariant{
 		"Closing",
 		"SchemaError",
-	}
-}
-
-type ReadCallbackMethod string
-
-// Enum values for ReadCallbackMethod
-const (
-	ReadCallbackMethodPost ReadCallbackMethod = "POST"
-	ReadCallbackMethodPut  ReadCallbackMethod = "PUT"
-)
-
-// Values returns all known values for ReadCallbackMethod. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (ReadCallbackMethod) Values() []ReadCallbackMethod {
-	return []ReadCallbackMethod{
-		"POST",
-		"PUT",
 	}
 }

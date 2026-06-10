@@ -377,6 +377,22 @@ type Channel struct {
 	noSmithyDocumentSerde
 }
 
+// A single detected intent with a confidence score. Shared across products that
+// surface intent detection (Listen batch, Read). Mirrors Topic .
+type Intent struct {
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	ConfidenceScore *float32 `json:"confidence_score"`
+
+	// This member is required.
+	Intent *string `json:"intent"`
+
+	noSmithyDocumentSerde
+}
+
 type ModelInfo struct {
 	Arch *string `json:"arch,omitempty"`
 
@@ -490,20 +506,6 @@ type AverageSentiment struct {
 
 	// This member is required.
 	Average *SentimentAggregate `json:"average"`
-
-	noSmithyDocumentSerde
-}
-
-type Intent struct {
-
-	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
-	// alternatives, and per-word confidences.
-	//
-	// This member is required.
-	ConfidenceScore *float32 `json:"confidence_score"`
-
-	// This member is required.
-	Intent *string `json:"intent"`
 
 	noSmithyDocumentSerde
 }
@@ -1321,7 +1323,7 @@ type AnalyzeInput struct {
 	Callback *string `json:"-"`
 
 	// HTTP method to use for callback delivery. Default POST .
-	CallbackMethod ReadCallbackMethod `json:"-"`
+	CallbackMethod CallbackMethod `json:"-"`
 
 	ContentType *string `json:"-"`
 
@@ -1400,27 +1402,13 @@ type ReadMetadata struct {
 	noSmithyDocumentSerde
 }
 
-type ReadIntent struct {
-
-	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
-	// alternatives, and per-word confidences.
-	//
-	// This member is required.
-	ConfidenceScore *float32 `json:"confidence_score"`
-
-	// This member is required.
-	Intent *string `json:"intent"`
-
-	noSmithyDocumentSerde
-}
-
 type IntentSegment struct {
 
 	// This member is required.
 	EndWord *int32 `json:"end_word"`
 
 	// This member is required.
-	Intents []ReadIntent `json:"intents"`
+	Intents []Intent `json:"intents"`
 
 	// This member is required.
 	StartWord *int32 `json:"start_word"`

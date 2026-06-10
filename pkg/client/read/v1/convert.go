@@ -17,7 +17,7 @@ func optionsToAnalyzeInput(o *ReadOptions) *spectypes.AnalyzeInput {
 		in.Callback = &v
 	}
 	if o.CallbackMethod != "" {
-		in.CallbackMethod = spectypes.ReadCallbackMethod(o.CallbackMethod)
+		in.CallbackMethod = spectypes.CallbackMethod(o.CallbackMethod)
 	}
 	if len(o.CustomIntent) > 0 {
 		in.CustomIntent = o.CustomIntent
