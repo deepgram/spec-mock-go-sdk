@@ -86,3 +86,53 @@ func (WsErrorVariant) Values() []WsErrorVariant {
 		"SchemaError",
 	}
 }
+
+type SpeakContainer string
+
+// Enum values for SpeakContainer
+const (
+	SpeakContainerWav  SpeakContainer = "wav"
+	SpeakContainerNone SpeakContainer = "none"
+	SpeakContainerOgg  SpeakContainer = "ogg"
+)
+
+// Values returns all known values for SpeakContainer. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (SpeakContainer) Values() []SpeakContainer {
+	return []SpeakContainer{
+		"wav",
+		"none",
+		"ogg",
+	}
+}
+
+type SpeakEncoding string
+
+// Enum values for SpeakEncoding
+const (
+	SpeakEncodingLinear16 SpeakEncoding = "linear16"
+	SpeakEncodingMulaw    SpeakEncoding = "mulaw"
+	SpeakEncodingAlaw     SpeakEncoding = "alaw"
+	SpeakEncodingMp3      SpeakEncoding = "mp3"
+	SpeakEncodingOpus     SpeakEncoding = "opus"
+	SpeakEncodingFlac     SpeakEncoding = "flac"
+	SpeakEncodingAac      SpeakEncoding = "aac"
+)
+
+// Values returns all known values for SpeakEncoding. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (SpeakEncoding) Values() []SpeakEncoding {
+	return []SpeakEncoding{
+		"linear16",
+		"mulaw",
+		"alaw",
+		"mp3",
+		"opus",
+		"flac",
+		"aac",
+	}
+}

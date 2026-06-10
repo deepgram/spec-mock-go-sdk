@@ -47,7 +47,14 @@ type HTTPRoute struct {
 	HeaderFields []FieldBinding
 	PathParams   []FieldBinding
 	PayloadField string
-	DecodeError  func(status int, body []byte, headers nethttp.Header) error
+	// RespPayloadField names the output member (if any) bound to the
+	// response body via @httpPayload — e.g. a binary audio blob.
+	// When set, Invoke reads the raw body into it instead of
+	// JSON-decoding. RespHeaderFields bind @httpHeader output members
+	// to response headers.
+	RespPayloadField string
+	RespHeaderFields []FieldBinding
+	DecodeError      func(status int, body []byte, headers nethttp.Header) error
 }
 
 // FieldBinding links a Go input struct field name to its wire-protocol
@@ -226,6 +233,33 @@ func Invoke[I any, O any](
 	}
 
 	var out O
+	outVal := reflect.ValueOf(&out).Elem()
+
+	// Bind @httpHeader-tagged output members from response headers.
+	for _, b := range route.RespHeaderFields {
+		f := outVal.FieldByName(b.GoField)
+		if !f.IsValid() || !f.CanSet() {
+			continue
+		}
+		if hv := resp.Header.Get(b.WireName); hv != "" {
+			setStringField(f, hv)
+		}
+	}
+
+	// Binary @httpPayload output (e.g. synthesized audio): read the
+	// raw body into the []byte field instead of JSON-decoding.
+	if route.RespPayloadField != "" {
+		raw, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("http.Invoke: read response body: %w", err)
+		}
+		if f := outVal.FieldByName(route.RespPayloadField); f.IsValid() && f.CanSet() &&
+			f.Kind() == reflect.Slice && f.Type().Elem().Kind() == reflect.Uint8 {
+			f.SetBytes(raw)
+		}
+		return &out, nil
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil && err != io.EOF {
 		return nil, fmt.Errorf("http.Invoke: decode response: %w", err)
 	}
@@ -288,4 +322,37 @@ func stringifyMultiField(v reflect.Value) []string {
 		return out
 	}
 	return []string{stringifyField(v)}
+}
+
+// setStringField parses a wire string into struct field v (the
+// reverse of stringifyField), used to bind @httpHeader-tagged
+// response fields. Handles string/int/uint/float/bool and their
+// pointer forms; unparseable numerics leave the field at zero.
+func setStringField(v reflect.Value, s string) {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			v.Set(reflect.New(v.Type().Elem()))
+		}
+		v = v.Elem()
+	}
+	switch v.Kind() {
+	case reflect.String:
+		v.SetString(s)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+			v.SetInt(n)
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		if n, err := strconv.ParseUint(s, 10, 64); err == nil {
+			v.SetUint(n)
+		}
+	case reflect.Float32, reflect.Float64:
+		if f, err := strconv.ParseFloat(s, 64); err == nil {
+			v.SetFloat(f)
+		}
+	case reflect.Bool:
+		if b, err := strconv.ParseBool(s); err == nil {
+			v.SetBool(b)
+		}
+	}
 }

@@ -1521,3 +1521,128 @@ type AnalyzeOutput struct {
 
 	noSmithyDocumentSerde
 }
+
+// JSON request body for /v1/speak . Exactly one of text or url must be set
+// (enforced server-side; Smithy cannot express "exactly one of").
+type SpeakTextSource struct {
+
+	// Inline text to synthesize.
+	Text *string `json:"text,omitempty"`
+
+	// HTTPS URL Deepgram fetches the text document from.
+	Url *string `json:"url,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// POST /v1/speak accepts the input text in one of two body shapes selected by
+// Content-Type (same pattern as Read; see READ-004).
+//
+// The following types satisfy this interface:
+//
+//	SpeakRequestBodyMemberSource
+//	SpeakRequestBodyMemberText
+type SpeakRequestBody interface {
+	isSpeakRequestBody()
+}
+
+// JSON envelope carrying inline text or a URL to fetch text from. Content-Type:
+// application/json selects this variant.
+type SpeakRequestBodyMemberSource struct {
+	Value SpeakTextSource
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakRequestBodyMemberSource) isSpeakRequestBody() {}
+
+// Raw text. Content-Type: text/plain (or no Content-Type ).
+type SpeakRequestBodyMemberText struct {
+	Value string
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakRequestBodyMemberText) isSpeakRequestBody() {}
+
+type SynthesizeInput struct {
+
+	// Output bit rate (bps). Valid for mp3 / opus / aac only.
+	BitRate *int32 `json:"-"`
+
+	// POST /v1/speak accepts the input text in one of two body shapes selected by
+	// Content-Type (same pattern as Read; see READ-004).
+	Body SpeakRequestBody `json:"-"`
+
+	// Where to deliver the synthesized audio. When set, the operation returns
+	// {"request_id": ...} immediately and POSTs/PUTs the audio to this URL. See
+	// SPEAK-002.
+	Callback *string `json:"-"`
+
+	// HTTP method for callback delivery. Default POST .
+	CallbackMethod CallbackMethod `json:"-"`
+
+	// Output container. Valid values depend on encoding (e.g. wav / none for
+	// linear16, ogg for opus).
+	Container SpeakContainer `json:"-"`
+
+	ContentType *string `json:"-"`
+
+	// Output audio codec. Default mp3 .
+	Encoding SpeakEncoding `json:"-"`
+
+	// Opt out of the Model Improvement Program.
+	MipOptOut *bool `json:"-"`
+
+	// Voice model, formatted {tier}-{voice}-{language} (e.g. aura-2-asteria-en ).
+	// Default aura-asteria-en .
+	Model *string `json:"-"`
+
+	// Output sample rate (Hz). Valid values depend on encoding .
+	SampleRate *int32 `json:"-"`
+
+	// Playback speed multiplier (e.g. 1.0 , 1.5 ).
+	Speed *float32 `json:"-"`
+
+	// Tags echoed back in dg-* response metadata. Repeated ?tag= .
+	Tag []string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// Synchronous Speak response: the body is the synthesized audio; format and model
+// metadata travel in response headers.
+type SynthesizeOutput struct {
+
+	// Comma-separated additional model UUIDs, when applicable.
+	AdditionalModelUuids *string `json:"-"`
+
+	// The synthesized audio bytes.
+	//
+	// This value conforms to the media type: audio/*
+	Audio []byte `json:"-"`
+
+	// Count of pronunciation break tokens applied.
+	BreaksApplied *int32 `json:"-"`
+
+	// Number of input characters (UTF-8 chars).
+	CharCount *int32 `json:"-"`
+
+	// Audio MIME type (e.g. audio/mpeg , audio/wav , audio/ogg ), derived from
+	// encoding + container .
+	ContentType *string `json:"-"`
+
+	// Model used (e.g. aura-2-asteria-en ).
+	ModelName *string `json:"-"`
+
+	ModelUuid *string `json:"-"`
+
+	// Count of pronunciation override tokens applied.
+	PronunciationsApplied *int32 `json:"-"`
+
+	// Comma-separated pronunciation-validation warning codes ( PRON-00x ), when
+	// present.
+	Warnings *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
