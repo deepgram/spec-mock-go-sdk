@@ -135,8 +135,9 @@ func MarshalServerStream(msg ServerStream) ([]byte, bool, error) {
 }
 
 // UnmarshalServerStream decodes a frame into the matching ServerStream
-// variant. The JSON `type` discriminator selects the variant.
-func UnmarshalServerStream(data []byte) (ServerStream, error) {
+// variant. The JSON `type` discriminator selects the variant
+// (isBinary is unused — this union has no @binaryFrame member).
+func UnmarshalServerStream(data []byte, isBinary bool) (ServerStream, error) {
 	var header struct {
 		Type string `json:"type"`
 	}

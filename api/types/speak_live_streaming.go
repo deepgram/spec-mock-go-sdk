@@ -49,8 +49,9 @@ func MarshalSpeakClientStream(msg SpeakClientStream) ([]byte, bool, error) {
 }
 
 // UnmarshalSpeakClientStream decodes a frame into the matching SpeakClientStream
-// variant. The JSON `type` discriminator selects the variant.
-func UnmarshalSpeakClientStream(data []byte) (SpeakClientStream, error) {
+// variant. The JSON `type` discriminator selects the variant
+// (isBinary is unused — this union has no @binaryFrame member).
+func UnmarshalSpeakClientStream(data []byte, isBinary bool) (SpeakClientStream, error) {
 	var header struct {
 		Type string `json:"type"`
 	}

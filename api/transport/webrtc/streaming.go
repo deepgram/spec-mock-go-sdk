@@ -30,7 +30,7 @@ func OpenStream[C any, S any](
 	ctx context.Context,
 	signalingURL string,
 	marshal func(C) ([]byte, bool, error),
-	unmarshal func([]byte) (S, error),
+	unmarshal func([]byte, bool) (S, error),
 ) (Stream[C, S], error) {
 	_ = ctx
 	_ = signalingURL
