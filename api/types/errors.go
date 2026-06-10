@@ -411,3 +411,124 @@ func (e *DriverTimeoutError) ErrorCode() string {
 	return *e.ErrorCodeOverride
 }
 func (e *DriverTimeoutError) ErrorFault() smithy.ErrorFault { return smithy.FaultServer }
+
+// Client sent a binary or unrecognized message type. WS close code 1003 . code :
+// MESSAGE-0000 .
+type SpeakBadMessageError struct {
+	Message *string
+
+	ErrorCodeOverride *string
+
+	Code        *string `json:"code"`
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+func (e *SpeakBadMessageError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *SpeakBadMessageError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *SpeakBadMessageError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "SpeakBadMessageError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *SpeakBadMessageError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
+
+// Policy violation. WS close code 1008 . code : DATA-0000 (invalid command),
+// DATA-0001 (input-text rate limit), DATA-0002 (invalid inline TTS control).
+type SpeakPolicyError struct {
+	Message *string
+
+	ErrorCodeOverride *string
+
+	Code        *string `json:"code"`
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+func (e *SpeakPolicyError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *SpeakPolicyError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *SpeakPolicyError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "SpeakPolicyError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *SpeakPolicyError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }
+
+// Server-side transport/driver/timeout failure. WS close code 1011 . code :
+// NET-0000 (driver request failed), NET-0001 (failed to receive), NET-0002
+// (failed to send), NET-0003 (time limit exceeded).
+type SpeakServerError struct {
+	Message *string
+
+	ErrorCodeOverride *string
+
+	Code        *string `json:"code"`
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+func (e *SpeakServerError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *SpeakServerError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *SpeakServerError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "SpeakServerError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *SpeakServerError) ErrorFault() smithy.ErrorFault { return smithy.FaultServer }
+
+// Message or input text too large. WS close code 1009 . code : BIG-0000 (message
+// too large), BIG-0001 (input text too many characters).
+type SpeakTooLargeError struct {
+	Message *string
+
+	ErrorCodeOverride *string
+
+	Code        *string `json:"code"`
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+func (e *SpeakTooLargeError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode(), e.ErrorMessage())
+}
+func (e *SpeakTooLargeError) ErrorMessage() string {
+	if e.Message == nil {
+		return ""
+	}
+	return *e.Message
+}
+func (e *SpeakTooLargeError) ErrorCode() string {
+	if e == nil || e.ErrorCodeOverride == nil {
+		return "SpeakTooLargeError"
+	}
+	return *e.ErrorCodeOverride
+}
+func (e *SpeakTooLargeError) ErrorFault() smithy.ErrorFault { return smithy.FaultClient }

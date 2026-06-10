@@ -136,3 +136,28 @@ func (SpeakEncoding) Values() []SpeakEncoding {
 		"aac",
 	}
 }
+
+type SpeakTimestampEvent string
+
+// Enum values for SpeakTimestampEvent
+const (
+	SpeakTimestampEventUpgradedWebsocketConnection SpeakTimestampEvent = "UpgradedWebSocketConnection"
+	SpeakTimestampEventReceivedFirstInputText      SpeakTimestampEvent = "ReceivedFirstInputText"
+	SpeakTimestampEventReceivedFirstSentence       SpeakTimestampEvent = "ReceivedFirstSentence"
+	SpeakTimestampEventRequestedFirstAudioChunk    SpeakTimestampEvent = "RequestedFirstAudioChunk"
+	SpeakTimestampEventReceivedFirstAudioChunk     SpeakTimestampEvent = "ReceivedFirstAudioChunk"
+)
+
+// Values returns all known values for SpeakTimestampEvent. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (SpeakTimestampEvent) Values() []SpeakTimestampEvent {
+	return []SpeakTimestampEvent{
+		"UpgradedWebSocketConnection",
+		"ReceivedFirstInputText",
+		"ReceivedFirstSentence",
+		"RequestedFirstAudioChunk",
+		"ReceivedFirstAudioChunk",
+	}
+}

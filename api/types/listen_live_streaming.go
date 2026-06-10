@@ -23,25 +23,6 @@ import (
 	"fmt"
 )
 
-// marshalTagged JSON-marshals payload then injects a top-level
-// `"type": typeName` field on the result. Used for streaming-union
-// members whose target structure carries @messageType.
-func marshalTagged(typeName string, payload any) ([]byte, error) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-	var raw map[string]any
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, err
-	}
-	if raw == nil {
-		raw = map[string]any{}
-	}
-	raw["type"] = typeName
-	return json.Marshal(raw)
-}
-
 // MarshalClientStream encodes a ClientStream variant for the wire.
 // Returns (payload, isBinary, err). When isBinary is true the payload is raw
 // bytes destined for a WebSocket binary frame; otherwise the payload is JSON

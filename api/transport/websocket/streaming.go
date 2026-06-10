@@ -27,9 +27,13 @@ import (
 
 // Close codes mapped from @websocketCloseCode trait on error shapes.
 const (
-	CloseCodeClientTimeout = 1011
-	CloseCodeCodec         = 1008
-	CloseCodeDriverTimeout = 1011
+	CloseCodeClientTimeout   = 1011
+	CloseCodeCodec           = 1008
+	CloseCodeDriverTimeout   = 1011
+	CloseCodeSpeakBadMessage = 1003
+	CloseCodeSpeakPolicy     = 1008
+	CloseCodeSpeakServer     = 1011
+	CloseCodeSpeakTooLarge   = 1009
 )
 
 // Stream is the bidirectional WebSocket session handle. C is the

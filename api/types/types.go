@@ -1646,3 +1646,300 @@ type SynthesizeOutput struct {
 
 	noSmithyDocumentSerde
 }
+
+// Audio frame variant. The wire form is a binary WS frame whose body is data .
+// @eventPayload marks the binary payload (per AWS event-stream conventions); the
+// custom WebSocket protocol generator emits it as a WS binary frame.
+type SpeakAudioFrame struct {
+
+	// Raw synthesized audio bytes (per the session's encoding ).
+	//
+	// This member is required.
+	Data []byte `json:"data"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"AudioMetadata", ...} . Only when ?performance=true .
+type SpeakAudioMetadata struct {
+
+	// This member is required.
+	ContentType *string `json:"content_type"`
+
+	// This member is required.
+	InputNumChars *int32 `json:"input_num_chars"`
+
+	// This member is required.
+	InputText *string `json:"input_text"`
+
+	// Latency in milliseconds.
+	//
+	// This member is required.
+	LatencyMilliseconds *int64 `json:"latency_milliseconds"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Clear"} .
+type SpeakClear struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Cleared","sequence_id":<u64>} .
+type SpeakCleared struct {
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Close"} .
+type SpeakClose struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Flush"} .
+type SpeakFlush struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Speak","text":"..."} .
+type SpeakText struct {
+
+	// Text to synthesize. An empty/absent value is treated as empty text.
+	//
+	// This member is required.
+	Text *string `json:"text"`
+
+	noSmithyDocumentSerde
+}
+
+// Client → Server message stream. All variants are JSON text frames whose type
+// field discriminates the variant. The client never sends binary.
+//
+// The following types satisfy this interface:
+//
+//	SpeakClientStreamMemberClear
+//	SpeakClientStreamMemberClose
+//	SpeakClientStreamMemberFlush
+//	SpeakClientStreamMemberSpeak
+type SpeakClientStream interface {
+	isSpeakClientStream()
+}
+
+// Discard buffered text and any in-flight synthesis.
+type SpeakClientStreamMemberClear struct {
+	Value SpeakClear
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberClear) isSpeakClientStream() {}
+
+// Cleanly close the session.
+type SpeakClientStreamMemberClose struct {
+	Value SpeakClose
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberClose) isSpeakClientStream() {}
+
+// Synthesize and emit all buffered text immediately.
+type SpeakClientStreamMemberFlush struct {
+	Value SpeakFlush
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberFlush) isSpeakClientStream() {}
+
+// Enqueue text for synthesis.
+type SpeakClientStreamMemberSpeak struct {
+	Value SpeakText
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberSpeak) isSpeakClientStream() {}
+
+// {"type":"Flushed","sequence_id":<u64>} .
+type SpeakFlushed struct {
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+type SpeakStreamInput struct {
+
+	// Automatically flush buffered audio. Default true . Streaming-only.
+	AutoFlush *bool `json:"-"`
+
+	// Webhook URL for completion callback.
+	Callback *string `json:"-"`
+
+	// HTTP method for callback delivery. Default POST .
+	CallbackMethod CallbackMethod `json:"-"`
+
+	// Output codec. Streaming supports linear16 / mulaw / alaw .
+	Encoding SpeakEncoding `json:"-"`
+
+	// Opt out of the Model Improvement Program.
+	MipOptOut *bool `json:"-"`
+
+	// Voice model (e.g. aura-2-asteria-en ). Default aura-asteria-en .
+	Model *string `json:"-"`
+
+	// Output sample rate (Hz). Valid values depend on encoding .
+	SampleRate *int32 `json:"-"`
+
+	SecWebSocketProtocol *string `json:"-"`
+
+	// Playback speed multiplier.
+	Speed *float32 `json:"-"`
+
+	// Tags echoed back. Repeated ?tag= .
+	Tag []string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Metadata", ...} .
+type SpeakMetadata struct {
+
+	// This member is required.
+	AdditionalModelUuids []string `json:"additional_model_uuids"`
+
+	// This member is required.
+	ModelName *string `json:"model_name"`
+
+	// This member is required.
+	ModelUuid *string `json:"model_uuid"`
+
+	// This member is required.
+	ModelVersion *string `json:"model_version"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Timestamp", ...} . Only when ?performance=true .
+type SpeakTimestamp struct {
+
+	// This member is required.
+	Event SpeakTimestampEvent `json:"event"`
+
+	// Milliseconds from session start.
+	//
+	// This member is required.
+	MillisecondsFromStart *int64 `json:"milliseconds_from_start"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Warning","warn_code":"...","warn_msg":"..."} .
+type SpeakWarning struct {
+
+	// This member is required.
+	WarnCode *string `json:"warn_code"`
+
+	// This member is required.
+	WarnMsg *string `json:"warn_msg"`
+
+	noSmithyDocumentSerde
+}
+
+// Server → Client message stream. Synthesized audio rides as binary frames ( audio
+// variant); status messages ride as JSON text frames whose type field
+// discriminates the variant.
+//
+// The following types satisfy this interface:
+//
+//	SpeakServerStreamMemberAudio
+//	SpeakServerStreamMemberAudioMetadata
+//	SpeakServerStreamMemberCleared
+//	SpeakServerStreamMemberFlushed
+//	SpeakServerStreamMemberMetadata
+//	SpeakServerStreamMemberTimestamp
+//	SpeakServerStreamMemberWarning
+type SpeakServerStream interface {
+	isSpeakServerStream()
+}
+
+// Synthesized audio bytes. Sent as a binary WebSocket frame, NOT JSON.
+type SpeakServerStreamMemberAudio struct {
+	Value SpeakAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberAudio) isSpeakServerStream() {}
+
+// Per-flush audio metadata. Only when ?performance=true .
+type SpeakServerStreamMemberAudioMetadata struct {
+	Value SpeakAudioMetadata
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberAudioMetadata) isSpeakServerStream() {}
+
+// Acknowledges a client Clear .
+type SpeakServerStreamMemberCleared struct {
+	Value SpeakCleared
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberCleared) isSpeakServerStream() {}
+
+// Acknowledges a client Flush .
+type SpeakServerStreamMemberFlushed struct {
+	Value SpeakFlushed
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberFlushed) isSpeakServerStream() {}
+
+// Per-session metadata. Emitted at the start of synthesis.
+type SpeakServerStreamMemberMetadata struct {
+	Value SpeakMetadata
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberMetadata) isSpeakServerStream() {}
+
+// Latency timestamp event. Only when ?performance=true .
+type SpeakServerStreamMemberTimestamp struct {
+	Value SpeakTimestamp
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberTimestamp) isSpeakServerStream() {}
+
+// Non-fatal warning (e.g. pronunciation/control validation).
+type SpeakServerStreamMemberWarning struct {
+	Value SpeakWarning
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberWarning) isSpeakServerStream() {}
+
+type SpeakStreamOutput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
