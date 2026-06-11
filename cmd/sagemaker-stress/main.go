@@ -73,7 +73,7 @@ func main() {
 	fmt.Printf("Go transport stress: endpoint=%s connections=%d isolate=%v wav=%s (%d Hz)\n",
 		*endpoint, *conns, *isolate, *wavPath, sampleRate)
 
-	var ok, errd int64
+	var ok, errd, established int64
 	var mu sync.Mutex
 	errCounts := map[string]int{}
 	var wg sync.WaitGroup
@@ -82,7 +82,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if e := runOne(open, pcm, sampleRate); e != nil {
+			if e := runOne(open, &established, pcm, sampleRate); e != nil {
 				atomic.AddInt64(&errd, 1)
 				mu.Lock()
 				errCounts[shorten(e.Error())]++
@@ -94,19 +94,27 @@ func main() {
 	}
 	wg.Wait()
 
+	// midStream = streams that opened (connect succeeded) but then errored —
+	// the regime the stateful replay layer targets. connectFail = never opened.
+	connectFail := int64(*conns) - established
+	midStream := established - ok
+
 	fmt.Printf("\n=== Go transport stress (api/transport/sagemaker) ===\n")
 	fmt.Printf("connections=%d  successful=%d  errored=%d  wall=%.1fs\n",
 		*conns, ok, errd, time.Since(start).Seconds())
+	fmt.Printf("established=%d  connect-failed=%d  mid-stream-failed=%d\n",
+		established, connectFail, midStream)
 	for msg, n := range errCounts {
 		fmt.Printf("  (x%d) %s\n", n, msg)
 	}
 }
 
-func runOne(open func() (sm.Stream[[]byte, []byte], error), pcm []byte, sampleRate int) error {
+func runOne(open func() (sm.Stream[[]byte, []byte], error), established *int64, pcm []byte, sampleRate int) error {
 	stream, err := open()
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
 	}
+	atomic.AddInt64(established, 1)
 	defer stream.Close()
 
 	recvErr := make(chan error, 1)
