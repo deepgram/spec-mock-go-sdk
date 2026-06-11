@@ -9,14 +9,15 @@ package livev1
 import (
 	"context"
 	"errors"
+	"fmt"
+	wstransport "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
+	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	nethttp "net/http"
 	"net/url"
 	"os"
 	"reflect"
 	"strconv"
-
-	wstransport "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
-	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
+	"time"
 )
 
 const DefaultBaseURL = "wss://api.deepgram.com"
@@ -29,6 +30,7 @@ type AgentLiveOptions struct {
 type Client struct {
 	apiKey, accessToken, baseURL string
 	transport                    liveTransport
+	config                       *Config
 }
 type Option func(*Client)
 
@@ -59,7 +61,7 @@ func WithAccessToken(accessToken string) Option {
 	return func(c *Client) { c.accessToken = accessToken }
 }
 func WithBaseURL(baseURL string) Option { return func(c *Client) { c.baseURL = baseURL } }
-
+func WithConfig(cfg *Config) Option     { return func(c *Client) { c.config = cfg } }
 func (c *Client) Connect(ctx context.Context, opts *AgentLiveOptions) (*Stream, error) {
 	if c.transport == nil {
 		WithWebSocketTransport()(c)
@@ -68,7 +70,9 @@ func (c *Client) Connect(ctx context.Context, opts *AgentLiveOptions) (*Stream, 
 	if err != nil {
 		return nil, err
 	}
-	return &Stream{transport: w}, nil
+	stream := &Stream{transport: w}
+	stream.applyConfigSendDefaults(c.config)
+	return stream, nil
 }
 
 type webSocketBinding struct{}
@@ -105,10 +109,15 @@ func (c *Client) authHeaders() (nethttp.Header, error) {
 }
 
 type Stream struct {
-	transport wireStream
+	transport    wireStream
+	maxFrameSize int
+	sendTimeout  time.Duration
 }
 
 func (s *Stream) SendAudio(data []byte) error {
+	if s.maxFrameSize > 0 && len(data) > s.maxFrameSize {
+		return fmt.Errorf("%w: %d > %d", ErrFrameTooLarge, len(data), s.maxFrameSize)
+	}
 	return s.transport.Send(&spectypes.AgentClientStreamMemberAudio{Value: spectypes.AgentAudioFrame{Data: data}})
 }
 func (s *Stream) SendSettings(v spectypes.AgentSettings) error {

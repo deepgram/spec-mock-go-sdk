@@ -77,7 +77,8 @@ func (c *Client) Connect(ctx context.Context, opts *SpeakLiveOptions) (*Stream, 
 	if err != nil {
 		return nil, err
 	}
-	return &Stream{transport: w}, nil
+	stream := &Stream{transport: w}
+	return stream, nil
 }
 
 type webSocketBinding struct{}
