@@ -27,11 +27,13 @@ type SpeakResponse = SynthesizeOutput
 type Client struct {
 	apiKey, accessToken, baseURL string
 	httpClient                   *nethttp.Client
+	transport                    speakTransport
 }
 type Option func(*Client)
 
 func New(opts ...Option) *Client {
 	c := &Client{apiKey: os.Getenv("DEEPGRAM_API_KEY"), accessToken: os.Getenv("DEEPGRAM_ACCESS_TOKEN"), baseURL: DefaultBaseURL, httpClient: nethttp.DefaultClient}
+	WithHTTPTransport()(c)
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -60,7 +62,21 @@ func (c *Client) FromURL(ctx context.Context, textURL string, opts *SpeakOptions
 	return c.invoke(ctx, opts, "application/json", bytes.NewReader(body))
 }
 
+type speakTransport interface {
+	invoke(ctx context.Context, c *Client, opts *SpeakOptions, contentType string, body io.Reader) (*SpeakResponse, error)
+}
+
 func (c *Client) invoke(ctx context.Context, opts *SpeakOptions, contentType string, body io.Reader) (*SpeakResponse, error) {
+	if c.transport == nil {
+		WithHTTPTransport()(c)
+	}
+	return c.transport.invoke(ctx, c, opts, contentType, body)
+}
+
+type httpBinding struct{}
+
+func WithHTTPTransport() Option { return func(c *Client) { c.transport = httpBinding{} } }
+func (httpBinding) invoke(ctx context.Context, c *Client, opts *SpeakOptions, contentType string, body io.Reader) (*SpeakResponse, error) {
 	input := optionsToSynthesizeInput(opts)
 	var additional url.Values
 	if opts != nil {

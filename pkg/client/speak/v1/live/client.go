@@ -35,11 +35,26 @@ type SpeakLiveOptions struct {
 	AdditionalQueryParams url.Values `json:"-" schema:"-"`
 }
 
-type Client struct{ apiKey, accessToken, baseURL string }
+type Client struct {
+	apiKey, accessToken, baseURL string
+	transport                    liveTransport
+}
 type Option func(*Client)
+
+// wireStream is the transport-agnostic session surface; both the
+// WebSocket and SageMaker bindings satisfy it.
+type wireStream interface {
+	Send(spectypes.SpeakClientStream) error
+	Recv() (spectypes.SpeakServerStream, error)
+	Close() error
+}
+type liveTransport interface {
+	connect(ctx context.Context, c *Client, opts *SpeakLiveOptions) (wireStream, error)
+}
 
 func New(opts ...Option) *Client {
 	c := &Client{apiKey: os.Getenv("DEEPGRAM_API_KEY"), accessToken: os.Getenv("DEEPGRAM_ACCESS_TOKEN"), baseURL: DefaultBaseURL}
+	WithWebSocketTransport()(c)
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -55,6 +70,24 @@ func WithAccessToken(accessToken string) Option {
 func WithBaseURL(baseURL string) Option { return func(c *Client) { c.baseURL = baseURL } }
 
 func (c *Client) Connect(ctx context.Context, opts *SpeakLiveOptions) (*Stream, error) {
+	if c.transport == nil {
+		WithWebSocketTransport()(c)
+	}
+	w, err := c.transport.connect(ctx, c, opts)
+	if err != nil {
+		return nil, err
+	}
+	return &Stream{transport: w}, nil
+}
+
+type webSocketBinding struct{}
+
+// WithWebSocketTransport selects the default cloud WebSocket
+// transport (api.deepgram.com). It is set by New; pass a
+// WithSageMaker... option to override.
+func WithWebSocketTransport() Option { return func(c *Client) { c.transport = webSocketBinding{} } }
+
+func (webSocketBinding) connect(ctx context.Context, c *Client, opts *SpeakLiveOptions) (wireStream, error) {
 	headers, err := c.authHeaders()
 	if err != nil {
 		return nil, err
@@ -64,11 +97,7 @@ func (c *Client) Connect(ctx context.Context, opts *SpeakLiveOptions) (*Stream, 
 	if query != "" {
 		dialURL += "?" + query
 	}
-	ws, err := wstransport.OpenStream[spectypes.SpeakClientStream, spectypes.SpeakServerStream](ctx, dialURL, headers, spectypes.MarshalSpeakClientStream, spectypes.UnmarshalSpeakServerStream)
-	if err != nil {
-		return nil, err
-	}
-	return &Stream{transport: ws}, nil
+	return wstransport.OpenStream[spectypes.SpeakClientStream, spectypes.SpeakServerStream](ctx, dialURL, headers, spectypes.MarshalSpeakClientStream, spectypes.UnmarshalSpeakServerStream)
 }
 
 func (c *Client) authHeaders() (nethttp.Header, error) {
@@ -85,7 +114,7 @@ func (c *Client) authHeaders() (nethttp.Header, error) {
 }
 
 type Stream struct {
-	transport wstransport.Stream[spectypes.SpeakClientStream, spectypes.SpeakServerStream]
+	transport wireStream
 }
 
 func (s *Stream) SendSpeak(text string) error {
