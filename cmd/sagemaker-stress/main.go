@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -36,6 +37,7 @@ func main() {
 	model := flag.String("model", "nova-3", "Deepgram model")
 	lang := flag.String("language", "en", "language code")
 	isolate := flag.Bool("isolate", false, "give each stream its own HTTP client (own connection pool) — the conn-per-stream / maxStreams=1 equivalent")
+	resilient := flag.Bool("resilient", false, "use ResilientDialBidi: conn-per-stream + reconnect/replay on transient mid-stream failures")
 	flag.Parse()
 	if *endpoint == "" || *wavPath == "" {
 		fmt.Fprintln(os.Stderr, "usage: sagemaker-stress -endpoint NAME -file WAV [-connections N]")
@@ -57,17 +59,28 @@ func main() {
 	}
 	marshal := func(b []byte) ([]byte, bool, error) { return b, true, nil }
 	unmarshal := func(b []byte, _ bool) ([]byte, error) { return b, nil }
+	// A received frame counts as an ack (server consumed input) unless it's an
+	// end-of-stream Metadata/Error message — mirrors the Java ack heuristic.
+	isAck := func(b []byte) bool {
+		s := string(b)
+		return !strings.Contains(s, `"type":"Metadata"`) && !strings.Contains(s, `"type":"Error"`)
+	}
 
 	// Default shared client (no Tier-B fix) — the control case that multiplexes.
 	shared := sagemakerruntimehttp2.NewFromConfig(awsCfg)
-	// open returns one bidi stream. With -isolate it uses the SHIPPED path
-	// (sm.DialBidi: fresh isolated client per stream + connect retry); else the
-	// shared multiplexing client.
+	// open returns one bidi stream:
+	//   -resilient: conn-per-stream + reconnect/replay on mid-stream failures
+	//   -isolate:   conn-per-stream + connect-retry (sm.DialBidi)
+	//   default:    shared multiplexing client (the unfixed control)
 	open := func() (sm.Stream[[]byte, []byte], error) {
-		if *isolate {
+		switch {
+		case *resilient:
+			return sm.ResilientDialBidi[[]byte, []byte](ctx, awsCfg, sm.DefaultConfig(), *endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal, isAck)
+		case *isolate:
 			return sm.DialBidi[[]byte, []byte](ctx, awsCfg, sm.DefaultConfig(), *endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal)
+		default:
+			return sm.OpenStream[[]byte, []byte](ctx, shared, *endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal)
 		}
-		return sm.OpenStream[[]byte, []byte](ctx, shared, *endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal)
 	}
 
 	fmt.Printf("Go transport stress: endpoint=%s connections=%d isolate=%v wav=%s (%d Hz)\n",
