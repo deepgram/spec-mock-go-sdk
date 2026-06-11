@@ -54,7 +54,20 @@ func WithEnableExplanations(v string) SageMakerOption {
 func (t sageMakerBidiBinding) connect(ctx context.Context, c *Client, opts *SpeakLiveOptions) (wireStream, error) {
 	_ = c
 	query := liveOptionsToQuery(opts).Encode()
-	// DialBidi builds a fresh isolated client per attempt (conn-per-stream)
-	// and retries transient connect failures with backoff + jitter.
-	return sm.DialBidi(ctx, t.cfg, sm.DefaultConfig(), t.endpointName, "v1/speak", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalSpeakClientStream, spectypes.UnmarshalSpeakServerStream)
+	// ResilientDialBidi builds a fresh isolated client per attempt
+	// (conn-per-stream), retries transient connect failures, and
+	// reconnects + replays unacked sends on mid-stream failures.
+	return sm.ResilientDialBidi(ctx, t.cfg, sm.DefaultConfig(), t.endpointName, "v1/speak", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalSpeakClientStream, spectypes.UnmarshalSpeakServerStream, isAckServerMessage)
+}
+
+// isAckServerMessage reports whether a received message proves the
+// server consumed input (so the replay buffer can be trimmed and the
+// retry budget reset). End-of-stream Error/Metadata messages do not.
+func isAckServerMessage(m spectypes.SpeakServerStream) bool {
+	switch m.(type) {
+	case *spectypes.SpeakServerStreamMemberMetadata, *spectypes.SpeakServerStreamMemberAudioMetadata:
+		return false
+	default:
+		return true
+	}
 }
