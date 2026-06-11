@@ -63,7 +63,7 @@ func TestAgentBinaryBothWays(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Recv (welcome): %v", err)
 	}
-	if _, ok := m1.(*spectypes.AgentServerStreamMemberWelcome); !ok {
+	if _, ok := m1.(*WelcomeEvent); !ok {
 		t.Fatalf("expected Welcome member, got %T", m1)
 	}
 
@@ -71,11 +71,11 @@ func TestAgentBinaryBothWays(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Recv (audio): %v", err)
 	}
-	af, ok := m2.(*spectypes.AgentServerStreamMemberAudio)
+	af, ok := m2.(*AudioEvent)
 	if !ok {
 		t.Fatalf("expected binary audio member, got %T", m2)
 	}
-	if string(af.Value.Data) != string(agentSpeech) {
-		t.Fatalf("agent speech mismatch: got %v want %v", af.Value.Data, agentSpeech)
+	if string(af.Data) != string(agentSpeech) {
+		t.Fatalf("agent speech mismatch: got %v want %v", af.Data, agentSpeech)
 	}
 }

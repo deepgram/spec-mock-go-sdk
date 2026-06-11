@@ -50,7 +50,7 @@ func TestFluxTurnEvents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Recv (connected): %v", err)
 	}
-	if _, ok := m1.(*spectypes.FluxServerStreamMemberConnected); !ok {
+	if _, ok := m1.(*ConnectedEvent); !ok {
 		t.Fatalf("expected Connected, got %T", m1)
 	}
 
@@ -58,14 +58,14 @@ func TestFluxTurnEvents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Recv (turninfo): %v", err)
 	}
-	ti, ok := m2.(*spectypes.FluxServerStreamMemberTurnInfo)
+	ti, ok := m2.(*TurnInfoEvent)
 	if !ok {
 		t.Fatalf("expected TurnInfo, got %T", m2)
 	}
-	if ti.Value.Transcript == nil || *ti.Value.Transcript != "hello world" {
-		t.Fatalf("transcript = %v", ti.Value.Transcript)
+	if ti.Transcript == nil || *ti.Transcript != "hello world" {
+		t.Fatalf("transcript = %v", ti.Transcript)
 	}
-	if ti.Value.Event != spectypes.FluxEventEndOfTurn {
-		t.Fatalf("event = %v", ti.Value.Event)
+	if ti.Event != spectypes.FluxEventEndOfTurn {
+		t.Fatalf("event = %v", ti.Event)
 	}
 }

@@ -15,7 +15,6 @@ import (
 	"strings"
 	"testing"
 
-	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 	ws "github.com/gorilla/websocket"
 )
 
@@ -53,19 +52,19 @@ func TestSpeakLiveBinaryRecv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Recv (audio): %v", err)
 	}
-	af, ok := m1.(*spectypes.SpeakServerStreamMemberAudio)
+	af, ok := m1.(*AudioEvent)
 	if !ok {
 		t.Fatalf("expected binary audio member, got %T", m1)
 	}
-	if string(af.Value.Data) != string(audio) {
-		t.Fatalf("audio bytes mismatch: got %v want %v", af.Value.Data, audio)
+	if string(af.Data) != string(audio) {
+		t.Fatalf("audio bytes mismatch: got %v want %v", af.Data, audio)
 	}
 
 	m2, err := stream.Recv()
 	if err != nil {
 		t.Fatalf("Recv (status): %v", err)
 	}
-	if _, ok := m2.(*spectypes.SpeakServerStreamMemberFlushed); !ok {
+	if _, ok := m2.(*FlushedEvent); !ok {
 		t.Fatalf("expected Flushed JSON member, got %T", m2)
 	}
 }
