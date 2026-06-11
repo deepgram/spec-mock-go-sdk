@@ -40,10 +40,10 @@ func TestGrantToken(t *testing.T) {
 	if err := json.Unmarshal([]byte(gotBody), &sent); err != nil {
 		t.Fatalf("body not JSON: %q", gotBody)
 	}
-	if out.Access_token == nil || *out.Access_token != "tok-123" {
-		t.Fatalf("access_token = %v", out.Access_token)
+	if out.AccessToken != "tok-123" {
+		t.Fatalf("access_token = %v", out.AccessToken)
 	}
-	if out.Expires_in == nil || *out.Expires_in != 30 {
-		t.Fatalf("expires_in = %v", out.Expires_in)
+	if out.ExpiresIn != 30 {
+		t.Fatalf("expires_in = %v", out.ExpiresIn)
 	}
 }

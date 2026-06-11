@@ -22,7 +22,7 @@ import (
 
 const DefaultBaseURL = "https://api.deepgram.com"
 
-type SpeakResponse = spectypes.SynthesizeOutput
+type SpeakResponse = SynthesizeOutput
 
 type Client struct {
 	apiKey, accessToken, baseURL string
@@ -66,7 +66,11 @@ func (c *Client) invoke(ctx context.Context, opts *SpeakOptions, contentType str
 	if opts != nil {
 		additional = opts.AdditionalQueryParams
 	}
-	return httptransport.Invoke[spectypes.SynthesizeInput, spectypes.SynthesizeOutput](ctx, c.httpClient, c.baseURL, spectypes.SynthesizeRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, body, additional)
+	raw, err := httptransport.Invoke[spectypes.SynthesizeInput, spectypes.SynthesizeOutput](ctx, c.httpClient, c.baseURL, spectypes.SynthesizeRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, body, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertSynthesizeOutput(raw), nil
 }
 
 type restAuthenticator struct{ apiKey, accessToken, contentType string }

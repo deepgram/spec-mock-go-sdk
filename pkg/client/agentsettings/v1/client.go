@@ -73,7 +73,7 @@ type ValidateSettingsOptions struct {
 	AdditionalQueryParams url.Values `schema:"-"`
 }
 
-func (c *Client) GetThinkProvider(ctx context.Context, provider string, opts *GetThinkProviderOptions) (*spectypes.GetThinkProviderOutput, error) {
+func (c *Client) GetThinkProvider(ctx context.Context, provider string, opts *GetThinkProviderOptions) (*GetThinkProviderOutput, error) {
 	input := &spectypes.GetThinkProviderInput{}
 	providerV := provider
 	input.Provider = &providerV
@@ -83,10 +83,14 @@ func (c *Client) GetThinkProvider(ctx context.Context, provider string, opts *Ge
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetThinkProviderInput, spectypes.GetThinkProviderOutput](ctx, c.httpClient, c.baseURL, spectypes.GetThinkProviderRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetThinkProviderInput, spectypes.GetThinkProviderOutput](ctx, c.httpClient, c.baseURL, spectypes.GetThinkProviderRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetThinkProviderOutput(raw), nil
 }
 
-func (c *Client) ListProviderModels(ctx context.Context, provider string, opts *ListProviderModelsOptions) (*spectypes.ListProviderModelsOutput, error) {
+func (c *Client) ListProviderModels(ctx context.Context, provider string, opts *ListProviderModelsOptions) (*ListProviderModelsOutput, error) {
 	input := &spectypes.ListProviderModelsInput{}
 	providerV := provider
 	input.Provider = &providerV
@@ -96,10 +100,14 @@ func (c *Client) ListProviderModels(ctx context.Context, provider string, opts *
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProviderModelsInput, spectypes.ListProviderModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProviderModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProviderModelsInput, spectypes.ListProviderModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProviderModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProviderModelsOutput(raw), nil
 }
 
-func (c *Client) ListThinkModels(ctx context.Context, opts *ListThinkModelsOptions) (*spectypes.ListThinkModelsOutput, error) {
+func (c *Client) ListThinkModels(ctx context.Context, opts *ListThinkModelsOptions) (*ListThinkModelsOutput, error) {
 	input := &spectypes.ListThinkModelsInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -107,10 +115,14 @@ func (c *Client) ListThinkModels(ctx context.Context, opts *ListThinkModelsOptio
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListThinkModelsInput, spectypes.ListThinkModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListThinkModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListThinkModelsInput, spectypes.ListThinkModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListThinkModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListThinkModelsOutput(raw), nil
 }
 
-func (c *Client) ListThinkProviders(ctx context.Context, opts *ListThinkProvidersOptions) (*spectypes.ListThinkProvidersOutput, error) {
+func (c *Client) ListThinkProviders(ctx context.Context, opts *ListThinkProvidersOptions) (*ListThinkProvidersOutput, error) {
 	input := &spectypes.ListThinkProvidersInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -118,10 +130,14 @@ func (c *Client) ListThinkProviders(ctx context.Context, opts *ListThinkProvider
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListThinkProvidersInput, spectypes.ListThinkProvidersOutput](ctx, c.httpClient, c.baseURL, spectypes.ListThinkProvidersRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListThinkProvidersInput, spectypes.ListThinkProvidersOutput](ctx, c.httpClient, c.baseURL, spectypes.ListThinkProvidersRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListThinkProvidersOutput(raw), nil
 }
 
-func (c *Client) ValidateAgent(ctx context.Context, agent any, opts *ValidateAgentOptions) (*spectypes.ValidateAgentOutput, error) {
+func (c *Client) ValidateAgent(ctx context.Context, agent any, opts *ValidateAgentOptions) (*ValidateAgentOutput, error) {
 	input := &spectypes.ValidateAgentInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -135,10 +151,14 @@ func (c *Client) ValidateAgent(ctx context.Context, agent any, opts *ValidateAge
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ValidateAgentInput, spectypes.ValidateAgentOutput](ctx, c.httpClient, c.baseURL, spectypes.ValidateAgentRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ValidateAgentInput, spectypes.ValidateAgentOutput](ctx, c.httpClient, c.baseURL, spectypes.ValidateAgentRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertValidateAgentOutput(raw), nil
 }
 
-func (c *Client) ValidateSettings(ctx context.Context, settings any, opts *ValidateSettingsOptions) (*spectypes.ValidateSettingsOutput, error) {
+func (c *Client) ValidateSettings(ctx context.Context, settings any, opts *ValidateSettingsOptions) (*ValidateSettingsOutput, error) {
 	input := &spectypes.ValidateSettingsInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -152,7 +172,11 @@ func (c *Client) ValidateSettings(ctx context.Context, settings any, opts *Valid
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ValidateSettingsInput, spectypes.ValidateSettingsOutput](ctx, c.httpClient, c.baseURL, spectypes.ValidateSettingsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ValidateSettingsInput, spectypes.ValidateSettingsOutput](ctx, c.httpClient, c.baseURL, spectypes.ValidateSettingsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertValidateSettingsOutput(raw), nil
 }
 
 type restAuthenticator struct{ apiKey, accessToken, contentType string }

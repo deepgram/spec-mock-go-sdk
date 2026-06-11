@@ -34,13 +34,13 @@ func TestBinaryAudioOut(t *testing.T) {
 	if string(resp.Audio) != string(audio) {
 		t.Fatalf("audio body not read into Audio: got %v want %v", resp.Audio, audio)
 	}
-	if resp.ContentType == nil || *resp.ContentType != "audio/mpeg" {
+	if resp.ContentType != "audio/mpeg" {
 		t.Fatalf("Content-Type header not bound: %v", resp.ContentType)
 	}
-	if resp.ModelName == nil || *resp.ModelName != "aura-2-asteria-en" {
+	if resp.ModelName != "aura-2-asteria-en" {
 		t.Fatalf("dg-model-name header not bound: %v", resp.ModelName)
 	}
-	if resp.CharCount == nil || *resp.CharCount != 5 {
+	if resp.CharCount != 5 {
 		t.Fatalf("dg-char-count header not bound/parsed: %v", resp.CharCount)
 	}
 }

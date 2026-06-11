@@ -284,7 +284,7 @@ type UpdateProjectOptions struct {
 	AdditionalQueryParams url.Values `schema:"-"`
 }
 
-func (c *Client) CreateProjectInvite(ctx context.Context, project_id string, body any, opts *CreateProjectInviteOptions) (*spectypes.CreateProjectInviteOutput, error) {
+func (c *Client) CreateProjectInvite(ctx context.Context, project_id string, body any, opts *CreateProjectInviteOptions) (*CreateProjectInviteOutput, error) {
 	input := &spectypes.CreateProjectInviteInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -300,10 +300,14 @@ func (c *Client) CreateProjectInvite(ctx context.Context, project_id string, bod
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.CreateProjectInviteInput, spectypes.CreateProjectInviteOutput](ctx, c.httpClient, c.baseURL, spectypes.CreateProjectInviteRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.CreateProjectInviteInput, spectypes.CreateProjectInviteOutput](ctx, c.httpClient, c.baseURL, spectypes.CreateProjectInviteRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertCreateProjectInviteOutput(raw), nil
 }
 
-func (c *Client) CreateProjectKey(ctx context.Context, project_id string, body any, opts *CreateProjectKeyOptions) (*spectypes.CreateProjectKeyOutput, error) {
+func (c *Client) CreateProjectKey(ctx context.Context, project_id string, body any, opts *CreateProjectKeyOptions) (*CreateProjectKeyOutput, error) {
 	input := &spectypes.CreateProjectKeyInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -319,10 +323,14 @@ func (c *Client) CreateProjectKey(ctx context.Context, project_id string, body a
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.CreateProjectKeyInput, spectypes.CreateProjectKeyOutput](ctx, c.httpClient, c.baseURL, spectypes.CreateProjectKeyRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.CreateProjectKeyInput, spectypes.CreateProjectKeyOutput](ctx, c.httpClient, c.baseURL, spectypes.CreateProjectKeyRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertCreateProjectKeyOutput(raw), nil
 }
 
-func (c *Client) DeleteProject(ctx context.Context, project_id string, opts *DeleteProjectOptions) (*spectypes.DeleteProjectOutput, error) {
+func (c *Client) DeleteProject(ctx context.Context, project_id string, opts *DeleteProjectOptions) (*DeleteProjectOutput, error) {
 	input := &spectypes.DeleteProjectInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -332,10 +340,14 @@ func (c *Client) DeleteProject(ctx context.Context, project_id string, opts *Del
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.DeleteProjectInput, spectypes.DeleteProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.DeleteProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.DeleteProjectInput, spectypes.DeleteProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.DeleteProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertDeleteProjectOutput(raw), nil
 }
 
-func (c *Client) DeleteProjectInvite(ctx context.Context, project_id string, email string, opts *DeleteProjectInviteOptions) (*spectypes.DeleteProjectInviteOutput, error) {
+func (c *Client) DeleteProjectInvite(ctx context.Context, project_id string, email string, opts *DeleteProjectInviteOptions) (*DeleteProjectInviteOutput, error) {
 	input := &spectypes.DeleteProjectInviteInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -347,10 +359,14 @@ func (c *Client) DeleteProjectInvite(ctx context.Context, project_id string, ema
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.DeleteProjectInviteInput, spectypes.DeleteProjectInviteOutput](ctx, c.httpClient, c.baseURL, spectypes.DeleteProjectInviteRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.DeleteProjectInviteInput, spectypes.DeleteProjectInviteOutput](ctx, c.httpClient, c.baseURL, spectypes.DeleteProjectInviteRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertDeleteProjectInviteOutput(raw), nil
 }
 
-func (c *Client) DeleteProjectKey(ctx context.Context, project_id string, key_id string, opts *DeleteProjectKeyOptions) (*spectypes.DeleteProjectKeyOutput, error) {
+func (c *Client) DeleteProjectKey(ctx context.Context, project_id string, key_id string, opts *DeleteProjectKeyOptions) (*DeleteProjectKeyOutput, error) {
 	input := &spectypes.DeleteProjectKeyInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -362,10 +378,14 @@ func (c *Client) DeleteProjectKey(ctx context.Context, project_id string, key_id
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.DeleteProjectKeyInput, spectypes.DeleteProjectKeyOutput](ctx, c.httpClient, c.baseURL, spectypes.DeleteProjectKeyRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.DeleteProjectKeyInput, spectypes.DeleteProjectKeyOutput](ctx, c.httpClient, c.baseURL, spectypes.DeleteProjectKeyRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertDeleteProjectKeyOutput(raw), nil
 }
 
-func (c *Client) GetBillingBreakdown(ctx context.Context, project_id string, opts *GetBillingBreakdownOptions) (*spectypes.GetBillingBreakdownOutput, error) {
+func (c *Client) GetBillingBreakdown(ctx context.Context, project_id string, opts *GetBillingBreakdownOptions) (*GetBillingBreakdownOutput, error) {
 	input := &spectypes.GetBillingBreakdownInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -375,10 +395,14 @@ func (c *Client) GetBillingBreakdown(ctx context.Context, project_id string, opt
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetBillingBreakdownInput, spectypes.GetBillingBreakdownOutput](ctx, c.httpClient, c.baseURL, spectypes.GetBillingBreakdownRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetBillingBreakdownInput, spectypes.GetBillingBreakdownOutput](ctx, c.httpClient, c.baseURL, spectypes.GetBillingBreakdownRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetBillingBreakdownOutput(raw), nil
 }
 
-func (c *Client) GetModel(ctx context.Context, model_id string, opts *GetModelOptions) (*spectypes.GetModelOutput, error) {
+func (c *Client) GetModel(ctx context.Context, model_id string, opts *GetModelOptions) (*GetModelOutput, error) {
 	input := &spectypes.GetModelInput{}
 	model_idV := model_id
 	input.Model_id = &model_idV
@@ -388,10 +412,14 @@ func (c *Client) GetModel(ctx context.Context, model_id string, opts *GetModelOp
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetModelInput, spectypes.GetModelOutput](ctx, c.httpClient, c.baseURL, spectypes.GetModelRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetModelInput, spectypes.GetModelOutput](ctx, c.httpClient, c.baseURL, spectypes.GetModelRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetModelOutput(raw), nil
 }
 
-func (c *Client) GetProject(ctx context.Context, project_id string, opts *GetProjectOptions) (*spectypes.GetProjectOutput, error) {
+func (c *Client) GetProject(ctx context.Context, project_id string, opts *GetProjectOptions) (*GetProjectOutput, error) {
 	input := &spectypes.GetProjectInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -401,10 +429,14 @@ func (c *Client) GetProject(ctx context.Context, project_id string, opts *GetPro
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetProjectInput, spectypes.GetProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetProjectInput, spectypes.GetProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetProjectOutput(raw), nil
 }
 
-func (c *Client) GetProjectBalance(ctx context.Context, project_id string, balance_id string, opts *GetProjectBalanceOptions) (*spectypes.GetProjectBalanceOutput, error) {
+func (c *Client) GetProjectBalance(ctx context.Context, project_id string, balance_id string, opts *GetProjectBalanceOptions) (*GetProjectBalanceOutput, error) {
 	input := &spectypes.GetProjectBalanceInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -416,10 +448,14 @@ func (c *Client) GetProjectBalance(ctx context.Context, project_id string, balan
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetProjectBalanceInput, spectypes.GetProjectBalanceOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectBalanceRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetProjectBalanceInput, spectypes.GetProjectBalanceOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectBalanceRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetProjectBalanceOutput(raw), nil
 }
 
-func (c *Client) GetProjectKey(ctx context.Context, project_id string, key_id string, opts *GetProjectKeyOptions) (*spectypes.GetProjectKeyOutput, error) {
+func (c *Client) GetProjectKey(ctx context.Context, project_id string, key_id string, opts *GetProjectKeyOptions) (*GetProjectKeyOutput, error) {
 	input := &spectypes.GetProjectKeyInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -431,10 +467,14 @@ func (c *Client) GetProjectKey(ctx context.Context, project_id string, key_id st
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetProjectKeyInput, spectypes.GetProjectKeyOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectKeyRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetProjectKeyInput, spectypes.GetProjectKeyOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectKeyRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetProjectKeyOutput(raw), nil
 }
 
-func (c *Client) GetProjectModel(ctx context.Context, project_id string, model_id string, opts *GetProjectModelOptions) (*spectypes.GetProjectModelOutput, error) {
+func (c *Client) GetProjectModel(ctx context.Context, project_id string, model_id string, opts *GetProjectModelOptions) (*GetProjectModelOutput, error) {
 	input := &spectypes.GetProjectModelInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -446,10 +486,14 @@ func (c *Client) GetProjectModel(ctx context.Context, project_id string, model_i
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetProjectModelInput, spectypes.GetProjectModelOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectModelRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetProjectModelInput, spectypes.GetProjectModelOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectModelRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetProjectModelOutput(raw), nil
 }
 
-func (c *Client) GetProjectRequest(ctx context.Context, project_id string, request_id string, opts *GetProjectRequestOptions) (*spectypes.GetProjectRequestOutput, error) {
+func (c *Client) GetProjectRequest(ctx context.Context, project_id string, request_id string, opts *GetProjectRequestOptions) (*GetProjectRequestOutput, error) {
 	input := &spectypes.GetProjectRequestInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -461,10 +505,14 @@ func (c *Client) GetProjectRequest(ctx context.Context, project_id string, reque
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetProjectRequestInput, spectypes.GetProjectRequestOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectRequestRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetProjectRequestInput, spectypes.GetProjectRequestOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectRequestRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetProjectRequestOutput(raw), nil
 }
 
-func (c *Client) GetProjectUsage(ctx context.Context, project_id string, opts *GetProjectUsageOptions) (*spectypes.GetProjectUsageOutput, error) {
+func (c *Client) GetProjectUsage(ctx context.Context, project_id string, opts *GetProjectUsageOptions) (*GetProjectUsageOutput, error) {
 	input := &spectypes.GetProjectUsageInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -474,10 +522,14 @@ func (c *Client) GetProjectUsage(ctx context.Context, project_id string, opts *G
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetProjectUsageInput, spectypes.GetProjectUsageOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectUsageRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetProjectUsageInput, spectypes.GetProjectUsageOutput](ctx, c.httpClient, c.baseURL, spectypes.GetProjectUsageRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetProjectUsageOutput(raw), nil
 }
 
-func (c *Client) GetUsageBreakdown(ctx context.Context, project_id string, opts *GetUsageBreakdownOptions) (*spectypes.GetUsageBreakdownOutput, error) {
+func (c *Client) GetUsageBreakdown(ctx context.Context, project_id string, opts *GetUsageBreakdownOptions) (*GetUsageBreakdownOutput, error) {
 	input := &spectypes.GetUsageBreakdownInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -487,10 +539,14 @@ func (c *Client) GetUsageBreakdown(ctx context.Context, project_id string, opts 
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GetUsageBreakdownInput, spectypes.GetUsageBreakdownOutput](ctx, c.httpClient, c.baseURL, spectypes.GetUsageBreakdownRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GetUsageBreakdownInput, spectypes.GetUsageBreakdownOutput](ctx, c.httpClient, c.baseURL, spectypes.GetUsageBreakdownRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGetUsageBreakdownOutput(raw), nil
 }
 
-func (c *Client) LeaveProject(ctx context.Context, project_id string, opts *LeaveProjectOptions) (*spectypes.LeaveProjectOutput, error) {
+func (c *Client) LeaveProject(ctx context.Context, project_id string, opts *LeaveProjectOptions) (*LeaveProjectOutput, error) {
 	input := &spectypes.LeaveProjectInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -500,10 +556,14 @@ func (c *Client) LeaveProject(ctx context.Context, project_id string, opts *Leav
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.LeaveProjectInput, spectypes.LeaveProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.LeaveProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.LeaveProjectInput, spectypes.LeaveProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.LeaveProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertLeaveProjectOutput(raw), nil
 }
 
-func (c *Client) ListBillingFields(ctx context.Context, project_id string, opts *ListBillingFieldsOptions) (*spectypes.ListBillingFieldsOutput, error) {
+func (c *Client) ListBillingFields(ctx context.Context, project_id string, opts *ListBillingFieldsOptions) (*ListBillingFieldsOutput, error) {
 	input := &spectypes.ListBillingFieldsInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -513,10 +573,14 @@ func (c *Client) ListBillingFields(ctx context.Context, project_id string, opts 
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListBillingFieldsInput, spectypes.ListBillingFieldsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListBillingFieldsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListBillingFieldsInput, spectypes.ListBillingFieldsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListBillingFieldsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListBillingFieldsOutput(raw), nil
 }
 
-func (c *Client) ListMemberScopes(ctx context.Context, project_id string, member_id string, opts *ListMemberScopesOptions) (*spectypes.ListMemberScopesOutput, error) {
+func (c *Client) ListMemberScopes(ctx context.Context, project_id string, member_id string, opts *ListMemberScopesOptions) (*ListMemberScopesOutput, error) {
 	input := &spectypes.ListMemberScopesInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -528,10 +592,14 @@ func (c *Client) ListMemberScopes(ctx context.Context, project_id string, member
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListMemberScopesInput, spectypes.ListMemberScopesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListMemberScopesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListMemberScopesInput, spectypes.ListMemberScopesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListMemberScopesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListMemberScopesOutput(raw), nil
 }
 
-func (c *Client) ListModels(ctx context.Context, opts *ListModelsOptions) (*spectypes.ListModelsOutput, error) {
+func (c *Client) ListModels(ctx context.Context, opts *ListModelsOptions) (*ListModelsOutput, error) {
 	input := &spectypes.ListModelsInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -539,10 +607,14 @@ func (c *Client) ListModels(ctx context.Context, opts *ListModelsOptions) (*spec
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListModelsInput, spectypes.ListModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListModelsInput, spectypes.ListModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListModelsOutput(raw), nil
 }
 
-func (c *Client) ListProjectBalances(ctx context.Context, project_id string, opts *ListProjectBalancesOptions) (*spectypes.ListProjectBalancesOutput, error) {
+func (c *Client) ListProjectBalances(ctx context.Context, project_id string, opts *ListProjectBalancesOptions) (*ListProjectBalancesOutput, error) {
 	input := &spectypes.ListProjectBalancesInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -552,10 +624,14 @@ func (c *Client) ListProjectBalances(ctx context.Context, project_id string, opt
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectBalancesInput, spectypes.ListProjectBalancesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectBalancesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectBalancesInput, spectypes.ListProjectBalancesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectBalancesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectBalancesOutput(raw), nil
 }
 
-func (c *Client) ListProjectInvites(ctx context.Context, project_id string, opts *ListProjectInvitesOptions) (*spectypes.ListProjectInvitesOutput, error) {
+func (c *Client) ListProjectInvites(ctx context.Context, project_id string, opts *ListProjectInvitesOptions) (*ListProjectInvitesOutput, error) {
 	input := &spectypes.ListProjectInvitesInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -565,10 +641,14 @@ func (c *Client) ListProjectInvites(ctx context.Context, project_id string, opts
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectInvitesInput, spectypes.ListProjectInvitesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectInvitesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectInvitesInput, spectypes.ListProjectInvitesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectInvitesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectInvitesOutput(raw), nil
 }
 
-func (c *Client) ListProjectKeys(ctx context.Context, project_id string, opts *ListProjectKeysOptions) (*spectypes.ListProjectKeysOutput, error) {
+func (c *Client) ListProjectKeys(ctx context.Context, project_id string, opts *ListProjectKeysOptions) (*ListProjectKeysOutput, error) {
 	input := &spectypes.ListProjectKeysInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -578,10 +658,14 @@ func (c *Client) ListProjectKeys(ctx context.Context, project_id string, opts *L
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectKeysInput, spectypes.ListProjectKeysOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectKeysRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectKeysInput, spectypes.ListProjectKeysOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectKeysRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectKeysOutput(raw), nil
 }
 
-func (c *Client) ListProjectMembers(ctx context.Context, project_id string, opts *ListProjectMembersOptions) (*spectypes.ListProjectMembersOutput, error) {
+func (c *Client) ListProjectMembers(ctx context.Context, project_id string, opts *ListProjectMembersOptions) (*ListProjectMembersOutput, error) {
 	input := &spectypes.ListProjectMembersInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -591,10 +675,14 @@ func (c *Client) ListProjectMembers(ctx context.Context, project_id string, opts
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectMembersInput, spectypes.ListProjectMembersOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectMembersRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectMembersInput, spectypes.ListProjectMembersOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectMembersRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectMembersOutput(raw), nil
 }
 
-func (c *Client) ListProjectModels(ctx context.Context, project_id string, opts *ListProjectModelsOptions) (*spectypes.ListProjectModelsOutput, error) {
+func (c *Client) ListProjectModels(ctx context.Context, project_id string, opts *ListProjectModelsOptions) (*ListProjectModelsOutput, error) {
 	input := &spectypes.ListProjectModelsInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -604,10 +692,14 @@ func (c *Client) ListProjectModels(ctx context.Context, project_id string, opts 
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectModelsInput, spectypes.ListProjectModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectModelsInput, spectypes.ListProjectModelsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectModelsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectModelsOutput(raw), nil
 }
 
-func (c *Client) ListProjectPurchases(ctx context.Context, project_id string, opts *ListProjectPurchasesOptions) (*spectypes.ListProjectPurchasesOutput, error) {
+func (c *Client) ListProjectPurchases(ctx context.Context, project_id string, opts *ListProjectPurchasesOptions) (*ListProjectPurchasesOutput, error) {
 	input := &spectypes.ListProjectPurchasesInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -617,10 +709,14 @@ func (c *Client) ListProjectPurchases(ctx context.Context, project_id string, op
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectPurchasesInput, spectypes.ListProjectPurchasesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectPurchasesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectPurchasesInput, spectypes.ListProjectPurchasesOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectPurchasesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectPurchasesOutput(raw), nil
 }
 
-func (c *Client) ListProjectRequests(ctx context.Context, project_id string, opts *ListProjectRequestsOptions) (*spectypes.ListProjectRequestsOutput, error) {
+func (c *Client) ListProjectRequests(ctx context.Context, project_id string, opts *ListProjectRequestsOptions) (*ListProjectRequestsOutput, error) {
 	input := &spectypes.ListProjectRequestsInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -630,10 +726,14 @@ func (c *Client) ListProjectRequests(ctx context.Context, project_id string, opt
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectRequestsInput, spectypes.ListProjectRequestsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectRequestsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectRequestsInput, spectypes.ListProjectRequestsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectRequestsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectRequestsOutput(raw), nil
 }
 
-func (c *Client) ListProjects(ctx context.Context, opts *ListProjectsOptions) (*spectypes.ListProjectsOutput, error) {
+func (c *Client) ListProjects(ctx context.Context, opts *ListProjectsOptions) (*ListProjectsOutput, error) {
 	input := &spectypes.ListProjectsInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -641,10 +741,14 @@ func (c *Client) ListProjects(ctx context.Context, opts *ListProjectsOptions) (*
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListProjectsInput, spectypes.ListProjectsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListProjectsInput, spectypes.ListProjectsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListProjectsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListProjectsOutput(raw), nil
 }
 
-func (c *Client) ListUsageFields(ctx context.Context, project_id string, opts *ListUsageFieldsOptions) (*spectypes.ListUsageFieldsOutput, error) {
+func (c *Client) ListUsageFields(ctx context.Context, project_id string, opts *ListUsageFieldsOptions) (*ListUsageFieldsOutput, error) {
 	input := &spectypes.ListUsageFieldsInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -654,10 +758,14 @@ func (c *Client) ListUsageFields(ctx context.Context, project_id string, opts *L
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.ListUsageFieldsInput, spectypes.ListUsageFieldsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListUsageFieldsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.ListUsageFieldsInput, spectypes.ListUsageFieldsOutput](ctx, c.httpClient, c.baseURL, spectypes.ListUsageFieldsRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertListUsageFieldsOutput(raw), nil
 }
 
-func (c *Client) RemoveProjectMember(ctx context.Context, project_id string, member_id string, opts *RemoveProjectMemberOptions) (*spectypes.RemoveProjectMemberOutput, error) {
+func (c *Client) RemoveProjectMember(ctx context.Context, project_id string, member_id string, opts *RemoveProjectMemberOptions) (*RemoveProjectMemberOutput, error) {
 	input := &spectypes.RemoveProjectMemberInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -669,10 +777,14 @@ func (c *Client) RemoveProjectMember(ctx context.Context, project_id string, mem
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.RemoveProjectMemberInput, spectypes.RemoveProjectMemberOutput](ctx, c.httpClient, c.baseURL, spectypes.RemoveProjectMemberRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.RemoveProjectMemberInput, spectypes.RemoveProjectMemberOutput](ctx, c.httpClient, c.baseURL, spectypes.RemoveProjectMemberRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertRemoveProjectMemberOutput(raw), nil
 }
 
-func (c *Client) UpdateMemberScopes(ctx context.Context, project_id string, member_id string, body any, opts *UpdateMemberScopesOptions) (*spectypes.UpdateMemberScopesOutput, error) {
+func (c *Client) UpdateMemberScopes(ctx context.Context, project_id string, member_id string, body any, opts *UpdateMemberScopesOptions) (*UpdateMemberScopesOutput, error) {
 	input := &spectypes.UpdateMemberScopesInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -690,10 +802,14 @@ func (c *Client) UpdateMemberScopes(ctx context.Context, project_id string, memb
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.UpdateMemberScopesInput, spectypes.UpdateMemberScopesOutput](ctx, c.httpClient, c.baseURL, spectypes.UpdateMemberScopesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.UpdateMemberScopesInput, spectypes.UpdateMemberScopesOutput](ctx, c.httpClient, c.baseURL, spectypes.UpdateMemberScopesRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertUpdateMemberScopesOutput(raw), nil
 }
 
-func (c *Client) UpdateProject(ctx context.Context, project_id string, body any, opts *UpdateProjectOptions) (*spectypes.UpdateProjectOutput, error) {
+func (c *Client) UpdateProject(ctx context.Context, project_id string, body any, opts *UpdateProjectOptions) (*UpdateProjectOutput, error) {
 	input := &spectypes.UpdateProjectInput{}
 	project_idV := project_id
 	input.Project_id = &project_idV
@@ -709,7 +825,11 @@ func (c *Client) UpdateProject(ctx context.Context, project_id string, body any,
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.UpdateProjectInput, spectypes.UpdateProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.UpdateProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.UpdateProjectInput, spectypes.UpdateProjectOutput](ctx, c.httpClient, c.baseURL, spectypes.UpdateProjectRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertUpdateProjectOutput(raw), nil
 }
 
 type restAuthenticator struct{ apiKey, accessToken, contentType string }

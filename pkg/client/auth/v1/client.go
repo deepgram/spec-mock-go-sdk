@@ -52,7 +52,7 @@ type GrantTokenOptions struct {
 	AdditionalQueryParams url.Values `schema:"-"`
 }
 
-func (c *Client) GrantToken(ctx context.Context, body any, opts *GrantTokenOptions) (*spectypes.GrantTokenOutput, error) {
+func (c *Client) GrantToken(ctx context.Context, body any, opts *GrantTokenOptions) (*GrantTokenOutput, error) {
 	input := &spectypes.GrantTokenInput{}
 	var bodyReader io.Reader
 	contentType := ""
@@ -66,7 +66,11 @@ func (c *Client) GrantToken(ctx context.Context, body any, opts *GrantTokenOptio
 	if opts != nil {
 		additional = optionsToQuery(opts)
 	}
-	return httptransport.Invoke[spectypes.GrantTokenInput, spectypes.GrantTokenOutput](ctx, c.httpClient, c.baseURL, spectypes.GrantTokenRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	raw, err := httptransport.Invoke[spectypes.GrantTokenInput, spectypes.GrantTokenOutput](ctx, c.httpClient, c.baseURL, spectypes.GrantTokenRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, bodyReader, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertGrantTokenOutput(raw), nil
 }
 
 type restAuthenticator struct{ apiKey, accessToken, contentType string }

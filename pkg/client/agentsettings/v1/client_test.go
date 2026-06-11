@@ -40,8 +40,8 @@ func TestAgentSettingsMultiOp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetThinkProvider: %v", err)
 	}
-	if gp.Id == nil || *gp.Id != "anthropic" {
-		t.Fatalf("GetThinkProvider id = %v", gp.Id)
+	if gp.ID != "anthropic" {
+		t.Fatalf("GetThinkProvider id = %v", gp.ID)
 	}
 
 	// Query-param GET — the server 400s unless include=models reached it.

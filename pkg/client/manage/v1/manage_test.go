@@ -51,7 +51,7 @@ func TestListProjects(t *testing.T) {
 	if c.auth != "Token k" {
 		t.Fatalf("auth = %q", c.auth)
 	}
-	if len(out.Projects) != 1 || out.Projects[0].Name == nil || *out.Projects[0].Name != "Acme" {
+	if len(out.Projects) != 1 || out.Projects[0].Name != "Acme" {
 		t.Fatalf("projects = %+v", out.Projects)
 	}
 }
@@ -69,7 +69,7 @@ func TestGetProjectKey_MultiLabelPath(t *testing.T) {
 	if c.path != "/v1/projects/proj1/keys/key1" {
 		t.Fatalf("path = %q (multi-label substitution wrong)", c.path)
 	}
-	if out.Item == nil || out.Item.Api_key == nil || out.Item.Api_key.Api_key_id == nil || *out.Item.Api_key.Api_key_id != "k1" {
+	if out.Item == nil || out.Item.APIKey == nil || out.Item.APIKey.APIKeyID != "k1" {
 		t.Fatalf("item = %+v", out.Item)
 	}
 }
@@ -95,7 +95,7 @@ func TestCreateProjectKey_PostBody(t *testing.T) {
 	if sent["comment"] != "ci key" {
 		t.Fatalf("body = %q", c.body)
 	}
-	if out.Key == nil || *out.Key != "secret-once" {
+	if out.Key != "secret-once" {
 		t.Fatalf("key = %v", out.Key)
 	}
 }

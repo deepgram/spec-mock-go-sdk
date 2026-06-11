@@ -22,7 +22,7 @@ import (
 
 const DefaultBaseURL = "https://api.deepgram.com"
 
-type ReadResponse = spectypes.AnalyzeOutput
+type ReadResponse = AnalyzeOutput
 
 type Client struct {
 	apiKey, accessToken, baseURL string
@@ -66,7 +66,11 @@ func (c *Client) invoke(ctx context.Context, opts *ReadOptions, contentType stri
 	if opts != nil {
 		additional = opts.AdditionalQueryParams
 	}
-	return httptransport.Invoke[spectypes.AnalyzeInput, spectypes.AnalyzeOutput](ctx, c.httpClient, c.baseURL, spectypes.AnalyzeRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, body, additional)
+	raw, err := httptransport.Invoke[spectypes.AnalyzeInput, spectypes.AnalyzeOutput](ctx, c.httpClient, c.baseURL, spectypes.AnalyzeRoute, &restAuthenticator{apiKey: c.apiKey, accessToken: c.accessToken, contentType: contentType}, input, body, additional)
+	if err != nil {
+		return nil, err
+	}
+	return convertAnalyzeOutput(raw), nil
 }
 
 type restAuthenticator struct{ apiKey, accessToken, contentType string }
