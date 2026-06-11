@@ -124,7 +124,11 @@ func (s *bidiStream[C, S]) Recv() (S, error) {
 	for event := range s.events.Events() {
 		switch e := event.(type) {
 		case *types.ResponseStreamEventMemberPayloadPart:
-			return s.unmarshal(e.Value.Bytes, false)
+			// The DataType header ("BINARY"/"UTF8") is the SageMaker bidi
+			// analog of a WebSocket binary/text frame; binary-on-server
+			// products (e.g. live TTS audio) depend on it being honored.
+			isBinary := e.Value.DataType != nil && *e.Value.DataType == "BINARY"
+			return s.unmarshal(e.Value.Bytes, isBinary)
 		default:
 			var zero S
 			return zero, fmt.Errorf("sagemaker.OpenStream: unknown response event %T", event)
