@@ -773,6 +773,35 @@ type ValidateSettingsOutput struct {
 	noSmithyDocumentSerde
 }
 
+type GrantTokenBody struct {
+
+	// Requested token lifetime in seconds. Server clamps to its allowed range.
+	Ttl_seconds *int32 `json:"ttl_seconds,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GrantTokenInput struct {
+
+	// Optional request body controlling the token lifetime.
+	Body *GrantTokenBody `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GrantTokenOutput struct {
+
+	// The short-lived bearer access token.
+	//
+	// This member is required.
+	Access_token *string `json:"access_token"`
+
+	// Token lifetime in seconds.
+	Expires_in *int32 `json:"expires_in,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
 type Entity struct {
 
 	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
@@ -2025,6 +2054,1080 @@ func (*ServerStreamMemberUtteranceEnd) isServerStream() {}
 
 type StreamOutput struct {
 	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageCreateInviteRequest struct {
+
+	// Email address to invite.
+	//
+	// This member is required.
+	Email *string `json:"email"`
+
+	// Scope to grant the invited account.
+	//
+	// This member is required.
+	Scope *string `json:"scope"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectInviteInput struct {
+
+	// This member is required.
+	Body *ManageCreateInviteRequest `json:"-"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectInviteOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageCreateKeyRequest struct {
+
+	// A human-readable label for the key.
+	//
+	// This member is required.
+	Comment *string `json:"comment"`
+
+	// The scopes (permissions) granted to the key.
+	//
+	// This member is required.
+	Scopes []string `json:"scopes"`
+
+	// Absolute expiration date (RFC 3339). Mutually exclusive with
+	// time_to_live_in_seconds .
+	Expiration_date *string `json:"expiration_date,omitempty"`
+
+	// Optional tags applied to requests authenticated with this key.
+	Tags []string `json:"tags,omitempty"`
+
+	// Lifetime in seconds. Mutually exclusive with expiration_date .
+	Time_to_live_in_seconds *int32 `json:"time_to_live_in_seconds,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectKeyInput struct {
+
+	// This member is required.
+	Body *ManageCreateKeyRequest `json:"-"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectKeyOutput struct {
+	Api_key_id *string `json:"api_key_id,omitempty"`
+
+	Comment *string `json:"comment,omitempty"`
+
+	Expiration_date *string `json:"expiration_date,omitempty"`
+
+	Key *string `json:"key,omitempty"`
+
+	Scopes []string `json:"scopes,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectInviteInput struct {
+
+	// This member is required.
+	Email *string `json:"email"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectInviteOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectKeyInput struct {
+
+	// This member is required.
+	Key_id *string `json:"key_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectKeyOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetBillingBreakdownInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	End *string `json:"-"`
+
+	Grouping []string `json:"-"`
+
+	Line_item *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	Tag *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// A { units, amount } resolution descriptor (usage/billing time bucket).
+type ManageResolution struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetBillingBreakdownOutput struct {
+
+	// This member is required.
+	End *string `json:"end"`
+
+	// A { units, amount } resolution descriptor (usage/billing time bucket).
+	//
+	// This member is required.
+	Resolution *ManageResolution `json:"resolution"`
+
+	// A list of free-form result rows. Each row's shape varies by the requested
+	// grouping/fields, so it is carried as an open document (see MANAGE-002).
+	//
+	// This member is required.
+	Results []document.Interface `json:"results"`
+
+	// This member is required.
+	Start *string `json:"start"`
+
+	noSmithyDocumentSerde
+}
+
+type GetModelInput struct {
+
+	// This member is required.
+	Model_id *string `json:"model_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageTtsMetadata struct {
+	Accent *string `json:"accent,omitempty"`
+
+	Age *string `json:"age,omitempty"`
+
+	Color *string `json:"color,omitempty"`
+
+	Image *string `json:"image,omitempty"`
+
+	Sample *string `json:"sample,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	Use_cases []string `json:"use_cases,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetModelOutput struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Batch *bool `json:"batch,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Formatted_output *bool `json:"formatted_output,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Metadata *ManageTtsMetadata `json:"metadata,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Streaming *bool `json:"streaming,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Limit *int32 `json:"-"`
+
+	Page *int32 `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectOutput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Mip_opt_out *bool `json:"mip_opt_out,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectBalanceInput struct {
+
+	// This member is required.
+	Balance_id *string `json:"balance_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectBalanceOutput struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Balance_id *string `json:"balance_id,omitempty"`
+
+	Purchase_order_id *string `json:"purchase_order_id,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectKeyInput struct {
+
+	// This member is required.
+	Key_id *string `json:"key_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageKeyInfo struct {
+	Api_key_id *string `json:"api_key_id,omitempty"`
+
+	Comment *string `json:"comment,omitempty"`
+
+	Created *string `json:"created,omitempty"`
+
+	Scopes []string `json:"scopes,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageKeyMember struct {
+	Email *string `json:"email,omitempty"`
+
+	Member_id *string `json:"member_id,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageProjectKey struct {
+	Api_key *ManageKeyInfo `json:"api_key,omitempty"`
+
+	Member *ManageKeyMember `json:"member,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectKeyOutput struct {
+	Item *ManageProjectKey `json:"item,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectModelInput struct {
+
+	// This member is required.
+	Model_id *string `json:"model_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectModelOutput struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Batch *bool `json:"batch,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Formatted_output *bool `json:"formatted_output,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Metadata *ManageTtsMetadata `json:"metadata,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Streaming *bool `json:"streaming,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectRequestInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	// This member is required.
+	Request_id *string `json:"request_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageRequest struct {
+	Api_key_id *string `json:"api_key_id,omitempty"`
+
+	Callback *string `json:"callback,omitempty"`
+
+	Code *int32 `json:"code,omitempty"`
+
+	Created *string `json:"created,omitempty"`
+
+	Deployment *string `json:"deployment,omitempty"`
+
+	Path *string `json:"path,omitempty"`
+
+	Project_uuid *string `json:"project_uuid,omitempty"`
+
+	Request_id *string `json:"request_id,omitempty"`
+
+	// The response metadata for the request (shape varies; open document).
+	Response document.Interface `json:"response,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectRequestOutput struct {
+	Request *ManageRequest `json:"request,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The shared transcription-feature filter set for the usage endpoints. Every
+// member is an optional query parameter; booleans filter on whether the feature
+// was used, strings filter on a specific value. Mixed into GetProjectUsage and
+// GetUsageBreakdown.
+type GetProjectUsageInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	Alternatives *bool `json:"-"`
+
+	Callback *bool `json:"-"`
+
+	Callback_method *bool `json:"-"`
+
+	Channels *bool `json:"-"`
+
+	Custom_intent *bool `json:"-"`
+
+	Custom_intent_mode *bool `json:"-"`
+
+	Custom_topic *bool `json:"-"`
+
+	Custom_topic_mode *bool `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	Detect_entities *bool `json:"-"`
+
+	Detect_language *bool `json:"-"`
+
+	Diarize *bool `json:"-"`
+
+	Dictation *bool `json:"-"`
+
+	Encoding *bool `json:"-"`
+
+	End *string `json:"-"`
+
+	// One of listen , read , speak , agent .
+	Endpoint *string `json:"-"`
+
+	Extra *bool `json:"-"`
+
+	Filler_words *bool `json:"-"`
+
+	Intents *bool `json:"-"`
+
+	Keyterm *bool `json:"-"`
+
+	Keywords *bool `json:"-"`
+
+	Language *bool `json:"-"`
+
+	Measurements *bool `json:"-"`
+
+	// One of sync , async , streaming .
+	Method *string `json:"-"`
+
+	Model *string `json:"-"`
+
+	Multichannel *bool `json:"-"`
+
+	Numerals *bool `json:"-"`
+
+	Paragraphs *bool `json:"-"`
+
+	Profanity_filter *bool `json:"-"`
+
+	Punctuate *bool `json:"-"`
+
+	Redact *bool `json:"-"`
+
+	Replace *bool `json:"-"`
+
+	Sample_rate *bool `json:"-"`
+
+	Search *bool `json:"-"`
+
+	Sentiment *bool `json:"-"`
+
+	Smart_format *bool `json:"-"`
+
+	Start *string `json:"-"`
+
+	Summarize *bool `json:"-"`
+
+	Tag *string `json:"-"`
+
+	Topics *bool `json:"-"`
+
+	Utt_split *bool `json:"-"`
+
+	Utterances *bool `json:"-"`
+
+	Version *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectUsageOutput struct {
+	End *string `json:"end,omitempty"`
+
+	// A { units, amount } resolution descriptor (usage/billing time bucket).
+	Resolution *ManageResolution `json:"resolution,omitempty"`
+
+	Start *string `json:"start,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The shared transcription-feature filter set for the usage endpoints. Every
+// member is an optional query parameter; booleans filter on whether the feature
+// was used, strings filter on a specific value. Mixed into GetProjectUsage and
+// GetUsageBreakdown.
+type GetUsageBreakdownInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	Alternatives *bool `json:"-"`
+
+	Callback *bool `json:"-"`
+
+	Callback_method *bool `json:"-"`
+
+	Channels *bool `json:"-"`
+
+	Custom_intent *bool `json:"-"`
+
+	Custom_intent_mode *bool `json:"-"`
+
+	Custom_topic *bool `json:"-"`
+
+	Custom_topic_mode *bool `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	Detect_entities *bool `json:"-"`
+
+	Detect_language *bool `json:"-"`
+
+	Diarize *bool `json:"-"`
+
+	Dictation *bool `json:"-"`
+
+	Encoding *bool `json:"-"`
+
+	End *string `json:"-"`
+
+	// One of listen , read , speak , agent .
+	Endpoint *string `json:"-"`
+
+	Extra *bool `json:"-"`
+
+	Filler_words *bool `json:"-"`
+
+	// One of accessor , endpoint , feature_set , models , method , tags , deployment .
+	Grouping *string `json:"-"`
+
+	Intents *bool `json:"-"`
+
+	Keyterm *bool `json:"-"`
+
+	Keywords *bool `json:"-"`
+
+	Language *bool `json:"-"`
+
+	Measurements *bool `json:"-"`
+
+	// One of sync , async , streaming .
+	Method *string `json:"-"`
+
+	Model *string `json:"-"`
+
+	Multichannel *bool `json:"-"`
+
+	Numerals *bool `json:"-"`
+
+	Paragraphs *bool `json:"-"`
+
+	Profanity_filter *bool `json:"-"`
+
+	Punctuate *bool `json:"-"`
+
+	Redact *bool `json:"-"`
+
+	Replace *bool `json:"-"`
+
+	Sample_rate *bool `json:"-"`
+
+	Search *bool `json:"-"`
+
+	Sentiment *bool `json:"-"`
+
+	Smart_format *bool `json:"-"`
+
+	Start *string `json:"-"`
+
+	Summarize *bool `json:"-"`
+
+	Tag *string `json:"-"`
+
+	Topics *bool `json:"-"`
+
+	Utt_split *bool `json:"-"`
+
+	Utterances *bool `json:"-"`
+
+	Version *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetUsageBreakdownOutput struct {
+
+	// This member is required.
+	End *string `json:"end"`
+
+	// A { units, amount } resolution descriptor (usage/billing time bucket).
+	//
+	// This member is required.
+	Resolution *ManageResolution `json:"resolution"`
+
+	// A list of free-form result rows. Each row's shape varies by the requested
+	// grouping/fields, so it is carried as an open document (see MANAGE-002).
+	//
+	// This member is required.
+	Results []document.Interface `json:"results"`
+
+	// This member is required.
+	Start *string `json:"start"`
+
+	noSmithyDocumentSerde
+}
+
+type LeaveProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type LeaveProjectOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListBillingFieldsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	End *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListBillingFieldsOutput struct {
+	Accessors []string `json:"accessors,omitempty"`
+
+	Deployments []string `json:"deployments,omitempty"`
+
+	// Line items available, keyed by name (open document; see MANAGE-002).
+	Line_items document.Interface `json:"line_items,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListMemberScopesInput struct {
+
+	// This member is required.
+	Member_id *string `json:"member_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ListMemberScopesOutput struct {
+
+	// This member is required.
+	Scopes []string `json:"scopes"`
+
+	noSmithyDocumentSerde
+}
+
+type ListModelsInput struct {
+
+	// Include models that are no longer the latest version.
+	Include_outdated *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageSttModel struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Batch *bool `json:"batch,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Formatted_output *bool `json:"formatted_output,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Streaming *bool `json:"streaming,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageTtsModel struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Metadata *ManageTtsMetadata `json:"metadata,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListModelsOutput struct {
+	Stt []ManageSttModel `json:"stt,omitempty"`
+
+	Tts []ManageTtsModel `json:"tts,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectBalancesInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageBalance struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Balance_id *string `json:"balance_id,omitempty"`
+
+	Purchase_order_id *string `json:"purchase_order_id,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectBalancesOutput struct {
+
+	// This member is required.
+	Balances []ManageBalance `json:"balances"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectInvitesInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageInvite struct {
+	Email *string `json:"email,omitempty"`
+
+	Scope *string `json:"scope,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectInvitesOutput struct {
+
+	// This member is required.
+	Invites []ManageInvite `json:"invites"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectKeysInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	// Filter by key status. One of active , expired .
+	Status *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectKeysOutput struct {
+
+	// This member is required.
+	Api_keys []ManageProjectKey `json:"api_keys"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectMembersInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageMember struct {
+	Email *string `json:"email,omitempty"`
+
+	First_name *string `json:"first_name,omitempty"`
+
+	Last_name *string `json:"last_name,omitempty"`
+
+	Member_id *string `json:"member_id,omitempty"`
+
+	Scopes []string `json:"scopes,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectMembersOutput struct {
+
+	// This member is required.
+	Members []ManageMember `json:"members"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectModelsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	// Include models that are no longer the latest version.
+	Include_outdated *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectModelsOutput struct {
+	Stt []ManageSttModel `json:"stt,omitempty"`
+
+	Tts []ManageTtsModel `json:"tts,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectPurchasesInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Limit *int32 `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageOrder struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Created *string `json:"created,omitempty"`
+
+	Expiration *string `json:"expiration,omitempty"`
+
+	Order_id *string `json:"order_id,omitempty"`
+
+	Order_type *string `json:"order_type,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectPurchasesOutput struct {
+
+	// This member is required.
+	Orders []ManageOrder `json:"orders"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectRequestsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	End *string `json:"-"`
+
+	// One of listen , read , speak , agent .
+	Endpoint *string `json:"-"`
+
+	Limit *int32 `json:"-"`
+
+	// One of sync , async , streaming .
+	Method *string `json:"-"`
+
+	Page *int32 `json:"-"`
+
+	Request_id *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	// One of succeeded , failed .
+	Status *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectRequestsOutput struct {
+	Limit *int32 `json:"limit,omitempty"`
+
+	Page *int32 `json:"page,omitempty"`
+
+	Requests []ManageRequest `json:"requests,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectsInput struct {
+	noSmithyDocumentSerde
+}
+
+type ManageProject struct {
+	Mip_opt_out *bool `json:"mip_opt_out,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Project_id *string `json:"project_id,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectsOutput struct {
+
+	// This member is required.
+	Projects []ManageProject `json:"projects"`
+
+	noSmithyDocumentSerde
+}
+
+type ListUsageFieldsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	End *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListUsageFieldsOutput struct {
+	Features []string `json:"features,omitempty"`
+
+	// A list of free-form result rows. Each row's shape varies by the requested
+	// grouping/fields, so it is carried as an open document (see MANAGE-002).
+	Models []document.Interface `json:"models,omitempty"`
+
+	Processing_methods []string `json:"processing_methods,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type RemoveProjectMemberInput struct {
+
+	// This member is required.
+	Member_id *string `json:"member_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type RemoveProjectMemberOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageUpdateScopesRequest struct {
+
+	// The scope to assign to the member.
+	//
+	// This member is required.
+	Scope *string `json:"scope"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateMemberScopesInput struct {
+
+	// This member is required.
+	Body *ManageUpdateScopesRequest `json:"-"`
+
+	// This member is required.
+	Member_id *string `json:"member_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateMemberScopesOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageUpdateProjectRequest struct {
+
+	// The new project name.
+	Name *string `json:"name,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Body *ManageUpdateProjectRequest `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateProjectOutput struct {
+	Message *string `json:"message,omitempty"`
 
 	noSmithyDocumentSerde
 }
