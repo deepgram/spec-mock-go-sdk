@@ -55,16 +55,19 @@ func main() {
 		fmt.Fprintln(os.Stderr, "aws config:", err)
 		os.Exit(1)
 	}
-	// Default shared client (no Tier-B tuning) — this is what we're measuring.
+	marshal := func(b []byte) ([]byte, bool, error) { return b, true, nil }
+	unmarshal := func(b []byte, _ bool) ([]byte, error) { return b, nil }
+
+	// Default shared client (no Tier-B fix) — the control case that multiplexes.
 	shared := sagemakerruntimehttp2.NewFromConfig(awsCfg)
-	// clientFor returns a per-stream client with its own connection pool when
-	// -isolate is set (each awshttp.BuildableClient owns a distinct
-	// *http.Transport), else the shared client.
-	clientFor := func() *sagemakerruntimehttp2.Client {
+	// open returns one bidi stream. With -isolate it uses the SHIPPED path
+	// (sm.DialBidi: fresh isolated client per stream + connect retry); else the
+	// shared multiplexing client.
+	open := func() (sm.Stream[[]byte, []byte], error) {
 		if *isolate {
-			return sm.NewBidiClient(awsCfg) // the shipped conn-per-stream helper
+			return sm.DialBidi[[]byte, []byte](ctx, awsCfg, sm.DefaultConfig(), *endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal)
 		}
-		return shared
+		return sm.OpenStream[[]byte, []byte](ctx, shared, *endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal)
 	}
 
 	fmt.Printf("Go transport stress: endpoint=%s connections=%d isolate=%v wav=%s (%d Hz)\n",
@@ -79,7 +82,7 @@ func main() {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if e := runOne(ctx, clientFor(), *endpoint, query, pcm, sampleRate); e != nil {
+			if e := runOne(open, pcm, sampleRate); e != nil {
 				atomic.AddInt64(&errd, 1)
 				mu.Lock()
 				errCounts[shorten(e.Error())]++
@@ -99,10 +102,8 @@ func main() {
 	}
 }
 
-func runOne(ctx context.Context, client *sagemakerruntimehttp2.Client, endpoint, query string, pcm []byte, sampleRate int) error {
-	marshal := func(b []byte) ([]byte, bool, error) { return b, true, nil } // audio = binary frames
-	unmarshal := func(b []byte, _ bool) ([]byte, error) { return b, nil }   // raw passthrough
-	stream, err := sm.OpenStream[[]byte, []byte](ctx, client, endpoint, "v1/listen", query, "", "", "", "", marshal, unmarshal)
+func runOne(open func() (sm.Stream[[]byte, []byte], error), pcm []byte, sampleRate int) error {
+	stream, err := open()
 	if err != nil {
 		return fmt.Errorf("open: %w", err)
 	}

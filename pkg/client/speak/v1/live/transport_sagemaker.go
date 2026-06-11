@@ -54,6 +54,7 @@ func WithEnableExplanations(v string) SageMakerOption {
 func (t sageMakerBidiBinding) connect(ctx context.Context, c *Client, opts *SpeakLiveOptions) (wireStream, error) {
 	_ = c
 	query := liveOptionsToQuery(opts).Encode()
-	client := sm.NewBidiClient(t.cfg) // one isolated client per stream
-	return sm.OpenStream(ctx, client, t.endpointName, "v1/speak", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalSpeakClientStream, spectypes.UnmarshalSpeakServerStream)
+	// DialBidi builds a fresh isolated client per attempt (conn-per-stream)
+	// and retries transient connect failures with backoff + jitter.
+	return sm.DialBidi(ctx, t.cfg, sm.DefaultConfig(), t.endpointName, "v1/speak", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalSpeakClientStream, spectypes.UnmarshalSpeakServerStream)
 }

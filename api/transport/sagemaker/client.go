@@ -12,6 +12,12 @@
 package sagemaker
 
 import (
+	"context"
+	"math/rand"
+	"net"
+	"net/http"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2"
@@ -20,9 +26,56 @@ import (
 // NewBidiClient builds a SageMaker HTTP/2 client with an isolated
 // transport. Call it once per bidirectional stream so each stream
 // gets its own connection (see the package note on multiplexing
-// starvation). optFns are applied after the isolated HTTPClient, so
-// callers can layer credential/endpoint/retry options on top.
-func NewBidiClient(cfg aws.Config, optFns ...func(*sagemakerruntimehttp2.Options)) *sagemakerruntimehttp2.Client {
-	base := func(o *sagemakerruntimehttp2.Options) { o.HTTPClient = awshttp.NewBuildableClient() }
+// starvation). It applies smCfg's connect/TLS-handshake timeouts and
+// disables the AWS SDK's own retries — DialBidi owns the retry policy,
+// and SDK retries on top compound transient errors into throttling
+// storms under burst. optFns layer on top.
+func NewBidiClient(cfg aws.Config, smCfg Config, optFns ...func(*sagemakerruntimehttp2.Options)) *sagemakerruntimehttp2.Client {
+	httpClient := awshttp.NewBuildableClient().WithTransportOptions(func(tr *http.Transport) {
+		tr.DialContext = (&net.Dialer{Timeout: smCfg.ConnectionTimeout}).DialContext
+		tr.TLSHandshakeTimeout = smCfg.ConnectionTimeout
+	})
+	base := func(o *sagemakerruntimehttp2.Options) {
+		o.HTTPClient = httpClient
+		o.Retryer = aws.NopRetryer{}
+	}
 	return sagemakerruntimehttp2.NewFromConfig(cfg, append([]func(*sagemakerruntimehttp2.Options){base}, optFns...)...)
+}
+
+// DialBidi opens a bidirectional stream, building a fresh isolated
+// client per attempt and retrying transient (Retryable) failures with
+// exponential backoff + full jitter, bounded by smCfg.MaxRetries and
+// smCfg.RetryBudget. Terminal errors and budget exhaustion surface to
+// the caller. This is the connect-side of the burst resilience ported
+// from the Java transport (see SAGEMAKER-002).
+func DialBidi[C any, S any](
+	ctx context.Context,
+	cfg aws.Config,
+	smCfg Config,
+	endpointName, modelInvocationPath, modelQueryString, targetVariant, targetModel, inferenceID, enableExplanations string,
+	marshal func(C) ([]byte, bool, error),
+	unmarshal func([]byte, bool) (S, error),
+) (Stream[C, S], error) {
+	deadline := time.Now().Add(smCfg.RetryBudget)
+	var lastErr error
+	for attempt := 0; attempt <= smCfg.MaxRetries; attempt++ {
+		client := NewBidiClient(cfg, smCfg)
+		stream, err := OpenStream[C, S](ctx, client, endpointName, modelInvocationPath, modelQueryString, targetVariant, targetModel, inferenceID, enableExplanations, marshal, unmarshal)
+		if err == nil {
+			return stream, nil
+		}
+		lastErr = err
+		if Classify(err) == Terminal || time.Now().After(deadline) {
+			break
+		}
+		backoff := ComputeBackoff(smCfg.InitialBackoff.Milliseconds(), smCfg.MaxBackoff.Milliseconds(), smCfg.BackoffMultiplier, attempt, rand.Int63n)
+		timer := time.NewTimer(time.Duration(backoff) * time.Millisecond)
+		select {
+		case <-timer.C:
+		case <-ctx.Done():
+			timer.Stop()
+			return nil, ctx.Err()
+		}
+	}
+	return nil, lastErr
 }
