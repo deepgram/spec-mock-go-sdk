@@ -9,13 +9,13 @@ package livev1
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	sm "github.com/deepgram/spec-mock-go-sdk/api/transport/sagemaker"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 )
 
 type sageMakerBidiBinding struct {
-	client             *sagemakerruntimehttp2.Client
+	cfg                aws.Config
 	endpointName       string
 	targetVariant      string
 	targetModel        string
@@ -25,10 +25,13 @@ type sageMakerBidiBinding struct {
 type SageMakerOption func(*sageMakerBidiBinding)
 
 // WithSageMakerBidiTransport routes the stream to a self-hosted
-// SageMaker endpoint instead of the cloud WebSocket.
-func WithSageMakerBidiTransport(client *sagemakerruntimehttp2.Client, endpointName string, opts ...SageMakerOption) Option {
+// SageMaker endpoint instead of the cloud WebSocket. Pass the
+// aws.Config from config.LoadDefaultConfig; a fresh, isolated
+// HTTP/2 client is built per Connect so each stream gets its own
+// connection (see sm.NewBidiClient / SAGEMAKER-002).
+func WithSageMakerBidiTransport(cfg aws.Config, endpointName string, opts ...SageMakerOption) Option {
 	return func(c *Client) {
-		b := sageMakerBidiBinding{client: client, endpointName: endpointName}
+		b := sageMakerBidiBinding{cfg: cfg, endpointName: endpointName}
 		for _, o := range opts {
 			o(&b)
 		}
@@ -51,5 +54,6 @@ func WithEnableExplanations(v string) SageMakerOption {
 func (t sageMakerBidiBinding) connect(ctx context.Context, c *Client, opts *AgentLiveOptions) (wireStream, error) {
 	_ = c
 	query := liveOptionsToQuery(opts).Encode()
-	return sm.OpenStream(ctx, t.client, t.endpointName, "v1/agent/converse", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalAgentClientStream, spectypes.UnmarshalAgentServerStream)
+	client := sm.NewBidiClient(t.cfg) // one isolated client per stream
+	return sm.OpenStream(ctx, client, t.endpointName, "v1/agent/converse", query, t.targetVariant, t.targetModel, t.inferenceID, t.enableExplanations, spectypes.MarshalAgentClientStream, spectypes.UnmarshalAgentServerStream)
 }
