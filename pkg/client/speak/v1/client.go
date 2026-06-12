@@ -54,8 +54,8 @@ func (c *Client) FromText(ctx context.Context, text string, opts *SpeakOptions) 
 	return c.invoke(ctx, opts, "text/plain", strings.NewReader(text))
 }
 
-func (c *Client) FromURL(ctx context.Context, textURL string, opts *SpeakOptions) (*SpeakResponse, error) {
-	body, err := json.Marshal(map[string]string{"url": textURL})
+func (c *Client) FromURL(ctx context.Context, url string, opts *SpeakOptions) (*SpeakResponse, error) {
+	body, err := json.Marshal(map[string]string{"url": url})
 	if err != nil {
 		return nil, err
 	}
