@@ -3,9 +3,9 @@
 // SageMaker batch transport binding for this REST product.
 // Wraps the AWS InvokeEndpoint primitive; the customer switches
 // cloud->SageMaker at construction via WithSageMakerTransport.
-// Note: typed query options are not forwarded as SageMaker
-// CustomAttributes in this first cut — model selection rides on
-// the endpoint + target model. See SAGEMAKER-001.
+// Typed query options ride through CustomAttributes as the request
+// target "<path>?<query>" (InvokeEndpoint has no URL query string),
+// mirroring the cloud REST path's URL encoding. See SAGEMAKER-001.
 
 package prerecordedv1
 
@@ -14,8 +14,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntime"
+	httptransport "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
 	sm "github.com/deepgram/spec-mock-go-sdk/api/transport/sagemaker"
 	spectypes "github.com/deepgram/spec-mock-go-sdk/api/types"
 )
@@ -44,7 +46,18 @@ func (t sageMakerBinding) invoke(ctx context.Context, c *Client, opts *PreRecord
 		}
 		payload = data
 	}
-	respBytes, err := sm.Invoke(ctx, t.client, t.endpointName, contentType, payload, "v1/listen")
+	// InvokeEndpoint has no URL query string; carry the typed query options
+	// through CustomAttributes as the request target, encoded identically to
+	// the cloud REST URL (see SAGEMAKER-001).
+	attrs := "v1/listen"
+	var additional url.Values
+	if opts != nil {
+		additional = opts.AdditionalQueryParams
+	}
+	if q := httptransport.EncodeQuery(spectypes.TranscribeRoute, optionsToTranscribeInput(opts), additional); q != "" {
+		attrs += "?" + q
+	}
+	respBytes, err := sm.Invoke(ctx, t.client, t.endpointName, contentType, payload, attrs)
 	if err != nil {
 		return nil, err
 	}

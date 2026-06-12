@@ -162,32 +162,9 @@ func Invoke[I any, O any](
 			u.Path = strings.ReplaceAll(u.Path, "{"+b.WireName+"}", url.PathEscape(val))
 		}
 
-		q := u.Query()
-		for _, b := range route.QueryFields {
-			f := inputVal.FieldByName(b.GoField)
-			if !f.IsValid() || isZeroField(f) {
-				continue
-			}
-			for _, v := range stringifyMultiField(f) {
-				q.Add(b.WireName, v)
-			}
-		}
-		for k, vs := range additionalQueryParams {
-			q.Del(k)
-			for _, v := range vs {
-				q.Add(k, v)
-			}
-		}
-		u.RawQuery = q.Encode()
+		u.RawQuery = EncodeQuery(route, input, additionalQueryParams)
 	} else if len(additionalQueryParams) > 0 {
-		q := u.Query()
-		for k, vs := range additionalQueryParams {
-			q.Del(k)
-			for _, v := range vs {
-				q.Add(k, v)
-			}
-		}
-		u.RawQuery = q.Encode()
+		u.RawQuery = EncodeQuery(route, input, additionalQueryParams)
 	}
 
 	req, err := nethttp.NewRequestWithContext(ctx, route.Method, u.String(), body)
@@ -264,6 +241,35 @@ func Invoke[I any, O any](
 		return nil, fmt.Errorf("http.Invoke: decode response: %w", err)
 	}
 	return &out, nil
+}
+
+// EncodeQuery renders the route's typed query fields from input, overlaid
+// with additionalQueryParams (which win on key collision), as a URL-encoded
+// query string. It is the query half of Invoke, exported so non-HTTP
+// transports that lack a URL query string (e.g. the SageMaker batch binding,
+// which carries the request target through CustomAttributes) can reproduce
+// the exact same wiring.
+func EncodeQuery[I any](route HTTPRoute, input *I, additionalQueryParams url.Values) string {
+	q := url.Values{}
+	if input != nil {
+		inputVal := reflect.ValueOf(input).Elem()
+		for _, b := range route.QueryFields {
+			f := inputVal.FieldByName(b.GoField)
+			if !f.IsValid() || isZeroField(f) {
+				continue
+			}
+			for _, v := range stringifyMultiField(f) {
+				q.Add(b.WireName, v)
+			}
+		}
+	}
+	for k, vs := range additionalQueryParams {
+		q.Del(k)
+		for _, v := range vs {
+			q.Add(k, v)
+		}
+	}
+	return q.Encode()
 }
 
 // isZeroField reports whether v should be treated as unset for the
