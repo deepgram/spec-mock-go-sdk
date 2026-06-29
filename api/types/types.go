@@ -6,6 +6,802 @@ import (
 	"github.com/deepgram/spec-mock-go-sdk/api/document"
 )
 
+// Audio frame variant. Wire form is a binary WS frame whose body is data .
+type AgentAudioFrame struct {
+
+	// This member is required.
+	Data []byte `json:"data"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"FunctionCallResponse","id":"...","name":"...","content":"..."} . Used
+// in BOTH directions (client reply + server-side result).
+type AgentFunctionCallResponse struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"InjectAgentMessage","content":"...","behavior":"..."} .
+type AgentInjectAgentMessage struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	// Interaction with ongoing speech: Default | Queue | Interrupt .
+	Behavior AgentInjectBehavior `json:"behavior,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"InjectUserMessage","content":"..."} .
+type AgentInjectUserMessage struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"KeepAlive"} .
+type AgentKeepAlive struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"ReplacePrompt","prompt":"..."} . Requires experimental: true .
+type AgentReplacePrompt struct {
+
+	// This member is required.
+	Prompt *string `json:"prompt"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentAudioInput struct {
+	Encoding AgentInputEncoding `json:"encoding,omitempty"`
+
+	SampleRate *int32 `json:"sample_rate,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentAudioOutput struct {
+	Bitrate *int32 `json:"bitrate,omitempty"`
+
+	Container AgentOutputContainer `json:"container,omitempty"`
+
+	Encoding AgentOutputEncoding `json:"encoding,omitempty"`
+
+	SampleRate *int32 `json:"sample_rate,omitempty"`
+
+	// Stream audio in fixed-size chunks. Default true.
+	Stream *bool `json:"stream,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentAudio struct {
+	Input *AgentAudioInput `json:"input,omitempty"`
+
+	Output *AgentAudioOutput `json:"output,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Settings", ...} . Session configuration. The agent provider config
+// (listen/think/speak) is deeply nested and open — modeled as Document . See
+// AGENT-001.
+type AgentSettings struct {
+
+	// Agent provider config (listen/think/speak/functions/greeting/...), OR a bare
+	// agent-id string. Deeply nested + provider-specific; open Document .
+	Agent document.Interface `json:"agent,omitempty"`
+
+	Audio *AgentAudio `json:"audio,omitempty"`
+
+	Experimental *bool `json:"experimental,omitempty"`
+
+	// Session flags (e.g. { "history": true } ). Open map.
+	Flags document.Interface `json:"flags,omitempty"`
+
+	MipOptOut *bool `json:"mip_opt_out,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"UpdatePrompt","prompt":"..."} .
+type AgentUpdatePrompt struct {
+
+	// This member is required.
+	Prompt *string `json:"prompt"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"UpdateSpeak","speak":...} . speak is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentUpdateSpeak struct {
+
+	// This member is required.
+	Speak document.Interface `json:"speak"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"UpdateThink","think":...} . think is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentUpdateThink struct {
+
+	// This member is required.
+	Think document.Interface `json:"think"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	AgentClientStreamMemberAudio
+//	AgentClientStreamMemberFunctionCallResponse
+//	AgentClientStreamMemberInjectAgentMessage
+//	AgentClientStreamMemberInjectUserMessage
+//	AgentClientStreamMemberKeepAlive
+//	AgentClientStreamMemberReplacePrompt
+//	AgentClientStreamMemberSettings
+//	AgentClientStreamMemberUpdatePrompt
+//	AgentClientStreamMemberUpdateSpeak
+//	AgentClientStreamMemberUpdateThink
+type AgentClientStream interface {
+	isAgentClientStream()
+}
+
+// Raw mic audio bytes. Binary WebSocket frame, NOT JSON. Allowed only after
+// Settings .
+type AgentClientStreamMemberAudio struct {
+	Value AgentAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberAudio) isAgentClientStream() {}
+
+// {"type":"FunctionCallResponse","id":"...","name":"...","content":"..."} . Used
+// in BOTH directions (client reply + server-side result).
+type AgentClientStreamMemberFunctionCallResponse struct {
+	Value AgentFunctionCallResponse
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberFunctionCallResponse) isAgentClientStream() {}
+
+// {"type":"InjectAgentMessage","content":"...","behavior":"..."} .
+type AgentClientStreamMemberInjectAgentMessage struct {
+	Value AgentInjectAgentMessage
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberInjectAgentMessage) isAgentClientStream() {}
+
+// {"type":"InjectUserMessage","content":"..."} .
+type AgentClientStreamMemberInjectUserMessage struct {
+	Value AgentInjectUserMessage
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberInjectUserMessage) isAgentClientStream() {}
+
+// {"type":"KeepAlive"} .
+type AgentClientStreamMemberKeepAlive struct {
+	Value AgentKeepAlive
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberKeepAlive) isAgentClientStream() {}
+
+// {"type":"ReplacePrompt","prompt":"..."} . Requires experimental: true .
+type AgentClientStreamMemberReplacePrompt struct {
+	Value AgentReplacePrompt
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberReplacePrompt) isAgentClientStream() {}
+
+// Session configuration. Must be the first message.
+type AgentClientStreamMemberSettings struct {
+	Value AgentSettings
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberSettings) isAgentClientStream() {}
+
+// {"type":"UpdatePrompt","prompt":"..."} .
+type AgentClientStreamMemberUpdatePrompt struct {
+	Value AgentUpdatePrompt
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberUpdatePrompt) isAgentClientStream() {}
+
+// {"type":"UpdateSpeak","speak":...} . speak is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentClientStreamMemberUpdateSpeak struct {
+	Value AgentUpdateSpeak
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberUpdateSpeak) isAgentClientStream() {}
+
+// {"type":"UpdateThink","think":...} . think is a single object or array of
+// provider configs (open). See AGENT-001.
+type AgentClientStreamMemberUpdateThink struct {
+	Value AgentUpdateThink
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentClientStreamMemberUpdateThink) isAgentClientStream() {}
+
+type ConverseInput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"AgentAudioDone"} . No more audio frames for the current utterance.
+type AgentAudioDone struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"AgentStartedSpeaking", ...} .
+type AgentStartedSpeaking struct {
+
+	// This member is required.
+	TtsLatency *float64 `json:"tts_latency"`
+
+	// This member is required.
+	TttLatency *float64 `json:"ttt_latency"`
+
+	TotalLatency *float64 `json:"total_latency,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"AgentThinking","content":"..."} . Non-verbalized reasoning.
+type AgentThinking struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"ConversationText","role":"...","content":"..."} . User or agent
+// utterance; interim when is_final is false.
+type AgentConversationText struct {
+
+	// This member is required.
+	Content *string `json:"content"`
+
+	// This member is required.
+	Role AgentRole `json:"role"`
+
+	IsFinal *bool `json:"is_final,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	// Word-level detail (open; provider-dependent).
+	Words document.Interface `json:"words,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"EndOfThought"} .
+type AgentEndOfThought struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Error","description":"...","code":"..."} . Fatal; sent before the
+// server closes the connection.
+type AgentError struct {
+
+	// Error code (e.g. INVALID_SETTINGS ). Open set; see developer docs.
+	//
+	// This member is required.
+	Code *string `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"FunctionCallRequest","functions":[...]} . functions is an open list of
+// {id,name,arguments,client_side,...} . See AGENT-001.
+type AgentFunctionCallRequest struct {
+
+	// This member is required.
+	Functions document.Interface `json:"functions"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"History", ...} . Conversation-history entry at session start when
+// flags.history is set. Payload is untagged (a conversation message OR a
+// function-call record); modeled as open Document . See AGENT-001.
+type AgentHistory struct {
+	Entry document.Interface `json:"entry,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"LatencyReport", ...} . One latency metric per message (the wire
+// flattens a single field); modeled flat with all metrics optional. See AGENT-003.
+type AgentLatencyReport struct {
+	SttLatency *float64 `json:"stt_latency,omitempty"`
+
+	TotalLatency *float64 `json:"total_latency,omitempty"`
+
+	TtsLatency *float64 `json:"tts_latency,omitempty"`
+
+	TttTextLatency *float64 `json:"ttt_text_latency,omitempty"`
+
+	TttThinkingLatency *float64 `json:"ttt_thinking_latency,omitempty"`
+
+	TttTokenLatency *float64 `json:"ttt_token_latency,omitempty"`
+
+	TttToolLatency *float64 `json:"ttt_tool_latency,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"PromptReplaced"} .
+type AgentPromptReplaced struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"PromptUpdated"} .
+type AgentPromptUpdated struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"SettingsApplied"} .
+type AgentSettingsApplied struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"SpeakUpdated"} .
+type AgentSpeakUpdated struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"ThinkUpdated"} .
+type AgentThinkUpdated struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"UserStartedSpeaking"} .
+type AgentUserStartedSpeaking struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Warning","description":"...","code":"..."} . Non-fatal.
+type AgentWarning struct {
+
+	// Warning code (e.g. PROMPT_TOO_LONG ). Open set; see developer docs.
+	//
+	// This member is required.
+	Code *string `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Welcome","request_id":"..."} . First message on every connection.
+type AgentWelcome struct {
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	AgentServerStreamMemberAgentAudioDone
+//	AgentServerStreamMemberAgentStartedSpeaking
+//	AgentServerStreamMemberAgentThinking
+//	AgentServerStreamMemberAudio
+//	AgentServerStreamMemberConversationText
+//	AgentServerStreamMemberEndOfThought
+//	AgentServerStreamMemberError
+//	AgentServerStreamMemberFunctionCallRequest
+//	AgentServerStreamMemberFunctionCallResponse
+//	AgentServerStreamMemberHistory
+//	AgentServerStreamMemberLatencyReport
+//	AgentServerStreamMemberPromptReplaced
+//	AgentServerStreamMemberPromptUpdated
+//	AgentServerStreamMemberSettingsApplied
+//	AgentServerStreamMemberSpeakUpdated
+//	AgentServerStreamMemberThinkUpdated
+//	AgentServerStreamMemberUserStartedSpeaking
+//	AgentServerStreamMemberWarning
+//	AgentServerStreamMemberWelcome
+type AgentServerStream interface {
+	isAgentServerStream()
+}
+
+// {"type":"AgentAudioDone"} . No more audio frames for the current utterance.
+type AgentServerStreamMemberAgentAudioDone struct {
+	Value AgentAudioDone
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAgentAudioDone) isAgentServerStream() {}
+
+// {"type":"AgentStartedSpeaking", ...} .
+//
+// Deprecated: Use latencyReport instead.
+type AgentServerStreamMemberAgentStartedSpeaking struct {
+	Value AgentStartedSpeaking
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAgentStartedSpeaking) isAgentServerStream() {}
+
+// {"type":"AgentThinking","content":"..."} . Non-verbalized reasoning.
+type AgentServerStreamMemberAgentThinking struct {
+	Value AgentThinking
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAgentThinking) isAgentServerStream() {}
+
+// Agent speech bytes. Binary WebSocket frame, NOT JSON.
+type AgentServerStreamMemberAudio struct {
+	Value AgentAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberAudio) isAgentServerStream() {}
+
+// {"type":"ConversationText","role":"...","content":"..."} . User or agent
+// utterance; interim when is_final is false.
+type AgentServerStreamMemberConversationText struct {
+	Value AgentConversationText
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberConversationText) isAgentServerStream() {}
+
+// {"type":"EndOfThought"} .
+type AgentServerStreamMemberEndOfThought struct {
+	Value AgentEndOfThought
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberEndOfThought) isAgentServerStream() {}
+
+// {"type":"Error","description":"...","code":"..."} . Fatal; sent before the
+// server closes the connection.
+type AgentServerStreamMemberError struct {
+	Value AgentError
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberError) isAgentServerStream() {}
+
+// {"type":"FunctionCallRequest","functions":[...]} . functions is an open list of
+// {id,name,arguments,client_side,...} . See AGENT-001.
+type AgentServerStreamMemberFunctionCallRequest struct {
+	Value AgentFunctionCallRequest
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberFunctionCallRequest) isAgentServerStream() {}
+
+// {"type":"FunctionCallResponse","id":"...","name":"...","content":"..."} . Used
+// in BOTH directions (client reply + server-side result).
+type AgentServerStreamMemberFunctionCallResponse struct {
+	Value AgentFunctionCallResponse
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberFunctionCallResponse) isAgentServerStream() {}
+
+// {"type":"History", ...} . Conversation-history entry at session start when
+// flags.history is set. Payload is untagged (a conversation message OR a
+// function-call record); modeled as open Document . See AGENT-001.
+type AgentServerStreamMemberHistory struct {
+	Value AgentHistory
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberHistory) isAgentServerStream() {}
+
+// {"type":"LatencyReport", ...} . One latency metric per message (the wire
+// flattens a single field); modeled flat with all metrics optional. See AGENT-003.
+type AgentServerStreamMemberLatencyReport struct {
+	Value AgentLatencyReport
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberLatencyReport) isAgentServerStream() {}
+
+// {"type":"PromptReplaced"} .
+type AgentServerStreamMemberPromptReplaced struct {
+	Value AgentPromptReplaced
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberPromptReplaced) isAgentServerStream() {}
+
+// {"type":"PromptUpdated"} .
+type AgentServerStreamMemberPromptUpdated struct {
+	Value AgentPromptUpdated
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberPromptUpdated) isAgentServerStream() {}
+
+// {"type":"SettingsApplied"} .
+type AgentServerStreamMemberSettingsApplied struct {
+	Value AgentSettingsApplied
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberSettingsApplied) isAgentServerStream() {}
+
+// {"type":"SpeakUpdated"} .
+type AgentServerStreamMemberSpeakUpdated struct {
+	Value AgentSpeakUpdated
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberSpeakUpdated) isAgentServerStream() {}
+
+// {"type":"ThinkUpdated"} .
+type AgentServerStreamMemberThinkUpdated struct {
+	Value AgentThinkUpdated
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberThinkUpdated) isAgentServerStream() {}
+
+// {"type":"UserStartedSpeaking"} .
+type AgentServerStreamMemberUserStartedSpeaking struct {
+	Value AgentUserStartedSpeaking
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberUserStartedSpeaking) isAgentServerStream() {}
+
+// {"type":"Warning","description":"...","code":"..."} . Non-fatal.
+type AgentServerStreamMemberWarning struct {
+	Value AgentWarning
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberWarning) isAgentServerStream() {}
+
+// {"type":"Welcome","request_id":"..."} . First message on every connection.
+type AgentServerStreamMemberWelcome struct {
+	Value AgentWelcome
+
+	noSmithyDocumentSerde
+}
+
+func (*AgentServerStreamMemberWelcome) isAgentServerStream() {}
+
+type ConverseOutput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetThinkProviderInput struct {
+
+	// Provider id (e.g. open_ai , anthropic , deepgram ). Case-sensitive.
+	//
+	// This member is required.
+	Provider *string `json:"provider"`
+
+	noSmithyDocumentSerde
+}
+
+type GetThinkProviderOutput struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProviderModelsInput struct {
+
+	// This member is required.
+	Provider *string `json:"provider"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentThinkModel struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProviderModelsOutput struct {
+
+	// This member is required.
+	Models []AgentThinkModel `json:"models"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkModelsInput struct {
+	noSmithyDocumentSerde
+}
+
+type AgentThinkModelInfo struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	// This member is required.
+	Provider *string `json:"provider"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkModelsOutput struct {
+
+	// This member is required.
+	Models []AgentThinkModelInfo `json:"models"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkProvidersInput struct {
+
+	// models to include each provider's model list.
+	Include *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type AgentThinkProvider struct {
+
+	// This member is required.
+	Id *string `json:"id"`
+
+	// This member is required.
+	Name *string `json:"name"`
+
+	// Present only when ?include=models .
+	Models []AgentThinkModel `json:"models,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListThinkProvidersOutput struct {
+
+	// This member is required.
+	Providers []AgentThinkProvider `json:"providers"`
+
+	noSmithyDocumentSerde
+}
+
+type ValidateAgentInput struct {
+
+	// { "agent": {...} } (open; see AGENT-001).
+	//
+	// This member is required.
+	Agent document.Interface `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ValidateAgentOutput struct {
+	noSmithyDocumentSerde
+}
+
+type ValidateSettingsInput struct {
+
+	// The full Settings config (open; same shape as the converse Settings message).
+	// See AGENT-001.
+	//
+	// This member is required.
+	Settings document.Interface `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ValidateSettingsOutput struct {
+	noSmithyDocumentSerde
+}
+
+type GrantTokenBody struct {
+
+	// Requested token lifetime in seconds. Server clamps to its allowed range.
+	Ttl_seconds *int32 `json:"ttl_seconds,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GrantTokenInput struct {
+
+	// Optional request body controlling the token lifetime.
+	Body *GrantTokenBody `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GrantTokenOutput struct {
+
+	// The short-lived bearer access token.
+	//
+	// This member is required.
+	Access_token *string `json:"access_token"`
+
+	// Token lifetime in seconds.
+	Expires_in *int32 `json:"expires_in,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
 type Entity struct {
 
 	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
@@ -377,6 +1173,22 @@ type Channel struct {
 	noSmithyDocumentSerde
 }
 
+// A single detected intent with a confidence score. Shared across products that
+// surface intent detection (Listen batch, Read). Mirrors Topic .
+type Intent struct {
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	ConfidenceScore *float32 `json:"confidence_score"`
+
+	// This member is required.
+	Intent *string `json:"intent"`
+
+	noSmithyDocumentSerde
+}
+
 type ModelInfo struct {
 	Arch *string `json:"arch,omitempty"`
 
@@ -490,20 +1302,6 @@ type AverageSentiment struct {
 
 	// This member is required.
 	Average *SentimentAggregate `json:"average"`
-
-	noSmithyDocumentSerde
-}
-
-type Intent struct {
-
-	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
-	// alternatives, and per-word confidences.
-	//
-	// This member is required.
-	ConfidenceScore *float32 `json:"confidence_score"`
-
-	// This member is required.
-	Intent *string `json:"intent"`
 
 	noSmithyDocumentSerde
 }
@@ -1255,6 +2053,2083 @@ type ServerStreamMemberUtteranceEnd struct {
 func (*ServerStreamMemberUtteranceEnd) isServerStream() {}
 
 type StreamOutput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageCreateInviteRequest struct {
+
+	// Email address to invite.
+	//
+	// This member is required.
+	Email *string `json:"email"`
+
+	// Scope to grant the invited account.
+	//
+	// This member is required.
+	Scope *string `json:"scope"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectInviteInput struct {
+
+	// This member is required.
+	Body *ManageCreateInviteRequest `json:"-"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectInviteOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageCreateKeyRequest struct {
+
+	// A human-readable label for the key.
+	//
+	// This member is required.
+	Comment *string `json:"comment"`
+
+	// The scopes (permissions) granted to the key.
+	//
+	// This member is required.
+	Scopes []string `json:"scopes"`
+
+	// Absolute expiration date (RFC 3339). Mutually exclusive with
+	// time_to_live_in_seconds .
+	Expiration_date *string `json:"expiration_date,omitempty"`
+
+	// Optional tags applied to requests authenticated with this key.
+	Tags []string `json:"tags,omitempty"`
+
+	// Lifetime in seconds. Mutually exclusive with expiration_date .
+	Time_to_live_in_seconds *int32 `json:"time_to_live_in_seconds,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectKeyInput struct {
+
+	// This member is required.
+	Body *ManageCreateKeyRequest `json:"-"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type CreateProjectKeyOutput struct {
+	Api_key_id *string `json:"api_key_id,omitempty"`
+
+	Comment *string `json:"comment,omitempty"`
+
+	Expiration_date *string `json:"expiration_date,omitempty"`
+
+	Key *string `json:"key,omitempty"`
+
+	Scopes []string `json:"scopes,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectInviteInput struct {
+
+	// This member is required.
+	Email *string `json:"email"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectInviteOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectKeyInput struct {
+
+	// This member is required.
+	Key_id *string `json:"key_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type DeleteProjectKeyOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetBillingBreakdownInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	End *string `json:"-"`
+
+	Grouping []string `json:"-"`
+
+	Line_item *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	Tag *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// A { units, amount } resolution descriptor (usage/billing time bucket).
+type ManageResolution struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetBillingBreakdownOutput struct {
+
+	// This member is required.
+	End *string `json:"end"`
+
+	// A { units, amount } resolution descriptor (usage/billing time bucket).
+	//
+	// This member is required.
+	Resolution *ManageResolution `json:"resolution"`
+
+	// A list of free-form result rows. Each row's shape varies by the requested
+	// grouping/fields, so it is carried as an open document (see MANAGE-002).
+	//
+	// This member is required.
+	Results []document.Interface `json:"results"`
+
+	// This member is required.
+	Start *string `json:"start"`
+
+	noSmithyDocumentSerde
+}
+
+type GetModelInput struct {
+
+	// This member is required.
+	Model_id *string `json:"model_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageTtsMetadata struct {
+	Accent *string `json:"accent,omitempty"`
+
+	Age *string `json:"age,omitempty"`
+
+	Color *string `json:"color,omitempty"`
+
+	Image *string `json:"image,omitempty"`
+
+	Sample *string `json:"sample,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	Use_cases []string `json:"use_cases,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetModelOutput struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Batch *bool `json:"batch,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Formatted_output *bool `json:"formatted_output,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Metadata *ManageTtsMetadata `json:"metadata,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Streaming *bool `json:"streaming,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Limit *int32 `json:"-"`
+
+	Page *int32 `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectOutput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Mip_opt_out *bool `json:"mip_opt_out,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectBalanceInput struct {
+
+	// This member is required.
+	Balance_id *string `json:"balance_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectBalanceOutput struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Balance_id *string `json:"balance_id,omitempty"`
+
+	Purchase_order_id *string `json:"purchase_order_id,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectKeyInput struct {
+
+	// This member is required.
+	Key_id *string `json:"key_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageKeyInfo struct {
+	Api_key_id *string `json:"api_key_id,omitempty"`
+
+	Comment *string `json:"comment,omitempty"`
+
+	Created *string `json:"created,omitempty"`
+
+	Scopes []string `json:"scopes,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageKeyMember struct {
+	Email *string `json:"email,omitempty"`
+
+	Member_id *string `json:"member_id,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageProjectKey struct {
+	Api_key *ManageKeyInfo `json:"api_key,omitempty"`
+
+	Member *ManageKeyMember `json:"member,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectKeyOutput struct {
+	Item *ManageProjectKey `json:"item,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectModelInput struct {
+
+	// This member is required.
+	Model_id *string `json:"model_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectModelOutput struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Batch *bool `json:"batch,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Formatted_output *bool `json:"formatted_output,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Metadata *ManageTtsMetadata `json:"metadata,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Streaming *bool `json:"streaming,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectRequestInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	// This member is required.
+	Request_id *string `json:"request_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageRequest struct {
+	Api_key_id *string `json:"api_key_id,omitempty"`
+
+	Callback *string `json:"callback,omitempty"`
+
+	Code *int32 `json:"code,omitempty"`
+
+	Created *string `json:"created,omitempty"`
+
+	Deployment *string `json:"deployment,omitempty"`
+
+	Path *string `json:"path,omitempty"`
+
+	Project_uuid *string `json:"project_uuid,omitempty"`
+
+	Request_id *string `json:"request_id,omitempty"`
+
+	// The response metadata for the request (shape varies; open document).
+	Response document.Interface `json:"response,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectRequestOutput struct {
+	Request *ManageRequest `json:"request,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The shared transcription-feature filter set for the usage endpoints. Every
+// member is an optional query parameter; booleans filter on whether the feature
+// was used, strings filter on a specific value. Mixed into GetProjectUsage and
+// GetUsageBreakdown.
+type GetProjectUsageInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	Alternatives *bool `json:"-"`
+
+	Callback *bool `json:"-"`
+
+	Callback_method *bool `json:"-"`
+
+	Channels *bool `json:"-"`
+
+	Custom_intent *bool `json:"-"`
+
+	Custom_intent_mode *bool `json:"-"`
+
+	Custom_topic *bool `json:"-"`
+
+	Custom_topic_mode *bool `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	Detect_entities *bool `json:"-"`
+
+	Detect_language *bool `json:"-"`
+
+	Diarize *bool `json:"-"`
+
+	Dictation *bool `json:"-"`
+
+	Encoding *bool `json:"-"`
+
+	End *string `json:"-"`
+
+	// One of listen , read , speak , agent .
+	Endpoint *string `json:"-"`
+
+	Extra *bool `json:"-"`
+
+	Filler_words *bool `json:"-"`
+
+	Intents *bool `json:"-"`
+
+	Keyterm *bool `json:"-"`
+
+	Keywords *bool `json:"-"`
+
+	Language *bool `json:"-"`
+
+	Measurements *bool `json:"-"`
+
+	// One of sync , async , streaming .
+	Method *string `json:"-"`
+
+	Model *string `json:"-"`
+
+	Multichannel *bool `json:"-"`
+
+	Numerals *bool `json:"-"`
+
+	Paragraphs *bool `json:"-"`
+
+	Profanity_filter *bool `json:"-"`
+
+	Punctuate *bool `json:"-"`
+
+	Redact *bool `json:"-"`
+
+	Replace *bool `json:"-"`
+
+	Sample_rate *bool `json:"-"`
+
+	Search *bool `json:"-"`
+
+	Sentiment *bool `json:"-"`
+
+	Smart_format *bool `json:"-"`
+
+	Start *string `json:"-"`
+
+	Summarize *bool `json:"-"`
+
+	Tag *string `json:"-"`
+
+	Topics *bool `json:"-"`
+
+	Utt_split *bool `json:"-"`
+
+	Utterances *bool `json:"-"`
+
+	Version *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetProjectUsageOutput struct {
+	End *string `json:"end,omitempty"`
+
+	// A { units, amount } resolution descriptor (usage/billing time bucket).
+	Resolution *ManageResolution `json:"resolution,omitempty"`
+
+	Start *string `json:"start,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The shared transcription-feature filter set for the usage endpoints. Every
+// member is an optional query parameter; booleans filter on whether the feature
+// was used, strings filter on a specific value. Mixed into GetProjectUsage and
+// GetUsageBreakdown.
+type GetUsageBreakdownInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	Alternatives *bool `json:"-"`
+
+	Callback *bool `json:"-"`
+
+	Callback_method *bool `json:"-"`
+
+	Channels *bool `json:"-"`
+
+	Custom_intent *bool `json:"-"`
+
+	Custom_intent_mode *bool `json:"-"`
+
+	Custom_topic *bool `json:"-"`
+
+	Custom_topic_mode *bool `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	Detect_entities *bool `json:"-"`
+
+	Detect_language *bool `json:"-"`
+
+	Diarize *bool `json:"-"`
+
+	Dictation *bool `json:"-"`
+
+	Encoding *bool `json:"-"`
+
+	End *string `json:"-"`
+
+	// One of listen , read , speak , agent .
+	Endpoint *string `json:"-"`
+
+	Extra *bool `json:"-"`
+
+	Filler_words *bool `json:"-"`
+
+	// One of accessor , endpoint , feature_set , models , method , tags , deployment .
+	Grouping *string `json:"-"`
+
+	Intents *bool `json:"-"`
+
+	Keyterm *bool `json:"-"`
+
+	Keywords *bool `json:"-"`
+
+	Language *bool `json:"-"`
+
+	Measurements *bool `json:"-"`
+
+	// One of sync , async , streaming .
+	Method *string `json:"-"`
+
+	Model *string `json:"-"`
+
+	Multichannel *bool `json:"-"`
+
+	Numerals *bool `json:"-"`
+
+	Paragraphs *bool `json:"-"`
+
+	Profanity_filter *bool `json:"-"`
+
+	Punctuate *bool `json:"-"`
+
+	Redact *bool `json:"-"`
+
+	Replace *bool `json:"-"`
+
+	Sample_rate *bool `json:"-"`
+
+	Search *bool `json:"-"`
+
+	Sentiment *bool `json:"-"`
+
+	Smart_format *bool `json:"-"`
+
+	Start *string `json:"-"`
+
+	Summarize *bool `json:"-"`
+
+	Tag *string `json:"-"`
+
+	Topics *bool `json:"-"`
+
+	Utt_split *bool `json:"-"`
+
+	Utterances *bool `json:"-"`
+
+	Version *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type GetUsageBreakdownOutput struct {
+
+	// This member is required.
+	End *string `json:"end"`
+
+	// A { units, amount } resolution descriptor (usage/billing time bucket).
+	//
+	// This member is required.
+	Resolution *ManageResolution `json:"resolution"`
+
+	// A list of free-form result rows. Each row's shape varies by the requested
+	// grouping/fields, so it is carried as an open document (see MANAGE-002).
+	//
+	// This member is required.
+	Results []document.Interface `json:"results"`
+
+	// This member is required.
+	Start *string `json:"start"`
+
+	noSmithyDocumentSerde
+}
+
+type LeaveProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type LeaveProjectOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListBillingFieldsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	End *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListBillingFieldsOutput struct {
+	Accessors []string `json:"accessors,omitempty"`
+
+	Deployments []string `json:"deployments,omitempty"`
+
+	// Line items available, keyed by name (open document; see MANAGE-002).
+	Line_items document.Interface `json:"line_items,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListMemberScopesInput struct {
+
+	// This member is required.
+	Member_id *string `json:"member_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ListMemberScopesOutput struct {
+
+	// This member is required.
+	Scopes []string `json:"scopes"`
+
+	noSmithyDocumentSerde
+}
+
+type ListModelsInput struct {
+
+	// Include models that are no longer the latest version.
+	Include_outdated *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageSttModel struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Batch *bool `json:"batch,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Formatted_output *bool `json:"formatted_output,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Streaming *bool `json:"streaming,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageTtsModel struct {
+	Architecture *string `json:"architecture,omitempty"`
+
+	Canonical_name *string `json:"canonical_name,omitempty"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	Metadata *ManageTtsMetadata `json:"metadata,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Uuid *string `json:"uuid,omitempty"`
+
+	Version *string `json:"version,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListModelsOutput struct {
+	Stt []ManageSttModel `json:"stt,omitempty"`
+
+	Tts []ManageTtsModel `json:"tts,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectBalancesInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageBalance struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Balance_id *string `json:"balance_id,omitempty"`
+
+	Purchase_order_id *string `json:"purchase_order_id,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectBalancesOutput struct {
+
+	// This member is required.
+	Balances []ManageBalance `json:"balances"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectInvitesInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageInvite struct {
+	Email *string `json:"email,omitempty"`
+
+	Scope *string `json:"scope,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectInvitesOutput struct {
+
+	// This member is required.
+	Invites []ManageInvite `json:"invites"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectKeysInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	// Filter by key status. One of active , expired .
+	Status *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectKeysOutput struct {
+
+	// This member is required.
+	Api_keys []ManageProjectKey `json:"api_keys"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectMembersInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageMember struct {
+	Email *string `json:"email,omitempty"`
+
+	First_name *string `json:"first_name,omitempty"`
+
+	Last_name *string `json:"last_name,omitempty"`
+
+	Member_id *string `json:"member_id,omitempty"`
+
+	Scopes []string `json:"scopes,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectMembersOutput struct {
+
+	// This member is required.
+	Members []ManageMember `json:"members"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectModelsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	// Include models that are no longer the latest version.
+	Include_outdated *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectModelsOutput struct {
+	Stt []ManageSttModel `json:"stt,omitempty"`
+
+	Tts []ManageTtsModel `json:"tts,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectPurchasesInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Limit *int32 `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageOrder struct {
+	Amount *float64 `json:"amount,omitempty"`
+
+	Created *string `json:"created,omitempty"`
+
+	Expiration *string `json:"expiration,omitempty"`
+
+	Order_id *string `json:"order_id,omitempty"`
+
+	Order_type *string `json:"order_type,omitempty"`
+
+	Units *string `json:"units,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectPurchasesOutput struct {
+
+	// This member is required.
+	Orders []ManageOrder `json:"orders"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectRequestsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Accessor *string `json:"-"`
+
+	// One of hosted , beta , self-hosted .
+	Deployment *string `json:"-"`
+
+	End *string `json:"-"`
+
+	// One of listen , read , speak , agent .
+	Endpoint *string `json:"-"`
+
+	Limit *int32 `json:"-"`
+
+	// One of sync , async , streaming .
+	Method *string `json:"-"`
+
+	Page *int32 `json:"-"`
+
+	Request_id *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	// One of succeeded , failed .
+	Status *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectRequestsOutput struct {
+	Limit *int32 `json:"limit,omitempty"`
+
+	Page *int32 `json:"page,omitempty"`
+
+	Requests []ManageRequest `json:"requests,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectsInput struct {
+	noSmithyDocumentSerde
+}
+
+type ManageProject struct {
+	Mip_opt_out *bool `json:"mip_opt_out,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	Project_id *string `json:"project_id,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ListProjectsOutput struct {
+
+	// This member is required.
+	Projects []ManageProject `json:"projects"`
+
+	noSmithyDocumentSerde
+}
+
+type ListUsageFieldsInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	End *string `json:"-"`
+
+	Start *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ListUsageFieldsOutput struct {
+	Features []string `json:"features,omitempty"`
+
+	// A list of free-form result rows. Each row's shape varies by the requested
+	// grouping/fields, so it is carried as an open document (see MANAGE-002).
+	Models []document.Interface `json:"models,omitempty"`
+
+	Processing_methods []string `json:"processing_methods,omitempty"`
+
+	Tags []string `json:"tags,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type RemoveProjectMemberInput struct {
+
+	// This member is required.
+	Member_id *string `json:"member_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type RemoveProjectMemberOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageUpdateScopesRequest struct {
+
+	// The scope to assign to the member.
+	//
+	// This member is required.
+	Scope *string `json:"scope"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateMemberScopesInput struct {
+
+	// This member is required.
+	Body *ManageUpdateScopesRequest `json:"-"`
+
+	// This member is required.
+	Member_id *string `json:"member_id"`
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateMemberScopesOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type ManageUpdateProjectRequest struct {
+
+	// The new project name.
+	Name *string `json:"name,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateProjectInput struct {
+
+	// This member is required.
+	Project_id *string `json:"project_id"`
+
+	Body *ManageUpdateProjectRequest `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type UpdateProjectOutput struct {
+	Message *string `json:"message,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// JSON request body for /v1/read . Exactly one of text or url must be set —
+// Smithy cannot express "exactly one of", so it is enforced server-side (sending
+// neither or both returns a 400). See READ-004.
+type ReadTextSource struct {
+
+	// Inline text to analyze.
+	Text *string `json:"text,omitempty"`
+
+	// HTTPS URL Deepgram fetches the text document from.
+	Url *string `json:"url,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// POST /v1/read accepts the input text in one of two body shapes selected by
+// Content-Type . See READ-004.
+//
+// The following types satisfy this interface:
+//
+//	ReadRequestBodyMemberSource
+//	ReadRequestBodyMemberText
+type ReadRequestBody interface {
+	isReadRequestBody()
+}
+
+// JSON envelope carrying inline text or a URL to fetch text from. Content-Type:
+// application/json selects this variant.
+type ReadRequestBodyMemberSource struct {
+	Value ReadTextSource
+
+	noSmithyDocumentSerde
+}
+
+func (*ReadRequestBodyMemberSource) isReadRequestBody() {}
+
+// Raw text. Sent with Content-Type: text/plain (or no Content-Type ).
+type ReadRequestBodyMemberText struct {
+	Value string
+
+	noSmithyDocumentSerde
+}
+
+func (*ReadRequestBodyMemberText) isReadRequestBody() {}
+
+type AnalyzeInput struct {
+
+	// Language of the input text. Must begin with en (English-only today); other
+	// values are rejected with a 400.
+	//
+	// This member is required.
+	Language *string `json:"-"`
+
+	// POST /v1/read accepts the input text in one of two body shapes selected by
+	// Content-Type . See READ-004.
+	Body ReadRequestBody `json:"-"`
+
+	// Where to deliver the completed analysis. When set, the operation returns
+	// immediately with only requestId populated; results are delivered to this URL.
+	Callback *string `json:"-"`
+
+	// HTTP method to use for callback delivery. Default POST .
+	CallbackMethod CallbackMethod `json:"-"`
+
+	ContentType *string `json:"-"`
+
+	// Custom intents to bias detection toward. Wire syntax is repeated
+	// ?custom_intent=... . Max 100 entries, each <= 120 chars.
+	CustomIntent []string `json:"-"`
+
+	// Detection strictness for custom intents. See READ-003.
+	CustomIntentMode *string `json:"-"`
+
+	// Custom topics to bias detection toward. Wire syntax is repeated
+	// ?custom_topic=... . Max 100 entries, each <= 120 chars.
+	CustomTopic []string `json:"-"`
+
+	// Detection strictness for custom topics.
+	CustomTopicMode *string `json:"-"`
+
+	// Enable intent detection.
+	Intents *bool `json:"-"`
+
+	// Deprecated: Prefer mip_opt_out . log_data is recognized for backward
+	// compatibility; sending both with conflicting values returns 400.
+	LogData *bool `json:"-"`
+
+	// Opt out of the Model Improvement Program (request not persisted for training).
+	MipOptOut *bool `json:"-"`
+
+	// Enable sentiment analysis.
+	Sentiment *bool `json:"-"`
+
+	// Enable summarization. Accepts true or a version string (e.g. v2 ); modeled as
+	// String to carry both forms, matching Listen's summarize .
+	Summarize *string `json:"-"`
+
+	// Tags echoed back in the response metadata. Repeated ?tag= .
+	Tag []string `json:"-"`
+
+	// Enable topic detection.
+	Topics *bool `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type ReadMetadata struct {
+
+	// This member is required.
+	Created *string `json:"created"`
+
+	// Always en today.
+	//
+	// This member is required.
+	Language *string `json:"language"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// Token-count metadata for intent detection. Present when intents ran.
+	IntentsInfo *TokenMetadata `json:"intents_info,omitempty"`
+
+	// Token-count metadata for sentiment analysis. Present when sentiment ran.
+	SentimentInfo *TokenMetadata `json:"sentiment_info,omitempty"`
+
+	// Token-count metadata for summarization. Present when summarization ran.
+	SummaryInfo *TokenMetadata `json:"summary_info,omitempty"`
+
+	// Tags echoed back from the request's ?tag= parameters.
+	Tags []string `json:"tags,omitempty"`
+
+	// Token-count metadata for topic detection. Present when topics ran.
+	TopicsInfo *TokenMetadata `json:"topics_info,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type IntentSegment struct {
+
+	// This member is required.
+	EndWord *int32 `json:"end_word"`
+
+	// This member is required.
+	Intents []Intent `json:"intents"`
+
+	// This member is required.
+	StartWord *int32 `json:"start_word"`
+
+	// This member is required.
+	Text *string `json:"text"`
+
+	noSmithyDocumentSerde
+}
+
+type IntentsResult struct {
+
+	// This member is required.
+	Segments []IntentSegment `json:"segments"`
+
+	noSmithyDocumentSerde
+}
+
+// Aggregate sentiment across the whole document. Read-prefixed to avoid a name
+// collision with com.deepgram.api.v1.listen#AverageSentiment (a different shape)
+// in the shared generated api/types . See READ-006.
+type ReadAverageSentiment struct {
+
+	// This member is required.
+	Sentiment Sentiment `json:"sentiment"`
+
+	// Range [-1, 1].
+	//
+	// This member is required.
+	SentimentScore *float32 `json:"sentiment_score"`
+
+	// See startTime .
+	EndTime *float32 `json:"end_time,omitempty"`
+
+	// Always null on Read responses; carried for shape-compatibility with the
+	// streaming sentiment aggregate.
+	StartTime *float32 `json:"start_time,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+type SentimentsResult struct {
+
+	// Aggregate sentiment across the whole document. Read-prefixed to avoid a name
+	// collision with com.deepgram.api.v1.listen#AverageSentiment (a different shape)
+	// in the shared generated api/types . See READ-006.
+	//
+	// This member is required.
+	Average *ReadAverageSentiment `json:"average"`
+
+	// This member is required.
+	Segments []SitSentimentSegment `json:"segments"`
+
+	noSmithyDocumentSerde
+}
+
+type SummaryResult struct {
+
+	// This member is required.
+	Text *string `json:"text"`
+
+	noSmithyDocumentSerde
+}
+
+type TopicsResult struct {
+
+	// Topic detections per text segment. Reuses the cross-product TopicSegment shape
+	// (identical wire form to Listen's batch topics).
+	//
+	// This member is required.
+	Segments []TopicSegment `json:"segments"`
+
+	noSmithyDocumentSerde
+}
+
+type ReadResults struct {
+
+	// Present when ?intents=true .
+	Intents *IntentsResult `json:"intents,omitempty"`
+
+	// Present when ?sentiment=true .
+	Sentiments *SentimentsResult `json:"sentiments,omitempty"`
+
+	// Present when ?summarize=... was enabled.
+	Summary *SummaryResult `json:"summary,omitempty"`
+
+	// Present when ?topics=true .
+	Topics *TopicsResult `json:"topics,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// Read response.
+//
+// Synchronous responses carry metadata + results . When ?callback= is set, the
+// immediate response carries only requestId , and the full result is delivered
+// later to the callback URL with the same shape. See READ-001.
+type AnalyzeOutput struct {
+
+	// Populated on synchronous responses. Absent on the async ack.
+	Metadata *ReadMetadata
+
+	// Populated only on the asynchronous (callback) immediate ack: {"request_id":
+	// "..."} . On synchronous responses the request id is inside metadata.requestId
+	// instead.
+	RequestId *string
+
+	// Populated on synchronous responses. Absent on the async ack.
+	Results *ReadResults
+
+	noSmithyDocumentSerde
+}
+
+// JSON request body for /v1/speak . Exactly one of text or url must be set
+// (enforced server-side; Smithy cannot express "exactly one of").
+type SpeakTextSource struct {
+
+	// Inline text to synthesize.
+	Text *string `json:"text,omitempty"`
+
+	// HTTPS URL Deepgram fetches the text document from.
+	Url *string `json:"url,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// POST /v1/speak accepts the input text in one of two body shapes selected by
+// Content-Type (same pattern as Read; see READ-004).
+//
+// The following types satisfy this interface:
+//
+//	SpeakRequestBodyMemberSource
+//	SpeakRequestBodyMemberText
+type SpeakRequestBody interface {
+	isSpeakRequestBody()
+}
+
+// JSON envelope carrying inline text or a URL to fetch text from. Content-Type:
+// application/json selects this variant.
+type SpeakRequestBodyMemberSource struct {
+	Value SpeakTextSource
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakRequestBodyMemberSource) isSpeakRequestBody() {}
+
+// Raw text. Content-Type: text/plain (or no Content-Type ).
+type SpeakRequestBodyMemberText struct {
+	Value string
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakRequestBodyMemberText) isSpeakRequestBody() {}
+
+type SynthesizeInput struct {
+
+	// Output bit rate (bps). Valid for mp3 / opus / aac only.
+	BitRate *int32 `json:"-"`
+
+	// POST /v1/speak accepts the input text in one of two body shapes selected by
+	// Content-Type (same pattern as Read; see READ-004).
+	Body SpeakRequestBody `json:"-"`
+
+	// Where to deliver the synthesized audio. When set, the operation returns
+	// {"request_id": ...} immediately and POSTs/PUTs the audio to this URL. See
+	// SPEAK-002.
+	Callback *string `json:"-"`
+
+	// HTTP method for callback delivery. Default POST .
+	CallbackMethod CallbackMethod `json:"-"`
+
+	// Output container. Valid values depend on encoding (e.g. wav / none for
+	// linear16, ogg for opus).
+	Container SpeakContainer `json:"-"`
+
+	ContentType *string `json:"-"`
+
+	// Output audio codec. Default mp3 .
+	Encoding SpeakEncoding `json:"-"`
+
+	// Opt out of the Model Improvement Program.
+	MipOptOut *bool `json:"-"`
+
+	// Voice model, formatted {tier}-{voice}-{language} (e.g. aura-2-asteria-en ).
+	// Default aura-asteria-en .
+	Model *string `json:"-"`
+
+	// Output sample rate (Hz). Valid values depend on encoding .
+	SampleRate *int32 `json:"-"`
+
+	// Playback speed multiplier (e.g. 1.0 , 1.5 ).
+	Speed *float32 `json:"-"`
+
+	// Tags echoed back in dg-* response metadata. Repeated ?tag= .
+	Tag []string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// Synchronous Speak response: the body is the synthesized audio; format and model
+// metadata travel in response headers.
+type SynthesizeOutput struct {
+
+	// Comma-separated additional model UUIDs, when applicable.
+	AdditionalModelUuids *string `json:"-"`
+
+	// The synthesized audio bytes.
+	//
+	// This value conforms to the media type: audio/*
+	Audio []byte `json:"-"`
+
+	// Count of pronunciation break tokens applied.
+	BreaksApplied *int32 `json:"-"`
+
+	// Number of input characters (UTF-8 chars).
+	CharCount *int32 `json:"-"`
+
+	// Audio MIME type (e.g. audio/mpeg , audio/wav , audio/ogg ), derived from
+	// encoding + container .
+	ContentType *string `json:"-"`
+
+	// Model used (e.g. aura-2-asteria-en ).
+	ModelName *string `json:"-"`
+
+	ModelUuid *string `json:"-"`
+
+	// Count of pronunciation override tokens applied.
+	PronunciationsApplied *int32 `json:"-"`
+
+	// Comma-separated pronunciation-validation warning codes ( PRON-00x ), when
+	// present.
+	Warnings *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// Audio frame variant. The wire form is a binary WS frame whose body is data .
+// @eventPayload marks the binary payload (per AWS event-stream conventions); the
+// custom WebSocket protocol generator emits it as a WS binary frame.
+type SpeakAudioFrame struct {
+
+	// Raw synthesized audio bytes (per the session's encoding ).
+	//
+	// This member is required.
+	Data []byte `json:"data"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"AudioMetadata", ...} . Only when ?performance=true .
+type SpeakAudioMetadata struct {
+
+	// This member is required.
+	ContentType *string `json:"content_type"`
+
+	// This member is required.
+	InputNumChars *int32 `json:"input_num_chars"`
+
+	// This member is required.
+	InputText *string `json:"input_text"`
+
+	// Latency in milliseconds.
+	//
+	// This member is required.
+	LatencyMilliseconds *int64 `json:"latency_milliseconds"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Clear"} .
+type SpeakClear struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Cleared","sequence_id":<u64>} .
+type SpeakCleared struct {
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Close"} .
+type SpeakClose struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Flush"} .
+type SpeakFlush struct {
+	noSmithyDocumentSerde
+}
+
+// {"type":"Speak","text":"..."} .
+type SpeakText struct {
+
+	// Text to synthesize. An empty/absent value is treated as empty text.
+	//
+	// This member is required.
+	Text *string `json:"text"`
+
+	noSmithyDocumentSerde
+}
+
+// Client → Server message stream. All variants are JSON text frames whose type
+// field discriminates the variant. The client never sends binary.
+//
+// The following types satisfy this interface:
+//
+//	SpeakClientStreamMemberClear
+//	SpeakClientStreamMemberClose
+//	SpeakClientStreamMemberFlush
+//	SpeakClientStreamMemberSpeak
+type SpeakClientStream interface {
+	isSpeakClientStream()
+}
+
+// Discard buffered text and any in-flight synthesis.
+type SpeakClientStreamMemberClear struct {
+	Value SpeakClear
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberClear) isSpeakClientStream() {}
+
+// Cleanly close the session.
+type SpeakClientStreamMemberClose struct {
+	Value SpeakClose
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberClose) isSpeakClientStream() {}
+
+// Synthesize and emit all buffered text immediately.
+type SpeakClientStreamMemberFlush struct {
+	Value SpeakFlush
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberFlush) isSpeakClientStream() {}
+
+// Enqueue text for synthesis.
+type SpeakClientStreamMemberSpeak struct {
+	Value SpeakText
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakClientStreamMemberSpeak) isSpeakClientStream() {}
+
+// {"type":"Flushed","sequence_id":<u64>} .
+type SpeakFlushed struct {
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+type SpeakStreamInput struct {
+
+	// Automatically flush buffered audio. Default true . Streaming-only.
+	AutoFlush *bool `json:"-"`
+
+	// Webhook URL for completion callback.
+	Callback *string `json:"-"`
+
+	// HTTP method for callback delivery. Default POST .
+	CallbackMethod CallbackMethod `json:"-"`
+
+	// Output codec. Streaming supports linear16 / mulaw / alaw .
+	Encoding SpeakEncoding `json:"-"`
+
+	// Opt out of the Model Improvement Program.
+	MipOptOut *bool `json:"-"`
+
+	// Voice model (e.g. aura-2-asteria-en ). Default aura-asteria-en .
+	Model *string `json:"-"`
+
+	// Output sample rate (Hz). Valid values depend on encoding .
+	SampleRate *int32 `json:"-"`
+
+	SecWebSocketProtocol *string `json:"-"`
+
+	// Playback speed multiplier.
+	Speed *float32 `json:"-"`
+
+	// Tags echoed back. Repeated ?tag= .
+	Tag []string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Metadata", ...} .
+type SpeakMetadata struct {
+
+	// This member is required.
+	AdditionalModelUuids []string `json:"additional_model_uuids"`
+
+	// This member is required.
+	ModelName *string `json:"model_name"`
+
+	// This member is required.
+	ModelUuid *string `json:"model_uuid"`
+
+	// This member is required.
+	ModelVersion *string `json:"model_version"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Timestamp", ...} . Only when ?performance=true .
+type SpeakTimestamp struct {
+
+	// This member is required.
+	Event SpeakTimestampEvent `json:"event"`
+
+	// Milliseconds from session start.
+	//
+	// This member is required.
+	MillisecondsFromStart *int64 `json:"milliseconds_from_start"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Warning","warn_code":"...","warn_msg":"..."} .
+type SpeakWarning struct {
+
+	// This member is required.
+	WarnCode *string `json:"warn_code"`
+
+	// This member is required.
+	WarnMsg *string `json:"warn_msg"`
+
+	noSmithyDocumentSerde
+}
+
+// Server → Client message stream. Synthesized audio rides as binary frames ( audio
+// variant); status messages ride as JSON text frames whose type field
+// discriminates the variant.
+//
+// The following types satisfy this interface:
+//
+//	SpeakServerStreamMemberAudio
+//	SpeakServerStreamMemberAudioMetadata
+//	SpeakServerStreamMemberCleared
+//	SpeakServerStreamMemberFlushed
+//	SpeakServerStreamMemberMetadata
+//	SpeakServerStreamMemberTimestamp
+//	SpeakServerStreamMemberWarning
+type SpeakServerStream interface {
+	isSpeakServerStream()
+}
+
+// Synthesized audio bytes. Sent as a binary WebSocket frame, NOT JSON.
+type SpeakServerStreamMemberAudio struct {
+	Value SpeakAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberAudio) isSpeakServerStream() {}
+
+// Per-flush audio metadata. Only when ?performance=true .
+type SpeakServerStreamMemberAudioMetadata struct {
+	Value SpeakAudioMetadata
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberAudioMetadata) isSpeakServerStream() {}
+
+// Acknowledges a client Clear .
+type SpeakServerStreamMemberCleared struct {
+	Value SpeakCleared
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberCleared) isSpeakServerStream() {}
+
+// Acknowledges a client Flush .
+type SpeakServerStreamMemberFlushed struct {
+	Value SpeakFlushed
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberFlushed) isSpeakServerStream() {}
+
+// Per-session metadata. Emitted at the start of synthesis.
+type SpeakServerStreamMemberMetadata struct {
+	Value SpeakMetadata
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberMetadata) isSpeakServerStream() {}
+
+// Latency timestamp event. Only when ?performance=true .
+type SpeakServerStreamMemberTimestamp struct {
+	Value SpeakTimestamp
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberTimestamp) isSpeakServerStream() {}
+
+// Non-fatal warning (e.g. pronunciation/control validation).
+type SpeakServerStreamMemberWarning struct {
+	Value SpeakWarning
+
+	noSmithyDocumentSerde
+}
+
+func (*SpeakServerStreamMemberWarning) isSpeakServerStream() {}
+
+type SpeakStreamOutput struct {
+	SecWebSocketProtocol *string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+type FluxAudioFrame struct {
+
+	// This member is required.
+	Data []byte `json:"data"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"CloseStream"} .
+type FluxCloseStream struct {
+	noSmithyDocumentSerde
+}
+
+type FluxConfigureThreshold struct {
+	EagerEotThreshold *float32 `json:"eager_eot_threshold,omitempty"`
+
+	EotThreshold *float32 `json:"eot_threshold,omitempty"`
+
+	EotTimeoutMs *int32 `json:"eot_timeout_ms,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Configure", ...} .
+type FluxConfigure struct {
+
+	// This member is required.
+	Thresholds *FluxConfigureThreshold `json:"thresholds"`
+
+	Keyterms []string `json:"keyterms,omitempty"`
+
+	LanguageHints []string `json:"language_hints,omitempty"`
+
+	ProfanityFilter *bool `json:"profanity_filter,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	FluxClientStreamMemberAudio
+//	FluxClientStreamMemberCloseStream
+//	FluxClientStreamMemberConfigure
+type FluxClientStream interface {
+	isFluxClientStream()
+}
+
+// Raw mic audio bytes. Binary WebSocket frame, NOT JSON.
+type FluxClientStreamMemberAudio struct {
+	Value FluxAudioFrame
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxClientStreamMemberAudio) isFluxClientStream() {}
+
+// Graceful end-of-audio. Server emits final turn data then closes.
+type FluxClientStreamMemberCloseStream struct {
+	Value FluxCloseStream
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxClientStreamMemberCloseStream) isFluxClientStream() {}
+
+// Update turn-detection thresholds / keyterms / hints mid-session.
+type FluxClientStreamMemberConfigure struct {
+	Value FluxConfigure
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxClientStreamMemberConfigure) isFluxClientStream() {}
+
+type FluxStreamInput struct {
+
+	// Flux model, formatted flux-{use_case}-{language} (e.g. flux-general-en ,
+	// flux-general-multi ).
+	//
+	// This member is required.
+	Model *string `json:"-"`
+
+	// Eager end-of-turn confidence threshold (0.3–0.9; must be <= eot_threshold ).
+	// Disabled when omitted.
+	EagerEotThreshold *float32 `json:"-"`
+
+	// Input audio codec. Pair with sample_rate , or omit both for auto-detect.
+	Encoding *string `json:"-"`
+
+	// End-of-turn confidence threshold (0.5–0.9). Default 0.7.
+	EotThreshold *float32 `json:"-"`
+
+	// End-of-turn timeout in ms (500–60000). Default 5000.
+	EotTimeoutMs *int32 `json:"-"`
+
+	// Key terms to boost. Repeated ?keyterm= .
+	Keyterm []string `json:"-"`
+
+	// Language hints (only on flux-general-multi ). Repeated.
+	LanguageHint []string `json:"-"`
+
+	MipOptOut *bool `json:"-"`
+
+	Numerals *bool `json:"-"`
+
+	ProfanityFilter *bool `json:"-"`
+
+	// Redaction modes: numbers , aggressive_numbers .
+	Redact []string `json:"-"`
+
+	SampleRate *int32 `json:"-"`
+
+	SecWebSocketProtocol *string `json:"-"`
+
+	Tag []string `json:"-"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"ConfigureFailure", ...} .
+type FluxConfigureFailure struct {
+
+	// This member is required.
+	Code FluxErrorCode `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"ConfigureSuccess", ...} .
+type FluxConfigureSuccess struct {
+
+	// This member is required.
+	Keyterms []string `json:"keyterms"`
+
+	// This member is required.
+	ProfanityFilter *bool `json:"profanity_filter"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	// This member is required.
+	Thresholds *FluxConfigureThreshold `json:"thresholds"`
+
+	LanguageHints []string `json:"language_hints,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Connected","request_id":"...","sequence_id":0} . First message.
+type FluxConnected struct {
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"Error", ...} . Session-ending; followed by a WS close. See FLUX-001.
+type FluxError struct {
+
+	// This member is required.
+	Code FluxErrorCode `json:"code"`
+
+	// This member is required.
+	Description *string `json:"description"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	noSmithyDocumentSerde
+}
+
+type FluxWord struct {
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	Confidence *float32 `json:"confidence"`
+
+	// Punctuated, properly-cased word.
+	//
+	// This member is required.
+	Word *string `json:"word"`
+
+	noSmithyDocumentSerde
+}
+
+// {"type":"TurnInfo", ...} . A turn-detection event.
+type FluxTurnInfo struct {
+
+	// This member is required.
+	AudioWindowEnd *float32 `json:"audio_window_end"`
+
+	// This member is required.
+	AudioWindowStart *float32 `json:"audio_window_start"`
+
+	// A confidence value in [0.0, 1.0]. Models output this for transcripts,
+	// alternatives, and per-word confidences.
+	//
+	// This member is required.
+	EndOfTurnConfidence *float32 `json:"end_of_turn_confidence"`
+
+	// This member is required.
+	Event FluxEvent `json:"event"`
+
+	// Deepgram request identifier, surfaced in response headers ( dg-request-id ) and
+	// most response bodies. Always a UUID v4 in canonical lowercase string form (
+	// 8-4-4-4-12 hex).
+	//
+	// This member is required.
+	RequestId *string `json:"request_id"`
+
+	// This member is required.
+	SequenceId *int64 `json:"sequence_id"`
+
+	// This member is required.
+	Transcript *string `json:"transcript"`
+
+	// This member is required.
+	TurnIndex *int64 `json:"turn_index"`
+
+	// This member is required.
+	Words []FluxWord `json:"words"`
+
+	Languages []string `json:"languages,omitempty"`
+
+	LanguagesHinted []string `json:"languages_hinted,omitempty"`
+
+	noSmithyDocumentSerde
+}
+
+// The following types satisfy this interface:
+//
+//	FluxServerStreamMemberConfigureFailure
+//	FluxServerStreamMemberConfigureSuccess
+//	FluxServerStreamMemberConnected
+//	FluxServerStreamMemberError
+//	FluxServerStreamMemberTurnInfo
+type FluxServerStream interface {
+	isFluxServerStream()
+}
+
+// {"type":"ConfigureFailure", ...} .
+type FluxServerStreamMemberConfigureFailure struct {
+	Value FluxConfigureFailure
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberConfigureFailure) isFluxServerStream() {}
+
+// {"type":"ConfigureSuccess", ...} .
+type FluxServerStreamMemberConfigureSuccess struct {
+	Value FluxConfigureSuccess
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberConfigureSuccess) isFluxServerStream() {}
+
+// {"type":"Connected","request_id":"...","sequence_id":0} . First message.
+type FluxServerStreamMemberConnected struct {
+	Value FluxConnected
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberConnected) isFluxServerStream() {}
+
+// {"type":"Error", ...} . Session-ending; followed by a WS close. See FLUX-001.
+type FluxServerStreamMemberError struct {
+	Value FluxError
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberError) isFluxServerStream() {}
+
+// {"type":"TurnInfo", ...} . A turn-detection event.
+type FluxServerStreamMemberTurnInfo struct {
+	Value FluxTurnInfo
+
+	noSmithyDocumentSerde
+}
+
+func (*FluxServerStreamMemberTurnInfo) isFluxServerStream() {}
+
+type FluxStreamOutput struct {
 	SecWebSocketProtocol *string `json:"-"`
 
 	noSmithyDocumentSerde

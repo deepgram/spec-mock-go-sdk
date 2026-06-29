@@ -2,6 +2,123 @@
 
 package types
 
+type AgentInjectBehavior string
+
+// Enum values for AgentInjectBehavior
+const (
+	AgentInjectBehaviorDefault   AgentInjectBehavior = "Default"
+	AgentInjectBehaviorQueue     AgentInjectBehavior = "Queue"
+	AgentInjectBehaviorInterrupt AgentInjectBehavior = "Interrupt"
+)
+
+// Values returns all known values for AgentInjectBehavior. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentInjectBehavior) Values() []AgentInjectBehavior {
+	return []AgentInjectBehavior{
+		"Default",
+		"Queue",
+		"Interrupt",
+	}
+}
+
+type AgentInputEncoding string
+
+// Enum values for AgentInputEncoding
+const (
+	AgentInputEncodingLinear16 AgentInputEncoding = "linear-16"
+	AgentInputEncodingLinear32 AgentInputEncoding = "linear-32"
+	AgentInputEncodingAlaw     AgentInputEncoding = "alaw"
+	AgentInputEncodingMulaw    AgentInputEncoding = "mulaw"
+)
+
+// Values returns all known values for AgentInputEncoding. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentInputEncoding) Values() []AgentInputEncoding {
+	return []AgentInputEncoding{
+		"linear-16",
+		"linear-32",
+		"alaw",
+		"mulaw",
+	}
+}
+
+type AgentOutputContainer string
+
+// Enum values for AgentOutputContainer
+const (
+	AgentOutputContainerWav  AgentOutputContainer = "wav"
+	AgentOutputContainerNone AgentOutputContainer = "none"
+	AgentOutputContainerOgg  AgentOutputContainer = "ogg"
+)
+
+// Values returns all known values for AgentOutputContainer. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentOutputContainer) Values() []AgentOutputContainer {
+	return []AgentOutputContainer{
+		"wav",
+		"none",
+		"ogg",
+	}
+}
+
+type AgentOutputEncoding string
+
+// Enum values for AgentOutputEncoding
+const (
+	AgentOutputEncodingLinear16 AgentOutputEncoding = "linear16"
+	AgentOutputEncodingMulaw    AgentOutputEncoding = "mulaw"
+	AgentOutputEncodingAlaw     AgentOutputEncoding = "alaw"
+	AgentOutputEncodingMp3      AgentOutputEncoding = "mp3"
+	AgentOutputEncodingOpus     AgentOutputEncoding = "opus"
+	AgentOutputEncodingFlac     AgentOutputEncoding = "flac"
+	AgentOutputEncodingAac      AgentOutputEncoding = "aac"
+)
+
+// Values returns all known values for AgentOutputEncoding. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentOutputEncoding) Values() []AgentOutputEncoding {
+	return []AgentOutputEncoding{
+		"linear16",
+		"mulaw",
+		"alaw",
+		"mp3",
+		"opus",
+		"flac",
+		"aac",
+	}
+}
+
+type AgentRole string
+
+// Enum values for AgentRole
+const (
+	AgentRoleUser              AgentRole = "user"
+	AgentRoleAssistant         AgentRole = "assistant"
+	AgentRoleSystem            AgentRole = "system"
+	AgentRoleAssistantThinking AgentRole = "assistant_thinking"
+)
+
+// Values returns all known values for AgentRole. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (AgentRole) Values() []AgentRole {
+	return []AgentRole{
+		"user",
+		"assistant",
+		"system",
+		"assistant_thinking",
+	}
+}
+
 type Sentiment string
 
 // Enum values for Sentiment
@@ -20,6 +137,25 @@ func (Sentiment) Values() []Sentiment {
 		"positive",
 		"neutral",
 		"negative",
+	}
+}
+
+type CallbackMethod string
+
+// Enum values for CallbackMethod
+const (
+	CallbackMethodPost CallbackMethod = "POST"
+	CallbackMethodPut  CallbackMethod = "PUT"
+)
+
+// Values returns all known values for CallbackMethod. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (CallbackMethod) Values() []CallbackMethod {
+	return []CallbackMethod{
+		"POST",
+		"PUT",
 	}
 }
 
@@ -46,25 +182,6 @@ func (WarningType) Values() []WarningType {
 	}
 }
 
-type CallbackMethod string
-
-// Enum values for CallbackMethod
-const (
-	CallbackMethodPost CallbackMethod = "POST"
-	CallbackMethodPut  CallbackMethod = "PUT"
-)
-
-// Values returns all known values for CallbackMethod. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (CallbackMethod) Values() []CallbackMethod {
-	return []CallbackMethod{
-		"POST",
-		"PUT",
-	}
-}
-
 type WsErrorVariant string
 
 // Enum values for WsErrorVariant
@@ -84,5 +201,128 @@ func (WsErrorVariant) Values() []WsErrorVariant {
 	return []WsErrorVariant{
 		"Closing",
 		"SchemaError",
+	}
+}
+
+type SpeakContainer string
+
+// Enum values for SpeakContainer
+const (
+	SpeakContainerWav  SpeakContainer = "wav"
+	SpeakContainerNone SpeakContainer = "none"
+	SpeakContainerOgg  SpeakContainer = "ogg"
+)
+
+// Values returns all known values for SpeakContainer. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (SpeakContainer) Values() []SpeakContainer {
+	return []SpeakContainer{
+		"wav",
+		"none",
+		"ogg",
+	}
+}
+
+type SpeakEncoding string
+
+// Enum values for SpeakEncoding
+const (
+	SpeakEncodingLinear16 SpeakEncoding = "linear16"
+	SpeakEncodingMulaw    SpeakEncoding = "mulaw"
+	SpeakEncodingAlaw     SpeakEncoding = "alaw"
+	SpeakEncodingMp3      SpeakEncoding = "mp3"
+	SpeakEncodingOpus     SpeakEncoding = "opus"
+	SpeakEncodingFlac     SpeakEncoding = "flac"
+	SpeakEncodingAac      SpeakEncoding = "aac"
+)
+
+// Values returns all known values for SpeakEncoding. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (SpeakEncoding) Values() []SpeakEncoding {
+	return []SpeakEncoding{
+		"linear16",
+		"mulaw",
+		"alaw",
+		"mp3",
+		"opus",
+		"flac",
+		"aac",
+	}
+}
+
+type SpeakTimestampEvent string
+
+// Enum values for SpeakTimestampEvent
+const (
+	SpeakTimestampEventUpgradedWebsocketConnection SpeakTimestampEvent = "UpgradedWebSocketConnection"
+	SpeakTimestampEventReceivedFirstInputText      SpeakTimestampEvent = "ReceivedFirstInputText"
+	SpeakTimestampEventReceivedFirstSentence       SpeakTimestampEvent = "ReceivedFirstSentence"
+	SpeakTimestampEventRequestedFirstAudioChunk    SpeakTimestampEvent = "RequestedFirstAudioChunk"
+	SpeakTimestampEventReceivedFirstAudioChunk     SpeakTimestampEvent = "ReceivedFirstAudioChunk"
+)
+
+// Values returns all known values for SpeakTimestampEvent. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (SpeakTimestampEvent) Values() []SpeakTimestampEvent {
+	return []SpeakTimestampEvent{
+		"UpgradedWebSocketConnection",
+		"ReceivedFirstInputText",
+		"ReceivedFirstSentence",
+		"RequestedFirstAudioChunk",
+		"ReceivedFirstAudioChunk",
+	}
+}
+
+type FluxErrorCode string
+
+// Enum values for FluxErrorCode
+const (
+	FluxErrorCodeInternalServerError     FluxErrorCode = "INTERNAL_SERVER_ERROR"
+	FluxErrorCodeUnparsableClientMessage FluxErrorCode = "UNPARSABLE_CLIENT_MESSAGE"
+	FluxErrorCodeInactiveClient          FluxErrorCode = "INACTIVE_CLIENT"
+	FluxErrorCodeServerGoingAway         FluxErrorCode = "SERVER_GOING_AWAY"
+)
+
+// Values returns all known values for FluxErrorCode. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (FluxErrorCode) Values() []FluxErrorCode {
+	return []FluxErrorCode{
+		"INTERNAL_SERVER_ERROR",
+		"UNPARSABLE_CLIENT_MESSAGE",
+		"INACTIVE_CLIENT",
+		"SERVER_GOING_AWAY",
+	}
+}
+
+type FluxEvent string
+
+// Enum values for FluxEvent
+const (
+	FluxEventUpdate         FluxEvent = "Update"
+	FluxEventStartOfTurn    FluxEvent = "StartOfTurn"
+	FluxEventEagerEndOfTurn FluxEvent = "EagerEndOfTurn"
+	FluxEventTurnResumed    FluxEvent = "TurnResumed"
+	FluxEventEndOfTurn      FluxEvent = "EndOfTurn"
+)
+
+// Values returns all known values for FluxEvent. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (FluxEvent) Values() []FluxEvent {
+	return []FluxEvent{
+		"Update",
+		"StartOfTurn",
+		"EagerEndOfTurn",
+		"TurnResumed",
+		"EndOfTurn",
 	}
 }
