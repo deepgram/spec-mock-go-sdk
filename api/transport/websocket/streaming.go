@@ -27,9 +27,13 @@ import (
 
 // Close codes mapped from @websocketCloseCode trait on error shapes.
 const (
-	CloseCodeClientTimeout = 1011
-	CloseCodeCodec         = 1008
-	CloseCodeDriverTimeout = 1011
+	CloseCodeClientTimeout   = 1011
+	CloseCodeCodec           = 1008
+	CloseCodeDriverTimeout   = 1011
+	CloseCodeSpeakBadMessage = 1003
+	CloseCodeSpeakPolicy     = 1008
+	CloseCodeSpeakServer     = 1011
+	CloseCodeSpeakTooLarge   = 1009
 )
 
 // Stream is the bidirectional WebSocket session handle. C is the
@@ -50,7 +54,7 @@ type Stream[C any, S any] interface {
 type wsStream[C any, S any] struct {
 	conn      *ws.Conn
 	marshal   func(C) ([]byte, bool, error)
-	unmarshal func([]byte) (S, error)
+	unmarshal func([]byte, bool) (S, error)
 	writeMu   sync.Mutex
 }
 
@@ -61,7 +65,7 @@ func OpenStream[C any, S any](
 	url string,
 	headers nethttp.Header,
 	marshal func(C) ([]byte, bool, error),
-	unmarshal func([]byte) (S, error),
+	unmarshal func([]byte, bool) (S, error),
 ) (Stream[C, S], error) {
 	dialer := ws.DefaultDialer
 	conn, _, err := dialer.DialContext(ctx, url, headers)
@@ -91,11 +95,11 @@ func (s *wsStream[C, S]) Send(msg C) error {
 
 func (s *wsStream[C, S]) Recv() (S, error) {
 	var zero S
-	_, data, err := s.conn.ReadMessage()
+	msgType, data, err := s.conn.ReadMessage()
 	if err != nil {
 		return zero, err
 	}
-	return s.unmarshal(data)
+	return s.unmarshal(data, msgType == ws.BinaryMessage)
 }
 
 func (s *wsStream[C, S]) Close() error {

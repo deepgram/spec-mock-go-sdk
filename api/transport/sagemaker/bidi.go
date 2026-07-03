@@ -44,7 +44,7 @@ func OpenStream[C any, S any](
 	inferenceID string,
 	enableExplanations string,
 	marshal func(C) ([]byte, bool, error),
-	unmarshal func([]byte) (S, error),
+	unmarshal func([]byte, bool) (S, error),
 ) (Stream[C, S], error) {
 	if client == nil {
 		return nil, fmt.Errorf("sagemaker.OpenStream: nil client")
@@ -98,7 +98,7 @@ type bidiStream[C any, S any] struct {
 	ctx       context.Context
 	events    *sagemakerruntimehttp2.InvokeEndpointWithBidirectionalStreamEventStream
 	marshal   func(C) ([]byte, bool, error)
-	unmarshal func([]byte) (S, error)
+	unmarshal func([]byte, bool) (S, error)
 }
 
 func (s *bidiStream[C, S]) Send(msg C) error {
@@ -124,7 +124,11 @@ func (s *bidiStream[C, S]) Recv() (S, error) {
 	for event := range s.events.Events() {
 		switch e := event.(type) {
 		case *types.ResponseStreamEventMemberPayloadPart:
-			return s.unmarshal(e.Value.Bytes)
+			// The DataType header ("BINARY"/"UTF8") is the SageMaker bidi
+			// analog of a WebSocket binary/text frame; binary-on-server
+			// products (e.g. live TTS audio) depend on it being honored.
+			isBinary := e.Value.DataType != nil && *e.Value.DataType == "BINARY"
+			return s.unmarshal(e.Value.Bytes, isBinary)
 		default:
 			var zero S
 			return zero, fmt.Errorf("sagemaker.OpenStream: unknown response event %T", event)
