@@ -15,7 +15,6 @@ import (
 	_ "github.com/deepgram/spec-mock-go-sdk/api/document"
 	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/http"
 	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/sagemaker"
-	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/webrtc"
 	_ "github.com/deepgram/spec-mock-go-sdk/api/transport/websocket"
 	_ "github.com/deepgram/spec-mock-go-sdk/api/types"
 	_ "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/live"
