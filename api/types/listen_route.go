@@ -186,5 +186,9 @@ var TranscribeRoute = httptransport.HTTPRoute{
 		{GoField: "ContentType", WireName: "Content-Type"},
 	},
 	PayloadField: "Body",
-	DecodeError:  decodeTranscribeError,
+	RespHeaderFields: []httptransport.FieldBinding{
+		{GoField: "DgRequestId", WireName: "dg-request-id"},
+		{GoField: "DgProjectId", WireName: "dg-project-id"},
+	},
+	DecodeError: decodeTranscribeError,
 }

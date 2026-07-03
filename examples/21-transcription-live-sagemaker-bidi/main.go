@@ -13,7 +13,6 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntimehttp2"
 	live "github.com/deepgram/spec-mock-go-sdk/pkg/client/listen/v1/live"
 )
 
@@ -36,8 +35,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("load AWS config: %v", err)
 	}
-	awsClient := sagemakerruntimehttp2.NewFromConfig(cfg)
-	client := live.New(live.WithSageMakerBidiTransport(awsClient, endpoint))
+	// A fresh, isolated HTTP/2 client is built per stream inside the binding
+	// (conn-per-stream; see api/transport/sagemaker). Pass the aws.Config.
+	client := live.New(live.WithSageMakerBidiTransport(cfg, endpoint))
 
 	stream, err := client.Connect(ctx, &live.LiveTranscriptionOptions{
 		Model:          "nova-3",
